@@ -6,6 +6,35 @@ env.info( '*** CSG-1 MOOSE MISSION SCRIPT START ***' )
 -- BEGIN UTILITIES SECTION
 
 
+-- ## Spawn Support aircraft
+-- Scheduled function on spawn to check for presence of the support aircraft in its spawn zone. Repeat check every 60 seconds. Respawn if ac has left zone. 
+-- also respawn on engine shutdown if an airfield is within the support zone.
+function SpawnSupport (SupportSpawn) -- spawnobject, spawnzone
+
+  --local SupportSpawn = _args[1]
+  local SupportSpawnObject = SPAWN:New( SupportSpawn.spawnobject )
+
+  SupportSpawnObject:InitLimit( 1, 50 )
+    :OnSpawnGroup(
+      function ( SpawnGroup )
+        local SpawnIndex = SupportSpawnObject:GetSpawnIndexFromGroup( SpawnGroup )
+        local CheckTanker = SCHEDULER:New( nil, 
+        function()
+          if SpawnGroup:IsNotInZone( SupportSpawn.spawnzone ) then
+            SupportSpawnObject:ReSpawn( SpawnIndex )
+          end
+        end,
+        {}, 0, 60 )
+      end
+    )
+    :InitRepeatOnEngineShutDown()
+    :Spawn()
+
+
+end -- function
+
+
+
 -- END UTILITIES SECTION
 
 -- BEGIN BOAT SECTION
