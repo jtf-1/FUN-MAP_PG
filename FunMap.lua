@@ -943,6 +943,34 @@ zonecheck = SCHEDULER:New( nil,
 
 end --function
 
+-- Added Factory strike Gannon 8/20
+function FactoryStrike ()
+
+-- Spawn AAA & Manpad at Gate
+  local FactoryPatrol = SPAWN:New("FactoryPatrol 2")
+  local FactoryPatrolGroup = FactoryPatrol:Spawn()
+
+-- Spawn AAA patrol around factory
+  local FactoryPatrol = SPAWN:New("FactoryPatrol")
+  local FactoryPatrolGroup = FactoryPatrol:Spawn()
+  FactoryPatrolGroup:PatrolRoute()
+  
+-- Spawn AAA and SAM road patrol on North/South route  
+  local FactorySAPatrol = SPAWN:New("FactorySAPatrol")
+  local FactorySAPatrolGroup = FactorySAPatrol:Spawn()
+  FactorySAPatrolGroup:PatrolRoute()
+
+-- Spawn 3 randomized SA-2 SAM sites near the factory  
+  local SA2Table = {ZONE:New("FactoryZone1"), ZONE:New("FactoryZone2"), ZONE:New("FactoryZone3"), ZONE:New("FactoryZone4"), ZONE:New("FactoryZone5"), ZONE:New("FactoryZone6"), ZONE:New("FactoryZone7"), ZONE:New("FactoryZone8"), ZONE:New("FactoryZone9"), ZONE:New("FactoryZone10"), ZONE:New("FactoryZone11")}
+    
+  local FactorySA2 = SPAWN:New("FactorySA2")
+  :InitLimit(50, 3)
+  :InitRandomizeZones(SA2Table)
+  :SpawnScheduled(.5, .5)
+  
+  MESSAGE:New("We have received intelligence that Iran is developing chemical weapons in a new facility on the Iranian coat NW of Lavan Island in grid square 'XL' N 27.33.27  E 52.33.22. Our satellite intel suggests that the factory is guarded by multiple SA-2 and AAA sites. Destroy the factory and limit the air defenses in the region to allow for follow up strikes." ,60,""):ToAll()
+  
+end --function
 
 
 -- MOOSE MENU DEFINITIONS FOR MOSTLY EVERYTHING IN THE SCRIPT HERE.
@@ -982,6 +1010,7 @@ _argsBandar = {BandarCampZones,campsBandarEnemy}
 campsBandar = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"TERRORIST TRAINING CAMPS HARD",MenuBandarL,SpawnCamps, _argsBandar)
 LavanIsland = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"LAVAN ISLAND DEFENSE",MenuBandarL,LavanIsland, "")
 SA6LavanIsland = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"LAVAN ISLAND SA6 SITE",MenuBandarL,LavanIslandSA6, "")
+FactoryStrike = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"ASALOYEH FACTORY STRIKE",MenuBandarL,FactoryStrike, "") --Added Gannon 8/20
 
 LIVESEAD = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"BANDAR LENGEH SEAD",MenuBandarL,BLSEAD, "")
 
