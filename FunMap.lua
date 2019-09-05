@@ -1,9 +1,9 @@
---CSG-1 Fun Map MOOSE Mission Script
+-- CSG-1 Fun Map MOOSE Mission Script
 
-env.info( '*** CSG-1 Fun Map MOOSE script ***' )
-env.info( '*** CSG-1 MOOSE MISSION SCRIPT START ***' )
+env.info( '*** JTF-1 Fun Map MOOSE script ***' )
+env.info( '*** JTF-1 MOOSE MISSION SCRIPT START ***' )
 
--- BEGIN UTILITIES SECTION
+-- XXX BEGIN UTILITIES SECTION
 
 
 -- ## Spawn Support aircraft
@@ -37,7 +37,7 @@ end -- function
 
 -- END UTILITIES SECTION
 
--- BEGIN BOAT SECTION
+-- XXX BEGIN BOAT SECTION
 -- Carrier Script is breaking all other scripting and menus - disabled
 -- workaround to keep the boats moving: 
 
@@ -48,156 +48,46 @@ tarawa = GROUP:FindByName( "CSG_CarrierGrp_Tarawa" )
 tarawa:PatrolRoute()
 
 -- END BOAT SECTION
+-- XXX BEGIN SUPPORT AC SECTION
 
--- BEGIN TANKER SECTION
+---------------------------------------------------
+--- Define spawn zones with trigger zones in ME ---
+---------------------------------------------------
 
---Define Tanker AAR Zones with trigger zones in ME
 Zone_AAR_1 = ZONE:New( "AAR_1_Zone" ) 
 Zone_AAR_2 = ZONE:New( "AAR_2_Zone" ) 
 Zone_AAR_3 = ZONE:New( "AAR_3_Zone" ) 
 Zone_AAR_4 = ZONE:New( "AAR_4_Zone" ) 
+Zone_AWACS_1 = ZONE:New( "AWACS_1_Zone" ) 
 
---Define Tanker spawn rules. Limit to 1 concurrent named instance.
---Add scheuled function on spawn to check for presence of tanker in AAR zone. Repeat check every 60 seconds. Respawn if tanker is not in AAR zone. 
---Also respawn on engine shutdown if an airfield is within the AAR zone.
+------------------------------------------------------
+--- define table of support aircraft to be spawned ---
+------------------------------------------------------
 
-Spawn_Tanker_C130_Arco1 = SPAWN:New( "Tanker_C130_Arco1" ) --IN AAR ZONE 1
-	:InitLimit( 1, 50 )
-	:OnSpawnGroup(
-		function ( SpawnGroup )
-			SpawnIndex_Arco1 = Spawn_Tanker_C130_Arco1:GetSpawnIndexFromGroup( SpawnGroup )
-			CheckTanker_C130_Arco1 = SCHEDULER:New( nil, 
-			function()
-				if SpawnGroup:IsNotInZone( Zone_AAR_1 ) then
-					Spawn_Tanker_C130_Arco1:ReSpawn( SpawnIndex_Arco1 )
-				end
-			end,
-			{}, 0, 60 )
-		end
-	)
-	:InitRepeatOnEngineShutDown()
-	:SpawnScheduled( 60 , .1 )
+TableSpawnSupport = { -- {spawnobjectname, spawnstub, spawnzone}
+  {spawnobject = "Tanker_C130_Arco1", spawnzone = Zone_AAR_1},
+  {spawnobject = "Tanker_C130_Arco2", spawnzone = Zone_AAR_2},
+  {spawnobject = "Tanker_C130_Arco3", spawnzone = Zone_AAR_3},
+  {spawnobject = "Tanker_KC135_Shell1", spawnzone = Zone_AAR_1},
+  {spawnobject = "Tanker_KC135_Shell2", spawnzone = Zone_AAR_2},
+  {spawnobject = "Tanker_KC135_Shell3", spawnzone = Zone_AAR_3},
+  {spawnobject = "Tanker_KC135_Shell4", spawnzone = Zone_AAR_4},
+  {spawnobject = "Tanker_KC135_Texaco1", spawnzone = Zone_AAR_4},
+  {spawnobject = "AWACS_Magic", spawnzone = Zone_AWACS_1},
+}
 
-Spawn_Tanker_C130_Arco2 = SPAWN:New( "Tanker_C130_Arco2" ) --IN AAR ZONE 2
-	:InitLimit( 1, 50 )
-	:OnSpawnGroup(
-		function ( SpawnGroup )
-			SpawnIndex_Arco2 = Spawn_Tanker_C130_Arco2:GetSpawnIndexFromGroup( SpawnGroup )
-			CheckTanker_C130_Arco2 = SCHEDULER:New( nil, 
-			function()
-				if SpawnGroup:IsNotInZone( Zone_AAR_2 ) then
-					Spawn_Tanker_C130_Arco2:ReSpawn( SpawnIndex_Arco2 )
-				end
-			end,
-			{}, 0, 60 )
-		end
-	)
-	:InitRepeatOnEngineShutDown()
-	:SpawnScheduled( 60 , .1 )
+------------------------------
+--- spawn support aircraft ---
+------------------------------
 
-Spawn_Tanker_C130_Arco3 = SPAWN:New( "Tanker_C130_Arco3" ) --IN AAR ZONE 3
-	:InitLimit( 1, 50 )
-	:OnSpawnGroup(
-		function ( SpawnGroup )
-			SpawnIndex_Arco3 = Spawn_Tanker_C130_Arco3:GetSpawnIndexFromGroup( SpawnGroup )
-			CheckTanker_C130_Arco3 = SCHEDULER:New( nil, 
-			function()
-				if SpawnGroup:IsNotInZone( Zone_AAR_3 ) then
-					Spawn_Tanker_C130_Arco3:ReSpawn( SpawnIndex_Arco3 )
-				end
-			end,
-			{}, 0, 60 )
-		end
-	)
-	:InitRepeatOnEngineShutDown()
-	:SpawnScheduled( 60 , .1 )
-	
-Spawn_Tanker_KC135_Shell1 = SPAWN:New( "Tanker_KC135_Shell1" ) --IN AAR ZONE 1
-	:InitLimit( 1, 50 )
-	:OnSpawnGroup(
-		function ( SpawnGroup )
-			SpawnIndex_Shell1 = Spawn_Tanker_KC135_Shell1:GetSpawnIndexFromGroup( SpawnGroup )
-			CheckTanker_KC135_Shell1 = SCHEDULER:New( nil, 
-			function()
-				if SpawnGroup:IsNotInZone( Zone_AAR_1 ) then
-					Spawn_Tanker_KC135_Shell1:ReSpawn( SpawnIndex_Shell1 )
-				end
-			end,
-			{}, 0, 60 )
-		end
-	)
-	:InitRepeatOnEngineShutDown()
-	:SpawnScheduled( 60 , .1 )
+for i, v in ipairs( TableSpawnSupport ) do
+  SpawnSupport ( v )
+  
+end
 
-Spawn_Tanker_KC135_Shell2 = SPAWN:New( "Tanker_KC135_Shell2" ) --IN AAR ZONE 2
-	:InitLimit( 1, 50 )
-	:OnSpawnGroup(
-		function ( SpawnGroup )
-			SpawnIndex_Shell2 = Spawn_Tanker_KC135_Shell1:GetSpawnIndexFromGroup( SpawnGroup )
-			CheckTanker_KC135_Shell2 = SCHEDULER:New( nil, 
-			function()
-				if SpawnGroup:IsNotInZone( Zone_AAR_2 ) then
-					Spawn_Tanker_KC135_Shell2:ReSpawn( SpawnIndex_Shell2 )
-				end
-			end,
-			{}, 0, 60 )
-		end
-	)
-	:InitRepeatOnEngineShutDown()
-	:SpawnScheduled( 60 , .1 )
-
-Spawn_Tanker_KC135_Shell3 = SPAWN:New( "Tanker_KC135_Shell3" ) --IN AAR ZONE 3
-	:InitLimit( 1, 50 )
-	:OnSpawnGroup(
-		function ( SpawnGroup )
-			SpawnIndex_Shell3 = Spawn_Tanker_KC135_Shell3:GetSpawnIndexFromGroup( SpawnGroup )
-			CheckTanker_KC135_Shell3 = SCHEDULER:New( nil, 
-			function()
-				if SpawnGroup:IsNotInZone( Zone_AAR_3 ) then
-					Spawn_Tanker_KC135_Shell3:ReSpawn( SpawnIndex_Shell3 )
-				end
-			end,
-			{}, 0, 60 )
-		end
-	)
-	:InitRepeatOnEngineShutDown()
-	:SpawnScheduled( 60 , .1 )
-
-Spawn_Tanker_KC135_Shell4 = SPAWN:New( "Tanker_KC135_Shell4" ) --IN AAR ZONE 4
-	:InitLimit( 1, 50 )
-	:OnSpawnGroup(
-		function ( SpawnGroup )
-			SpawnIndex_Shell4 = Spawn_Tanker_KC135_Shell4:GetSpawnIndexFromGroup( SpawnGroup )
-			CheckTanker_KC135_Shell4 = SCHEDULER:New( nil, 
-			function()
-				if SpawnGroup:IsNotInZone( Zone_AAR_4 ) then
-					Spawn_Tanker_KC135_Shell4:ReSpawn( SpawnIndex_Shell4 )
-				end
-			end,
-			{}, 0, 60 )
-		end
-	)
-	:InitRepeatOnEngineShutDown()
-	:SpawnScheduled( 60 , .1 )
-
-Spawn_Tanker_KC135_Texaco1 = SPAWN:New( "Tanker_KC135_Texaco1" ) --IN AAR ZONE 4
-	:InitLimit( 1, 50 )
-	:OnSpawnGroup(
-		function ( SpawnGroup )
-			SpawnIndex_Texaco1 = Spawn_Tanker_KC135_Texaco1:GetSpawnIndexFromGroup( SpawnGroup )
-			CheckTanker_KC135_Texaco1 = SCHEDULER:New( nil, 
-			function()
-				if SpawnGroup:IsNotInZone( Zone_AAR_4 ) then
-					Spawn_Tanker_KC135_Texaco1:ReSpawn( SpawnIndex_Texaco1 )
-				end
-			end,
-			{}, 0, 60 )
-		end
-	)
-	:InitRepeatOnEngineShutDown()
-	:SpawnScheduled( 60 , .1 )
-
--- ## Recovery Tanker Stennis
+-------------------------------
+--- Recovery Tanker Stennis ---
+-------------------------------
 
 Spawn_Tanker_S3B_Texaco2 = RECOVERYTANKER:New( UNIT:FindByName( "CSG_CarrierGrp_Stennis"), "Tanker_S3B_Texaco2" )
 
@@ -208,44 +98,75 @@ Spawn_Tanker_S3B_Texaco2:SetCallsign(CALLSIGN.Tanker.Texaco, 2)
 	:SetTakeoffAir()
 	:Start()
 
--- ## Resuce Helo Stennis
+---------------------------
+--- Rescue Helo Stennis ---
+---------------------------
 
 Spawn_Rescuehelo_Stennis = RESCUEHELO:New(UNIT:FindByName("CSG_CarrierGrp_Stennis"), "RescueHelo_Stennis")
 
 Spawn_Rescuehelo_Stennis:SetRespawnInAir()
+  :SetHomeBase(AIRBASE:FindByName("CSG_CarrierGrp_Stennis_03"))
+	:SetRescueStopBoatOff()
 	:Start()
 
+-----------------------
+--- Airboss Stennis ---
+-----------------------
+
+airbossStennis=AIRBOSS:New( "CSG_CarrierGrp_Stennis", "Stennis" )
+
+airbossStennis:Load(nil, "PG_Airboss-USS Stennis_LSOgrades.csv")
+airbossStennis:SetAutoSave(nil, "PG_Airboss-USS Stennis_LSOgrades.csv")
+
+local stennisCase = 1
+local stennisOffset_deg = 0
+local stennisRadioRelayMarshall = UNIT:FindByName("RadioRelayMarshall_Stennis")
+local stennisRadioRelayPaddles = UNIT:FindByName("RadioRelayPaddles_Stennis")
+local missionStartTime = timer.getTime0( )
+local clouds, visibility, fog, dust = airbossStennis:_GetStaticWeather() -- get mission weather (assumes static weather is used)
+
+--- adjust daytime Case according to weather state
+if clouds.base < 305 then -- cloudbase lower than 1000', Case III
+  stennisCase = 3
+elseif fog and fog.thickness > 60 and fog.visibility < 8000 then -- visibility < 5nm, Case III
+  stennisCase = 3
+elseif clouds.base < 915 then -- cloudbase lower than 3000', viz 5nm+, Case II
+    stennisCase = 2
+end     
+ 
+airbossStennis:SetMenuRecovery(30, 25, false, 30)
+airbossStennis:SetSoundfilesFolder("Airboss Soundfiles/")
+airbossStennis:SetTACAN(74,"X","STN")
+airbossStennis:SetICLS( 4,"STN" )
+airbossStennis:SetCarrierControlledArea( 50 )
+airbossStennis:SetDespawnOnEngineShutdown( true )
+airbossStennis:SetRecoveryTanker( Spawn_Tanker_S3B_Texaco1 )
+airbossStennis:SetMarshalRadio( 285.675, "AM" )
+airbossStennis:SetLSORadio( 308.475, "AM" )
+airbossStennis:SetRadioRelayLSO( stennisRadioRelayPaddles )
+airbossStennis:SetRadioRelayMarshal( stennisRadioRelayMarshall )
+
+--- Recovery windows dependant on mission start and finish times
+-- Sunset @ 17:45, Sunrise @ 05:30
+-- otherwise, intiate recovery through F10 menu
+if missionStartTime == 28800 then -- 08:00 start, 19:00 finish
+  airbossStennis:AddRecoveryWindow( "8:01", "18:15", stennisCase, stennisOffset_deg, true, 30 ) -- Recovery window from mission start + 1min to before sunset + 30mins
+  airbossStennis:AddRecoveryWindow( "18:16", "20:00", 3, stennisOffset_deg, true, 30 ) -- Recovery window after sunset + 30mins
+elseif missionStartTime == 79200 then -- 22:00 start, 09:00+1 finish
+  airbossStennis:AddRecoveryWindow( "22:01", "5:30+1", 3, stennisOffset_deg, true, 30 ) -- Recovery window after sunset + 30mins until sunrise - 30mins
+  airbossStennis:AddRecoveryWindow( "5:31+1", "10:00+1", stennisCase, stennisOffset_deg, true, 30 ) -- Recovery window from mission start + 1min to before sunset + 30mins
+end
+
+airbossStennis:SetAirbossNiceGuy( true )
+airbossStennis:SetDefaultPlayerSkill(AIRBOSS.Difficulty.Normal)
+airbossStennis:SetRespawnAI()
+
+airbossStennis:Start()
+
+Spawn_Tanker_S3B_Texaco2:SetRecoveryAirboss( true )
 	
 
 -- END TANKER SECTION
--- BEGIN AWACS SECTION
-
---Define AWACS Zones with trigger zones in ME
-Zone_AWACS_1 = ZONE:New( "AWACS_1_Zone" ) 
-
---Define AWACS spawn rules. Limit to 1 concurrent named instance.
---Add scheuled function on spawn to check for presence of AWACS in AWACS zone. Repeat check every 60 seconds. Respawn if AWACS is not in AWACS zone. 
---Also respawn on engine shutdown if an airfield is within the AWACS zone.
-
-Spawn_AWACS_Magic = SPAWN:New( "AWACS_Magic" ) --IN AWACS ZONE 1
-	:InitLimit( 1, 50 )
-	:OnSpawnGroup(
-		function ( SpawnGroup )
-			SpawnIndex_Magic = Spawn_AWACS_Magic:GetSpawnIndexFromGroup( SpawnGroup )
-			Check_AWACS_Magic = SCHEDULER:New( nil, 
-			function()
-				if SpawnGroup:IsNotInZone( Zone_AWACS_1 ) then
-					Spawn_AWACS_Magic:ReSpawn( SpawnIndex_Magic )
-				end
-			end,
-			{}, 0, 60 )
-		end
-	)
-	:InitRepeatOnEngineShutDown()
-	:SpawnScheduled( 60, 0.1 )
-
--- END AWACS SECTION
-
 
 -- BEGIN ON DEMAND CAP SECTION
 IranCAPAircraft = {"Iran_Mig29","Iran_Mig21","Iran_Mig21","Iran_Mig29"}
