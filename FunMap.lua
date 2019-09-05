@@ -755,14 +755,14 @@ local clouds, visibility, fog, dust = airbossStennis:_GetStaticWeather() -- get 
 
 --- Determine Daytime Case
 -- adjust case according to weather state
-if clouds.base < 305 or visibility < 8000 then -- cloudbase < 1000' or viz < 5 miles, Case III
-  stennisCase = 3
-elseif fog and fog.thickness > 60 and fog.visibility < 8000 then -- visibility in fog < 5nm, Case III
-  stennisCase = 3
-elseif clouds.base < 915 then -- cloudbase < 3000', viz > 5 miles, Case II
-    stennisCase = 2
-end     
- 
+--if clouds.base < 305 or visibility < 8000 then -- cloudbase < 1000' or viz < 5 miles, Case III
+--  stennisCase = 3
+--elseif fog and fog.thickness > 60 and fog.visibility < 8000 then -- visibility in fog < 5nm, Case III
+--  stennisCase = 3
+--elseif clouds.base < 915 then -- cloudbase < 3000', viz > 5 miles, Case II
+--    stennisCase = 2
+--end     
+
 airbossStennis:SetMenuRecovery(30, 25, false, 30)
 airbossStennis:SetSoundfilesFolder("Airboss Soundfiles/")
 airbossStennis:SetTACAN(74,"X","STN")
@@ -780,9 +780,11 @@ airbossStennis:SetRadioRelayMarshal( stennisRadioRelayMarshall )
 -- Sunset @ 17:45, Sunrise @ 05:30
 -- otherwise, intiate recovery through F10 menu
 if missionStartTime == 28800 then -- 08:00 start, 19:00 finish
+  env.info( '*** AIRBOSS DAYTIME START ***' )
   airbossStennis:AddRecoveryWindow( "8:01", "18:15", stennisCase, stennisOffset_deg, true, 30 ) -- Recovery window from mission start + 1min to before sunset + 30mins
   airbossStennis:AddRecoveryWindow( "18:16", "20:00", 3, stennisOffset_deg, true, 30 ) -- Recovery window after sunset + 30mins
 elseif missionStartTime == 79200 then -- 22:00 start, 09:00+1 finish
+  env.info( '*** AIRBOSS NIGHT START ***' )
   airbossStennis:AddRecoveryWindow( "22:01", "5:30+1", 3, stennisOffset_deg, true, 30 ) -- Recovery window after sunset + 30mins until sunrise - 30mins
   airbossStennis:AddRecoveryWindow( "5:31+1", "10:00+1", stennisCase, stennisOffset_deg, true, 30 ) -- Recovery window from mission start + 1min to before sunset + 30mins
 end
