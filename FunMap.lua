@@ -746,22 +746,40 @@ airbossStennis=AIRBOSS:New( "CSG_CarrierGrp_Stennis", "Stennis" )
 airbossStennis:Load(nil, "PG_Airboss-USS Stennis_LSOgrades.csv")
 airbossStennis:SetAutoSave(nil, "PG_Airboss-USS Stennis_LSOgrades.csv")
 
-local stennisCase = 1
+local stennisCase = 1 -- default to Case I
 local stennisOffset_deg = 0
 local stennisRadioRelayMarshall = UNIT:FindByName("RadioRelayMarshall_Stennis")
 local stennisRadioRelayPaddles = UNIT:FindByName("RadioRelayPaddles_Stennis")
 local missionStartTime = timer.getTime0( )
-local clouds, visibility, fog, dust = airbossStennis:_GetStaticWeather() -- get mission weather (assumes static weather is used)
+local stennisClouds, stennisVisibility, stennisFog, stennisDust = airbossStennis:_GetStaticWeather() -- get mission weather (assumes static weather is used)
+
+--local msg = "CB = " 
+--  .. stennisClouds.base
+--  .. "\nDensity = "
+--  .. stennisClouds.density
+--  .. "\nVis = "
+--  .. stennisVisibility
+--
+--if stennisFog then
+--  msg = msg .. "\nFog thickness = "
+--    .. stennisFog.thickness
+--    .. "\nFog Vis = "
+--    .. stennisFog.visibility
+--end
+--MESSAGE:New(msg ,60,""):ToAll()
 
 --- Determine Daytime Case
 -- adjust case according to weather state
---if clouds.base < 305 or visibility < 8000 then -- cloudbase < 1000' or viz < 5 miles, Case III
---  stennisCase = 3
---elseif fog and fog.thickness > 60 and fog.visibility < 8000 then -- visibility in fog < 5nm, Case III
---  stennisCase = 3
---elseif clouds.base < 915 then -- cloudbase < 3000', viz > 5 miles, Case II
---    stennisCase = 2
---end     
+if (stennisClouds.base < 305 and stennisClouds.density > 8) or stennisVisibility < 8000 then -- cloudbase < 1000' or viz < 5 miles, Case III
+  stennisCase = 3
+  --MESSAGE:New("Case III, Clouds<1000/Viz" ,60,""):ToAll()
+elseif stennisFog and stennisFog.thickness > 60 and stennisFog.visibility < 8000 then -- visibility in fog < 5nm, Case III
+  stennisCase = 3
+  --MESSAGE:New("Case III, Fog" ,60,""):ToAll()
+elseif (stennisClouds.base < 915 and stennisClouds.density > 8) and stennisVisibility >= 8000 then -- cloudbase < 3000', viz > 5 miles, Case II
+  stennisCase = 2
+  --MESSAGE:New("Case II, Clouds<3000/Viz" ,60,""):ToAll()
+end     
 
 airbossStennis:SetMenuRecovery(30, 25, false, 30)
 airbossStennis:SetSoundfilesFolder("Airboss Soundfiles/")
