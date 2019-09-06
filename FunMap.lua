@@ -746,7 +746,7 @@ airbossStennis=AIRBOSS:New( "CSG_CarrierGrp_Stennis", "Stennis" )
 
 -- Set load and save path/name for persistent LSO grades
 airbossStennis:Load(nil, "PG_Airboss-USS Stennis_LSOgrades.csv")
-  :SetAutoSave(nil, "PG_Airboss-USS Stennis_LSOgrades.csv")
+airbossStennis:SetAutoSave(nil, "PG_Airboss-USS Stennis_LSOgrades.csv")
 
 local stennisCase = 1 -- default to Case I
 local stennisOffset_deg = 0 -- Marshal offset
@@ -769,29 +769,29 @@ end
 
 -- Stennis AIRBOSS configuration
 airbossStennis:SetMenuRecovery(30, 25, false, 30)
-  :SetSoundfilesFolder("Airboss Soundfiles/")
-  --:SetVoiceOversLSOByRaynor()
-  --:SetVoiceOversMarshalByFF("Airboss Soundpack Marshal FF/")
-  :SetTACAN(74,"X","STN")
-  :SetICLS( 4,"STN" )
-  :SetCarrierControlledArea( 50 )
-  :SetDespawnOnEngineShutdown( true )
-  :SetRecoveryTanker( Spawn_Tanker_S3B_Texaco1 )
-  :SetMarshalRadio( 285.675, "AM" )
-  :SetLSORadio( 308.475, "AM" )
-  :SetRadioRelayLSO( stennisRadioRelayPaddles )
-  :SetRadioRelayMarshal( stennisRadioRelayMarshall )
-  :SetAirbossNiceGuy( true )
-  :SetDefaultPlayerSkill(AIRBOSS.Difficulty.Normal)
-  :SetRespawnAI()
+airbossStennis:SetSoundfilesFolder("Airboss Soundfiles/")
+--airbossStennis:SetVoiceOversLSOByRaynor()
+--airbossStennis:SetVoiceOversMarshalByFF("Airboss Soundpack Marshal FF/")
+airbossStennis:SetTACAN(74,"X","STN")
+airbossStennis:SetICLS( 4,"STN" )
+airbossStennis:SetCarrierControlledArea( 50 )
+airbossStennis:SetDespawnOnEngineShutdown( true )
+airbossStennis:SetRecoveryTanker( Spawn_Tanker_S3B_Texaco1 )
+airbossStennis:SetMarshalRadio( 285.675, "AM" )
+airbossStennis:SetLSORadio( 308.475, "AM" )
+airbossStennis:SetRadioRelayLSO( stennisRadioRelayPaddles )
+airbossStennis:SetRadioRelayMarshal( stennisRadioRelayMarshall )
+airbossStennis:SetAirbossNiceGuy( true )
+airbossStennis:SetDefaultPlayerSkill(AIRBOSS.Difficulty.Normal)
+airbossStennis:SetRespawnAI()
 
 --- Recovery Windows 
 -- dependant on mission start and finish times
 -- Sunrise @ 05:45, Sunset @ 18:45, recovery sunrise+10 and @ sunset-10
 -- otherwise, intiate recovery through F10 menu
 airbossStennis:AddRecoveryWindow( "5:55", "18:35", stennisCase, stennisOffset_deg, true, 30 ) -- Recovery window from mission start + 1min to before sunset + 30mins
-  :AddRecoveryWindow( "18:35", "5:55+1", 3, stennisOffset_deg, true, 30 ) -- Recovery window after sunset + 30mins until sunrise - 30mins
-  :AddRecoveryWindow( "5:55+1", "18:35+1", stennisCase, stennisOffset_deg, true, 30 ) -- Recovery window from mission start + 1min to before sunset + 30mins
+airbossStennis:AddRecoveryWindow( "18:35", "5:55+1", 3, stennisOffset_deg, true, 30 ) -- Recovery window after sunset + 30mins until sunrise - 30mins
+airbossStennis:AddRecoveryWindow( "5:55+1", "18:35+1", stennisCase, stennisOffset_deg, true, 30 ) -- Recovery window from mission start + 1min to before sunset + 30mins
 
 -- Start AIRBOSS Stennis
 airbossStennis:Start()
