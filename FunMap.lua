@@ -723,7 +723,23 @@ Spawn_Tanker_S3B_Texaco2:SetCallsign(CALLSIGN.Tanker.Texaco, 2)
 	:SetTakeoffAir()
 	:Start()
 
----------------------------
+------------------------------
+--- Recovery Tanker Tarawa ---
+------------------------------
+
+--Spawn_Tanker_C130_Texaco3 = RECOVERYTANKER:New( UNIT:FindByName( "CSG_CarrierGrp_Tarawa"), "Tanker_C130_Texaco3" )
+--
+--Spawn_Tanker_C130_Texaco3:SetCallsign(CALLSIGN.Tanker.Texaco, 3)
+--  :SetTACAN(16, "TEX")
+--  :SetRadio(276.1)
+--  :SetModex(999)
+--  :SetAltitude(10000)
+--  :SetTakeoffAir()
+--  :SetRespawnInAir()
+--  :SetHomeBase(AIRBASE:FindByName("Sir Abu Nuayr"))
+--  :Start()
+
+--------------------------
 --- Rescue Helo Stennis ---
 ---------------------------
 
@@ -733,6 +749,18 @@ Spawn_Rescuehelo_Stennis:SetRespawnInAir()
   :SetHomeBase(AIRBASE:FindByName("CSG_CarrierGrp_Stennis_03"))
 	:SetRescueStopBoatOff()
 	:Start()
+
+---------------------------
+--- Rescue Helo Tarawa ---
+---------------------------
+
+Spawn_Rescuehelo_Tarawa = RESCUEHELO:New(UNIT:FindByName("CSG_CarrierGrp_Tarawa"), "RescueHelo_Tarawa")
+
+Spawn_Rescuehelo_Tarawa:SetRespawnInAir()
+  :SetHomeBase(AIRBASE:FindByName("CSG_CarrierGrp_Tarawa_05"))
+  :SetRescueStopBoatOff()
+  :Start()
+  
 
 -- END SUPPORT AC SECTION
 -- XXX BEGIN AIRBOSS SECTION
@@ -748,14 +776,17 @@ airbossStennis=AIRBOSS:New( "CSG_CarrierGrp_Stennis", "Stennis" )
 airbossStennis:Load(nil, "PG_Airboss-USS Stennis_LSOgrades.csv")
 airbossStennis:SetAutoSave(nil, "PG_Airboss-USS Stennis_LSOgrades.csv")
 
-local stennisCase = 1 -- default to Case I
 local stennisOffset_deg = 0 -- Marshal offset
+local stennisDefaultPlayerSkill = AIRBOSS.Difficulty.Normal -- default skill level
 local stennisRadioRelayMarshall = UNIT:FindByName("RadioRelayMarshall_Stennis") -- radio relay unit for Marshal
 local stennisRadioRelayPaddles = UNIT:FindByName("RadioRelayPaddles_Stennis") -- radio relay unit for LSO
 local stennisClouds, stennisVisibility, stennisFog, stennisDust = airbossStennis:_GetStaticWeather() -- get mission weather (assumes static weather is used)
 
 --- Determine Daytime Case
 -- adjust case according to weather state
+
+local stennisCase = 1 -- default to Case I
+
 if (stennisClouds.base < 305 and stennisClouds.density > 8) or stennisVisibility < 8000 then -- cloudbase < 1000' or viz < 5 miles, Case III
   stennisCase = 3
 elseif stennisFog and stennisFog.thickness > 60 and stennisFog.visibility < 8000 then -- visibility in fog < 5nm, Case III
@@ -778,12 +809,12 @@ airbossStennis:SetMarshalRadio( 285.675, "AM" )
 airbossStennis:SetLSORadio( 308.475, "AM" )
 airbossStennis:SetRadioRelayLSO( stennisRadioRelayPaddles )
 airbossStennis:SetRadioRelayMarshal( stennisRadioRelayMarshall )
-airbossStennis:SetAirbossNiceGuy( true )
-airbossStennis:SetDefaultPlayerSkill(AIRBOSS.Difficulty.Normal)
+airbossStennis:SetAirbossNiceGuy( true ) -- allow direct to commence
+airbossStennis:SetDefaultPlayerSkill(stennisDefaultPlayerSkill)
 airbossStennis:SetRespawnAI()
 
---- Recovery Windows 
--- dependant on mission start and finish times
+--- Fun Map Recovery Windows 
+-- dependent on mission start and finish times
 -- Sunrise @ 05:45, Sunset @ 18:45, recovery sunrise+10 and @ sunset-10
 -- otherwise, intiate recovery through F10 menu
 airbossStennis:AddRecoveryWindow( "5:55", "18:35", stennisCase, stennisOffset_deg, true, 30 ) 
@@ -795,6 +826,60 @@ airbossStennis:Start()
 
 -- Set AIRBOSS control of Hawk tanker recovery 
 Spawn_Tanker_S3B_Texaco2:SetRecoveryAirboss( true )
+
+
+-----------------------
+--- Airboss Tarawa ---
+-----------------------
+
+airbossTarawa=AIRBOSS:New( "CSG_CarrierGrp_Tarawa", "Tarawa" )
+
+airbossTarawa:Load(nil, "PG_Airboss-USS Tarawa_LSOgrades.csv")
+airbossTarawa:SetAutoSave(nil, "PG_Airboss-USS Tarawa_LSOgrades.csv")
+
+local tarawaOffset_deg = 0
+local tarawaDefaultPlayerSkill = AIRBOSS.Difficulty.Normal -- default skill level
+local tarawaRadioRelayMarshall = UNIT:FindByName("RadioRelayMarshall_Tarawa")
+local tarawaRadioRelayPaddles = UNIT:FindByName("RadioRelayPaddles_Tarawa")
+local tarawaClouds, tarawaVisibility, tarawaFog, tarawaDust = airbossTarawa:_GetStaticWeather() -- get mission weather (assumes static weather is used)
+
+--- Determine Daytime Case
+-- adjust case according to weather state
+
+local tarawaCase = 1 -- default to Case I
+
+if (tarawaClouds.base < 305 and tarawaClouds.density > 8) or tarawaVisibility < 8000 then -- cloudbase < 1000' or viz < 5 miles, Case III
+  tarawaCase = 3
+elseif tarawaFog and tarawaFog.thickness > 60 and tarawaFog.visibility < 8000 then -- visibility in fog < 5nm, Case III
+  tarawaCase = 3
+elseif (tarawaClouds.base < 915 and tarawaClouds.density > 8) and tarawaVisibility >= 8000 then -- cloudbase < 3000', viz > 5 miles, Case II
+  tarawaCase = 2
+end     
+ 
+airbossTarawa:SetMenuRecovery(30, 25, false, 30)
+airbossTarawa:SetSoundfilesFolder("Airboss Soundfiles/")
+airbossTarawa:SetTACAN(1,"X","TAR")
+airbossTarawa:SetICLS( 1,"TAR" )
+airbossTarawa:SetCarrierControlledArea( 50 )
+airbossTarawa:SetDespawnOnEngineShutdown( true )
+airbossTarawa:SetMarshalRadio( 285.675, "AM" )
+airbossTarawa:SetLSORadio( 255.725, "AM" )
+airbossTarawa:SetRadioRelayLSO( tarawaRadioRelayPaddles )
+airbossTarawa:SetRadioRelayMarshal( tarawaRadioRelayMarshall  )
+airbossTarawa:AddRecoveryWindow( "8:01", "10:00+1", tarawaCase, tarawaOffset_deg, true, 20 ) 
+airbossTarawa:SetAirbossNiceGuy( true )
+airbossTarawa:SetDefaultPlayerSkill(tarawaDefaultPlayerSkill)
+airbossTarawa:SetRespawnAI()
+
+--- Fun Map Recovery Windows 
+-- dependent on mission start and finish times
+-- Sunrise @ 05:45, Sunset @ 18:45, recovery sunrise+10 and @ sunset-10
+-- otherwise, intiate recovery through F10 menu
+airbossTarawa:AddRecoveryWindow( "5:55", "18:35", tarawaCase, stennisOffset_deg, true, 30 ) 
+airbossTarawa:AddRecoveryWindow( "18:35", "5:55+1", 3, tarawaOffset_deg, true, 30 ) 
+airbossTarawa:AddRecoveryWindow( "5:55+1", "18:35+1", tarawaCase, stennisOffset_deg, true, 30 ) 
+
+airbossTarawa:Start()
 
 -- END AIRBOSS SECTION
 -- XXX BEGIN ON DEMAND CAP SECTION
