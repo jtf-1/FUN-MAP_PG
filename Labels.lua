@@ -40,6 +40,7 @@ GroundFormat = {
 [5000]	=  dot_symbol(0,0.75), 
 [10000]	=  dot_symbol(0, 0.5), 
 [20000] =  dot_symbol(0, 0.25), 
+[30000] = dot_symbol(0,0.1), 
 }
 
 NavyFormat = {
