@@ -1,0 +1,1 @@
+assert(loadfile("C:\\Users\\rober\\Documents\\GitHub\\FUN-MAP_PG\\FunMap.lua"))()
