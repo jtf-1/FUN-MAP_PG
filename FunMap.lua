@@ -689,7 +689,7 @@ Zone_AWACS_1 = ZONE:New( "AWACS_1_Zone" )
 --- define table of support aircraft to be spawned ---
 ------------------------------------------------------
 
-TableSpawnSupport = { -- {spawnobjectname, spawnstub, spawnzone}
+TableSpawnSupport = { -- {spawnobjectname, spawnzone}
   {spawnobject = "Tanker_C130_Arco1", spawnzone = Zone_AAR_1},
   {spawnobject = "Tanker_C130_Arco2", spawnzone = Zone_AAR_2},
   {spawnobject = "Tanker_C130_Arco3", spawnzone = Zone_AAR_3},
@@ -814,8 +814,9 @@ airbossStennis:SetDefaultPlayerSkill(stennisDefaultPlayerSkill)
 airbossStennis:SetRespawnAI()
 
 --- Fun Map Recovery Windows 
--- dependent on mission start and finish times
--- Sunrise @ 05:45, Sunset @ 18:45, recovery sunrise+10 and @ sunset-10
+-- sunrise and sunset dependant on mission date
+-- https://www.timeanddate.com/sun/united-arab-emirates/abu-dhabi?month=4&year=2011
+-- Sunrise @ 08:00, Sunset @ 19:00, recovery @ sunrise+10 and sunset-10
 -- otherwise, intiate recovery through F10 menu
 airbossStennis:AddRecoveryWindow( "5:55", "18:35", stennisCase, stennisOffset_deg, true, 30 ) 
 airbossStennis:AddRecoveryWindow( "18:35", "5:55+1", 3, stennisOffset_deg, true, 30 ) 
@@ -871,12 +872,13 @@ airbossTarawa:SetDefaultPlayerSkill(tarawaDefaultPlayerSkill)
 airbossTarawa:SetRespawnAI()
 
 --- Fun Map Recovery Windows 
--- dependent on mission start and finish times
+-- sunrise and sunset dependant on mission date
+-- https://www.timeanddate.com/sun/united-arab-emirates/abu-dhabi?month=4&year=2011
 -- Sunrise @ 05:45, Sunset @ 18:45, recovery sunrise+10 and @ sunset-10
 -- otherwise, intiate recovery through F10 menu
-airbossTarawa:AddRecoveryWindow( "5:55", "18:35", tarawaCase, stennisOffset_deg, true, 30 ) 
+airbossTarawa:AddRecoveryWindow( "5:55", "18:35", tarawaCase, tarawaOffset_deg, true, 30 ) 
 airbossTarawa:AddRecoveryWindow( "18:35", "5:55+1", 3, tarawaOffset_deg, true, 30 ) 
-airbossTarawa:AddRecoveryWindow( "5:55+1", "18:35+1", tarawaCase, stennisOffset_deg, true, 30 ) 
+airbossTarawa:AddRecoveryWindow( "5:55+1", "18:35+1", tarawaCase, tarawaOffset_deg, true, 30 ) 
 
 airbossTarawa:Start()
 
