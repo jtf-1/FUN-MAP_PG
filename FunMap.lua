@@ -697,7 +697,11 @@ TableSpawnSupport = { -- {spawnobjectname, spawnzone}
   {spawnobject = "Tanker_KC135_Shell2", spawnzone = Zone_AAR_2},
   {spawnobject = "Tanker_KC135_Shell3", spawnzone = Zone_AAR_3},
   {spawnobject = "Tanker_KC135_Shell4", spawnzone = Zone_AAR_4},
-  {spawnobject = "Tanker_KC135_Texaco1", spawnzone = Zone_AAR_4},
+  {spawnobject = "Tanker_KC135_Texaco1", spawnzone = Zone_AAR_1},
+  {spawnobject = "Tanker_KC135_Texaco2", spawnzone = Zone_AAR_2},
+  {spawnobject = "Tanker_KC135_Texaco3", spawnzone = Zone_AAR_3},
+  {spawnobject = "Tanker_KC135_Texaco4", spawnzone = Zone_AAR_4},
+  {spawnobject = "Tanker_KC135_Texaco5", spawnzone = Zone_AAR_4},
   {spawnobject = "AWACS_Magic", spawnzone = Zone_AWACS_1},
 }
 
@@ -714,9 +718,9 @@ end
 --- Recovery Tanker Stennis ---
 -------------------------------
 
-Spawn_Tanker_S3B_Texaco2 = RECOVERYTANKER:New( UNIT:FindByName( "CSG_CarrierGrp_Stennis"), "Tanker_S3B_Texaco2" )
+Spawn_Tanker_S3B_Texaco6 = RECOVERYTANKER:New( UNIT:FindByName( "CSG_CarrierGrp_Stennis"), "Tanker_S3B_Texaco6" )
 
-Spawn_Tanker_S3B_Texaco2:SetCallsign(CALLSIGN.Tanker.Texaco, 2)
+Spawn_Tanker_S3B_Texaco6:SetCallsign(CALLSIGN.Tanker.Texaco, 6)
 	:SetTACAN(15, "TEX")
 	:SetRadio(317.775)
 	:SetModex(049)
@@ -826,7 +830,7 @@ airbossStennis:AddRecoveryWindow( "5:55+1", "18:35+1", stennisCase, stennisOffse
 airbossStennis:Start()
 
 -- Set AIRBOSS control of Hawk tanker recovery 
-Spawn_Tanker_S3B_Texaco2:SetRecoveryAirboss( true )
+Spawn_Tanker_S3B_Texaco6:SetRecoveryAirboss( true )
 
 
 -----------------------
