@@ -693,15 +693,15 @@ TableSpawnSupport = { -- {spawnobjectname, spawnzone}
   {spawnobject = "Tanker_C130_Arco1", spawnzone = Zone_AAR_1},
   {spawnobject = "Tanker_C130_Arco2", spawnzone = Zone_AAR_2},
   {spawnobject = "Tanker_C130_Arco3", spawnzone = Zone_AAR_3},
-  {spawnobject = "Tanker_KC135_Shell1", spawnzone = Zone_AAR_1},
-  {spawnobject = "Tanker_KC135_Shell2", spawnzone = Zone_AAR_2},
-  {spawnobject = "Tanker_KC135_Shell3", spawnzone = Zone_AAR_3},
-  {spawnobject = "Tanker_KC135_Shell4", spawnzone = Zone_AAR_4},
+  {spawnobject = "Tanker_KC135MPRS_Arco4", spawnzone = Zone_AAR_4},
+  {spawnobject = "Tanker_KC135MPRS_Shell1", spawnzone = Zone_AAR_1},
+  {spawnobject = "Tanker_KC135MPRS_Shell2", spawnzone = Zone_AAR_2},
+  {spawnobject = "Tanker_KC135MPRS_Shell3", spawnzone = Zone_AAR_3},
+  {spawnobject = "Tanker_KC135MPRS_Shell4", spawnzone = Zone_AAR_4},
   {spawnobject = "Tanker_KC135_Texaco1", spawnzone = Zone_AAR_1},
   {spawnobject = "Tanker_KC135_Texaco2", spawnzone = Zone_AAR_2},
   {spawnobject = "Tanker_KC135_Texaco3", spawnzone = Zone_AAR_3},
   {spawnobject = "Tanker_KC135_Texaco4", spawnzone = Zone_AAR_4},
-  {spawnobject = "Tanker_KC135_Texaco5", spawnzone = Zone_AAR_4},
   {spawnobject = "AWACS_Magic", spawnzone = Zone_AWACS_1},
 }
 
@@ -731,9 +731,9 @@ Spawn_Tanker_S3B_Texaco6:SetCallsign(CALLSIGN.Tanker.Texaco, 6)
 --- Recovery Tanker Tarawa ---
 ------------------------------
 
---Spawn_Tanker_C130_Texaco3 = RECOVERYTANKER:New( UNIT:FindByName( "CSG_CarrierGrp_Tarawa"), "Tanker_C130_Texaco3" )
+--Spawn_Tanker_C130_Texaco5 = RECOVERYTANKER:New( UNIT:FindByName( "CSG_CarrierGrp_Tarawa"), "Tanker_C130_Texaco5" )
 --
---Spawn_Tanker_C130_Texaco3:SetCallsign(CALLSIGN.Tanker.Texaco, 3)
+--Spawn_Tanker_C130_Texaco5:SetCallsign(CALLSIGN.Tanker.Texaco, 5)
 --  :SetTACAN(16, "TEX")
 --  :SetRadio(276.1)
 --  :SetModex(999)
