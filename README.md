@@ -32,6 +32,9 @@ Track DP;
 Stennis Hawk;
 - Texaco 6-1 [S-3B] 15Y, 317.775, FL060
 
+Redair Track BQ;
+- 100 [IL-78M] NA, 330.975, FL200
+
 NAVAL OPERATIONS
 ================
 
