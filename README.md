@@ -1,14 +1,6 @@
 Welcome to the CSG-1 Fun Map!
 Please make yourself aware of the following information:
 
-ATIS
-====
-
-- Al Dhafra 119.6
-- Al Minhad 121.925
-- Dubai Intl. 131.7
-- Abu Dhabi Intl. 125.1 
-
 AWACS
 =====
 
