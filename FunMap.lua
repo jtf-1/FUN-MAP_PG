@@ -664,6 +664,48 @@ end --function
 
 
 -- END FUNCTIONS SECTION
+-- BEGIN ATIS SECTION
+
+atisAldhafra=ATIS:New(AIRBASE.PersianGulf.Al_Dhafra_AB, 119.6)
+atisAldhafra:SetRadioRelayUnitName("Radio Relay Al Dhafra")
+--atisAldhafra:SetActiveRunway("R")
+--atisAldhafra:SetTACAN(96)
+atisAldhafra:SetTowerFrequencies({251.0, 126.5})
+atisAldhafra:Start()
+
+
+atisAlminhad=ATIS:New(AIRBASE.PersianGulf.Al_Minhad_AB, 121.925)
+atisAlminhad:SetRadioRelayUnitName("Radio Relay Al Minhad")
+--atisAlminhad:AddILS(110.75, "27")
+atisAlminhad:SetTACAN(99)
+atisAlminhad:SetTowerFrequencies({250.1, 121.8})
+atisAlminhad:Start()
+
+
+atisDubai=ATIS:New(AIRBASE.PersianGulf.Dubai_Intl, 131.7)
+atisDubai:SetRadioRelayUnitName("Radio Relay Dubai Intl")
+atisDubai:SetActiveRunway("R")
+--atisDubai:AddILS(110.9, "30R")
+atisDubai:SetTowerFrequencies({251.05, 118.75})
+atisDubai:Start()
+
+
+atisAbuDhabi=ATIS:New(AIRBASE.PersianGulf.Abu_Dhabi_International_Airport, 125.1)
+atisAbuDhabi:SetRadioRelayUnitName("Radio Relay Abu Dhabi International Airport")
+atisAbuDhabi:SetActiveRunway("L")
+atisAbuDhabi:SetTowerFrequencies({250.5, 119.2})
+--atisAbuDhabi:SetVOR(114.25)
+atisAbuDhabi:Start()
+
+
+
+local airbases=AIRBASE.GetAllAirbases()
+for _,_airbase in pairs(airbases) do
+  local airbase=_airbase --Wrapper.Airbase#AIRBASE
+  airbase:GetRunwayData(nil, true)
+end
+
+-- END ATIS SECTION
 -- XXX BEGIN BOAT SECTION
 
 stennis = GROUP:FindByName("CSG_CarrierGrp_Stennis")
