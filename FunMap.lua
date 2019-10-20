@@ -670,6 +670,7 @@ atisAldhafra=ATIS:New(AIRBASE.PersianGulf.Al_Dhafra_AB, 119.6)
 atisAldhafra:SetRadioRelayUnitName("Radio Relay Al Dhafra")
 --atisAldhafra:SetActiveRunway("R")
 atisAldhafra:SetTACAN(96)
+atisAldhafra:SetVOR(114.9)
 atisAldhafra:SetTowerFrequencies({251.0, 126.5})
 atisAldhafra:Start()
 
@@ -680,6 +681,13 @@ atisAlminhad:AddILS(110.75, "27")
 atisAlminhad:SetTACAN(99)
 atisAlminhad:SetTowerFrequencies({250.1, 121.8})
 atisAlminhad:Start()
+
+atisAlkhasab=ATIS:New(AIRBASE.PersianGulf.Al_Minhad_AB, 121.925)
+atisAlkhasab:SetRadioRelayUnitName("Radio Relay Al Minhad")
+atisAlkhasab:AddILS(110.75, "27")
+atisAlkhasab:SetTACAN(99)
+atisAlkhasab:SetTowerFrequencies({250.1, 121.8})
+atisAlkhasab:Start()
 
 
 atisDubai=ATIS:New(AIRBASE.PersianGulf.Dubai_Intl, 131.7)
@@ -698,12 +706,6 @@ atisAbuDhabi:SetVOR(114.25)
 atisAbuDhabi:Start()
 
 
-
-local airbases=AIRBASE.GetAllAirbases()
-for _,_airbase in pairs(airbases) do
-  local airbase=_airbase --Wrapper.Airbase#AIRBASE
-  airbase:GetRunwayData(nil, true)
-end
 
 -- END ATIS SECTION
 -- XXX BEGIN BOAT SECTION

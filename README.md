@@ -18,23 +18,27 @@ TANKERS
 =======
 
 Track WK;
-- Arco 1-1  [C130]  35X, 276.5, FL160
-- Shell 1-1 [KC135] 115X, 317.5, FL200
+- Arco 1-1  [C130]  35Y, 276.5, FL160
+- Shell 1-1 [KC135MPRS] 115Y, 317.5, FL200
+- Texaco 1-1 [KC-135] 105Y, 317.55, FL240
 
 Track XK-YK;
-- Shell 4-1 [KC135] 118X ,317.8, FL160
-- Texaco 1-1 [KC135] 119X ,317.9, FL200
+- Arco 4-1 [KC135] 118Y ,317.8, FL160
+- Shell 4-1 [KC135MPRS] 119Y ,317.9, FL200
+- Texaco 4-1 [KC-135] 120Y, 317.95, FL240
 
 Track YH-BN;
-- Arco 2-1  [C130]  36X, 276.6, FL160
-- Shell 2-1 [KC135] 116X, 317.6, FL200
+- Arco 2-1  [C130]  36Y, 276.6, FL160
+- Shell 2-1 [KC135MPRS] 116Y, 317.6, FL200
+- Texaco 2-1 [KC-135] 106Y, 317.65, FL240
 
 Track DP;
-- Arco 3-1  [C130]  37X, 276.7, FL160
-- Shell 3-1 [KC135] 117X ,317.7, FL200
+- Arco 3-1  [C130]  37Y, 276.7, FL160
+- Shell 3-1 [KC135MPRS] 117Y ,317.7, FL200
+- Texaco 3-1 [KC-135] 107Y, 317.75, FL240
 
 Stennis Hawk;
-- Texaco 2-1 [S-3B] 15Y, 317.775, FL060
+- Texaco 6-1 [S-3B] 15Y, 317.775, FL060
 
 NAVAL OPERATIONS
 ================
