@@ -860,6 +860,7 @@ airbossStennis:SetRadioRelayMarshal( stennisRadioRelayMarshall )
 airbossStennis:SetAirbossNiceGuy( true ) -- allow direct to commence
 airbossStennis:SetDefaultPlayerSkill(stennisDefaultPlayerSkill)
 airbossStennis:SetRespawnAI()
+airbossStennis:SetMenuMarkZones( false ) -- disable marking zones using smoke or flares
 
 --- Fun Map Recovery Windows 
 -- sunrise and sunset dependant on mission date
@@ -918,6 +919,7 @@ airbossTarawa:SetRadioRelayMarshal( tarawaRadioRelayMarshall  )
 airbossTarawa:SetAirbossNiceGuy( true )
 airbossTarawa:SetDefaultPlayerSkill(tarawaDefaultPlayerSkill)
 airbossTarawa:SetRespawnAI()
+airbossTarawa:SetMenuMarkZones( false ) -- disable marking zones using smoke or flares
 
 --- Fun Map Recovery Windows 
 -- sunrise and sunset dependant on mission date
