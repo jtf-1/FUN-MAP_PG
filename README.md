@@ -1,4 +1,4 @@
-Welcome to the CSG-1 Fun Map!
+Welcome to the JTF-1 Fun Map!
 Please make yourself aware of the following information:
 
 ATIS
