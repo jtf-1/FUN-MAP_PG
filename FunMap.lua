@@ -16,6 +16,8 @@ local MenuCoalitionTopLevel = MENU_COALITION:New( coalition.side.BLUE, "GROUND A
   local MenuBandarL = MENU_COALITION:New( coalition.side.BLUE, "BANDAR LENGEH/LAR", MenuCoalitionTopLevel )
   local MenuKerman = MENU_COALITION:New( coalition.side.BLUE, "KERMAN", MenuCoalitionTopLevel )
   local MenuShiraz = MENU_COALITION:New( coalition.side.BLUE, "SHIRAZ", MenuCoalitionTopLevel )
+  local MenuAsaloyeh = MENU_COALITION:New( coalition.side.BLUE, "ASALOYEH", MenuCoalitionTopLevel )
+  
 
 local MenuCoalitionBlue = MENU_COALITION:New(coalition.side.BLUE,"SHIP STRIKE")
 
@@ -614,14 +616,15 @@ function airfieldattackshiraz()
   
 end --function
 
--- XXX Factory strike Gannon 8/20
-function FactoryStrike ()
+-- XXX Factory strike - Gannon 11/1
+-- Factory strike Easy
+function FactoryStrikeEasy ()
 
 -- Spawn AAA & Manpad at Gate
-  local FactoryPatrol = SPAWN:New("FactoryPatrol 2")
+  local FactoryPatrol = SPAWN:New("FactoryGate")
   local FactoryPatrolGroup = FactoryPatrol:Spawn()
 
--- Spawn AAA patrol around factory
+-- Spawn AAA and SAM patrol around factory
   local FactoryPatrol = SPAWN:New("FactoryPatrol")
   local FactoryPatrolGroup = FactoryPatrol:Spawn()
   FactoryPatrolGroup:PatrolRoute()
@@ -631,8 +634,8 @@ function FactoryStrike ()
   local FactorySAPatrolGroup = FactorySAPatrol:Spawn()
   FactorySAPatrolGroup:PatrolRoute()
 
--- Spawn 3 randomized SA-2 SAM sites near the factory  
-  local SA2Table = {
+-- Spawn Zones  
+  local SpawnZones = {
     ZONE:New("FactoryZone1"), 
     ZONE:New("FactoryZone2"), 
     ZONE:New("FactoryZone3"), 
@@ -646,22 +649,139 @@ function FactoryStrike ()
     ZONE:New("FactoryZone11"),
     }
     
-  local FactorySA2 = SPAWN:New("FactorySA2")
+  local FactorySA6 = SPAWN:New("FactorySA6")
     :InitLimit(50, 3)
-    :InitRandomizeZones(SA2Table)
+    :InitRandomizeZones(SpawnZones)
     :SpawnScheduled(.5, .5)
   
-  local msg = "We have received intelligence that Iran is developing chemical weapons in a new\n"
+  local msg = "Asaloyeh Factory Strike EASY\n"
+    .. "We have received intelligence that Iran is developing chemical weapons in a new\n"
     .. "facility on the Iranian coast NW of Lavan Island.\n"
     .. "Grid: 'XL'\n"
     .. "LL: N 27.33.27  E 52.33.22.\n"
-    .. "Our satellite intel suggests that the factory is guarded by multiple SA-2 and AAA sites.\n"
+    .. "Our satellite intel suggests that the factory is guarded by multiple SA-6 and AAA sites.\n"
     .. "Destroy the factory and limit the air defenses in the region to allow for follow up strikes."
 
   MESSAGE:New(msg ,60,""):ToAll()
   
 end --function
 
+-- Factory strike Medium
+function FactoryStrikeMedium ()
+
+-- Spawn AAA & Manpad at Gate
+  local FactoryPatrol = SPAWN:New("FactoryGate")
+  local FactoryPatrolGroup = FactoryPatrol:Spawn()
+
+-- Spawn AAA and SAM patrol around factory
+  local FactoryPatrol = SPAWN:New("FactoryPatrol")
+  local FactoryPatrolGroup = FactoryPatrol:Spawn()
+  FactoryPatrolGroup:PatrolRoute()
+  
+-- Spawn AAA and SAM road patrol on North/South route  
+  local FactorySAPatrol = SPAWN:New("FactorySAPatrol")
+  local FactorySAPatrolGroup = FactorySAPatrol:Spawn()
+  FactorySAPatrolGroup:PatrolRoute()
+
+-- Spawn Zones  
+  local SpawnZones = {
+    ZONE:New("FactoryZone1"), 
+    ZONE:New("FactoryZone2"), 
+    ZONE:New("FactoryZone3"), 
+    ZONE:New("FactoryZone4"), 
+    ZONE:New("FactoryZone5"), 
+    ZONE:New("FactoryZone6"), 
+    ZONE:New("FactoryZone7"), 
+    ZONE:New("FactoryZone8"), 
+    ZONE:New("FactoryZone9"), 
+    ZONE:New("FactoryZone10"), 
+    ZONE:New("FactoryZone11"),
+    }
+    
+  local FactorySA6 = SPAWN:New("FactorySA6")
+    :InitLimit(50, 2)
+    :InitRandomizeZones(SpawnZones)
+    :SpawnScheduled(.5, .5)
+
+  local FactorySA6 = SPAWN:New("FactorySA11")
+    :InitLimit(50, 1)
+    :InitRandomizeZones(SpawnZones)
+    :SpawnScheduled(.5, .5)   
+  
+  local msg = "Asaloyeh Factory Strike MEDIUM\n"
+    .. "We have received intelligence that Iran is developing chemical weapons in a new\n"
+    .. "facility on the Iranian coast NW of Lavan Island.\n"
+    .. "Grid: 'XL'\n"
+    .. "LL: N 27.33.27  E 52.33.22.\n"
+    .. "Our satellite intel suggests that the factory is guarded by multiple SA-6, SA-11, and AAA sites.\n"
+    .. "Destroy the factory and limit the air defenses in the region to allow for follow up strikes."
+
+  MESSAGE:New(msg ,60,""):ToAll()
+  
+end --function
+
+-- Factory strike Hard
+function FactoryStrikeHard ()
+
+-- Spawn AAA & Manpad at Gate
+  local FactoryPatrol = SPAWN:New("FactoryGate")
+  local FactoryPatrolGroup = FactoryPatrol:Spawn()
+
+-- Spawn AAA and SAM patrol around factory
+  local FactoryPatrol = SPAWN:New("FactoryPatrol")
+  local FactoryPatrolGroup = FactoryPatrol:Spawn()
+  FactoryPatrolGroup:PatrolRoute()
+  
+-- Spawn AAA and SAM road patrol on North/South route  
+  local FactorySAPatrol = SPAWN:New("FactorySAPatrol")
+  local FactorySAPatrolGroup = FactorySAPatrol:Spawn()
+  FactorySAPatrolGroup:PatrolRoute()
+
+-- Spawn Zones  
+  local SpawnZones = {
+    ZONE:New("FactoryZone1"), 
+    ZONE:New("FactoryZone2"), 
+    ZONE:New("FactoryZone3"), 
+    ZONE:New("FactoryZone4"), 
+    ZONE:New("FactoryZone5"), 
+    ZONE:New("FactoryZone6"), 
+    ZONE:New("FactoryZone7"), 
+    ZONE:New("FactoryZone8"), 
+    ZONE:New("FactoryZone9"), 
+    ZONE:New("FactoryZone10"), 
+    ZONE:New("FactoryZone11"),
+    }
+    
+  local FactorySA6 = SPAWN:New("FactorySA6")
+    :InitLimit(50, 1)
+    :InitRandomizeZones(SpawnZones)
+    :SpawnScheduled(.5, .5)
+    
+  local FactorySA6 = SPAWN:New("FactorySA11")
+    :InitLimit(50, 2)
+    :InitRandomizeZones(SpawnZones)
+    :SpawnScheduled(.5, .5)
+  
+  local FactorySA6 = SPAWN:New("FactorySA10")
+    :InitLimit(50, 1)
+    :InitRandomizeZones(SpawnZones)
+    :SpawnScheduled(.5, .5)  
+  
+  local msg = "Asaloyeh Factory Strike HARD\n"
+    .. "We have received intelligence that Iran is developing chemical weapons in a new\n"
+    .. "facility on the Iranian coast NW of Lavan Island.\n"
+    .. "Grid: 'XL'\n"
+    .. "LL: N 27.33.27  E 52.33.22.\n"
+    .. "Our satellite intel suggests that the factory is guarded by multiple SA-6, SA-10, SA-11, and AAA sites.\n"
+    .. "Destroy the factory and limit the air defenses in the region to allow for follow up strikes."
+
+  MESSAGE:New(msg ,60,""):ToAll()
+  
+end --function
+
+FactoryStrikeEasy = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"ASALOYEH FACTORY STRIKE EASY - 1-2 planes",MenuAsaloyeh,FactoryStrikeEasy, "")
+FactoryStrikeMedium = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"ASALOYEH FACTORY STRIKE MEDIUM - 2-4 planes",MenuAsaloyeh,FactoryStrikeMedium, "")
+FactoryStrikeHard = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"ASALOYEH FACTORY STRIKE HARD - 4+ planes",MenuAsaloyeh,FactoryStrikeHard, "")
 
 -- END FUNCTIONS SECTION
 -- BEGIN ATIS SECTION
