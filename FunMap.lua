@@ -913,10 +913,10 @@ Spawn_Tanker_S3B_Texaco6:SetCallsign(CALLSIGN.Tanker.Texaco, 6)
 
 Spawn_Rescuehelo_Stennis = RESCUEHELO:New(UNIT:FindByName("CSG_CarrierGrp_Stennis"), "RescueHelo_Stennis")
 
+Spawn_Rescuehelo_Stennis:SetTakeoffAir()
 Spawn_Rescuehelo_Stennis:SetRespawnInAir()
-  :SetHomeBase(AIRBASE:FindByName("CSG_CarrierGrp_Stennis_03"))
-	:SetRescueStopBoatOff()
-	:Start()
+Spawn_Rescuehelo_Stennis:SetRescueStopBoatOff()
+Spawn_Rescuehelo_Stennis:Start()
 
 ---------------------------
 --- Rescue Helo Tarawa ---
@@ -924,10 +924,10 @@ Spawn_Rescuehelo_Stennis:SetRespawnInAir()
 
 Spawn_Rescuehelo_Tarawa = RESCUEHELO:New(UNIT:FindByName("CSG_CarrierGrp_Tarawa"), "RescueHelo_Tarawa")
 
+Spawn_Rescuehelo_Tarawa:SetTakeoffAir()
 Spawn_Rescuehelo_Tarawa:SetRespawnInAir()
-  :SetHomeBase(AIRBASE:FindByName("CSG_CarrierGrp_Tarawa_05"))
-  :SetRescueStopBoatOff()
-  :Start()
+Spawn_Rescuehelo_Tarawa:SetRescueStopBoatOff()
+Spawn_Rescuehelo_Tarawa:Start()
   
 
 -- END SUPPORT AC SECTION
