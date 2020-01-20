@@ -885,11 +885,12 @@ end
 Spawn_Tanker_S3B_Texaco6 = RECOVERYTANKER:New( UNIT:FindByName( "CSG_CarrierGrp_Stennis"), "Tanker_S3B_Texaco6" )
 
 Spawn_Tanker_S3B_Texaco6:SetCallsign(CALLSIGN.Tanker.Texaco, 6)
-	:SetTACAN(15, "TEX")
-	:SetRadio(317.775)
-	:SetModex(049)
-	:SetTakeoffAir()
-	:Start()
+Spawn_Tanker_S3B_Texaco6:SetTACAN(15, "TEX")
+Spawn_Tanker_S3B_Texaco6:SetRadio(317.775)
+Spawn_Tanker_S3B_Texaco6:SetModex(049)
+Spawn_Tanker_S3B_Texaco6:SetTakeoffAir()
+Spawn_Tanker_S3B_Texaco6:SetRespawnInAir()
+Spawn_Tanker_S3B_Texaco6:Start()
 
 ------------------------------
 --- Recovery Tanker Tarawa ---
