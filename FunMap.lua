@@ -996,7 +996,7 @@ airbossStennis:AddRecoveryWindow( "5:55+1", "18:35+1", stennisCase, stennisOffse
 airbossStennis:Start()
 
 -- Set AIRBOSS control of Hawk tanker recovery 
-Spawn_Tanker_S3B_Texaco6:SetRecoveryAirboss( true )
+Spawn_Tanker_S3B_Texaco6:SetRecoveryAirboss( false )
 
 
 -----------------------
