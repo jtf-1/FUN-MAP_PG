@@ -885,27 +885,13 @@ end
 Spawn_Tanker_S3B_Texaco6 = RECOVERYTANKER:New( UNIT:FindByName( "CSG_CarrierGrp_Stennis"), "Tanker_S3B_Texaco6" )
 
 Spawn_Tanker_S3B_Texaco6:SetCallsign(CALLSIGN.Tanker.Texaco, 6)
-	:SetTACAN(15, "TEX")
-	:SetRadio(317.775)
-	:SetModex(049)
-	:SetTakeoffAir()
-	:Start()
-
-------------------------------
---- Recovery Tanker Tarawa ---
-------------------------------
-
---Spawn_Tanker_C130_Texaco5 = RECOVERYTANKER:New( UNIT:FindByName( "CSG_CarrierGrp_Tarawa"), "Tanker_C130_Texaco5" )
---
---Spawn_Tanker_C130_Texaco5:SetCallsign(CALLSIGN.Tanker.Texaco, 5)
---  :SetTACAN(16, "TEX")
---  :SetRadio(276.1)
---  :SetModex(999)
---  :SetAltitude(10000)
---  :SetTakeoffAir()
---  :SetRespawnInAir()
---  :SetHomeBase(AIRBASE:FindByName("Sir Abu Nuayr"))
---  :Start()
+Spawn_Tanker_S3B_Texaco6:SetTACAN(15, "TEX")
+Spawn_Tanker_S3B_Texaco6:SetRadio(317.775)
+Spawn_Tanker_S3B_Texaco6:SetModex(049)
+Spawn_Tanker_S3B_Texaco6:SetTakeoffAir()
+Spawn_Tanker_S3B_Texaco6:SetAltitude(6000)
+Spawn_Tanker_S3B_Texaco6:SetRespawnInAir()
+Spawn_Tanker_S3B_Texaco6:Start()
 
 --------------------------
 --- Rescue Helo Stennis ---
@@ -916,6 +902,7 @@ Spawn_Rescuehelo_Stennis = RESCUEHELO:New(UNIT:FindByName("CSG_CarrierGrp_Stenni
 Spawn_Rescuehelo_Stennis:SetTakeoffAir()
 Spawn_Rescuehelo_Stennis:SetRespawnInAir()
 Spawn_Rescuehelo_Stennis:SetRescueStopBoatOff()
+Spawn_Rescuehelo_Stennis:SetOffsetZ(800)
 Spawn_Rescuehelo_Stennis:Start()
 
 ---------------------------
@@ -927,6 +914,7 @@ Spawn_Rescuehelo_Tarawa = RESCUEHELO:New(UNIT:FindByName("CSG_CarrierGrp_Tarawa"
 Spawn_Rescuehelo_Tarawa:SetTakeoffAir()
 Spawn_Rescuehelo_Tarawa:SetRespawnInAir()
 Spawn_Rescuehelo_Tarawa:SetRescueStopBoatOff()
+Spawn_Rescuehelo_Tarawa:SetOffsetZ(800)
 Spawn_Rescuehelo_Tarawa:Start()
   
 
@@ -980,7 +968,7 @@ airbossStennis:SetRadioRelayMarshal( stennisRadioRelayMarshall )
 airbossStennis:SetAirbossNiceGuy( true ) -- allow direct to commence
 airbossStennis:SetDefaultPlayerSkill(stennisDefaultPlayerSkill)
 airbossStennis:SetRespawnAI()
-airbossStennis:SetMenuMarkZones( false ) -- disable marking zones using smoke or flares
+airbossStennis:SetMenuMarkZones(false) -- disable marking zones using smoke or flares
 
 --- Fun Map Recovery Windows 
 -- sunrise and sunset dependant on mission date
@@ -995,7 +983,7 @@ airbossStennis:AddRecoveryWindow( "5:55+1", "18:35+1", stennisCase, stennisOffse
 airbossStennis:Start()
 
 -- Set AIRBOSS control of Hawk tanker recovery 
-Spawn_Tanker_S3B_Texaco6:SetRecoveryAirboss( true )
+Spawn_Tanker_S3B_Texaco6:SetRecoveryAirboss(false)
 
 
 -----------------------
