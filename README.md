@@ -38,7 +38,7 @@ Track DP;
 - Texaco 3-1 [KC-135] 107Y, 317.75, FL240
 
 Stennis Hawk;
-- Texaco 6-1 [S-3B] 15Y, 317.775, FL060
+- Texaco 6-1 [S-3B] 15Y, 317.775, FL080
 
 NAVAL OPERATIONS
 ================
