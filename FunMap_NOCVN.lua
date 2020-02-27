@@ -829,10 +829,10 @@ atisAbuDhabi:Start()
 
 -- END ATIS SECTION
 -- XXX BEGIN BOAT SECTION
-
+--[[
 stennis = GROUP:FindByName("CSG_CarrierGrp_Stennis")
 stennis:PatrolRoute()
-
+--]]
 tarawa = GROUP:FindByName( "CSG_CarrierGrp_Tarawa" )
 tarawa:PatrolRoute()
 
