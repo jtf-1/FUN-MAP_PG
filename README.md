@@ -52,7 +52,7 @@ Stennis CVN-74:
 - ILCS: Channel 4
 - Towers/Paddles: 308.475 AM
  
-(Use CV TWR alt freq 289.025 to call AI Tower to reqest landing. This also activates lights at night)
+(Use CV Deck freq 274.075 to call AI Tower to reqest landing. This also activates lights at night)
 
 Tarawa LHA-1:
 - BRC 280'
