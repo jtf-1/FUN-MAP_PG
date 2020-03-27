@@ -1055,45 +1055,13 @@ IranCAPAircraft = {"Iran_Mig29","Iran_Mig21","Iran_Mig21","Iran_Mig29"}
 MenuSpawnAntiShipStrike = MENU_COALITION_COMMAND:New(coalition.side.BLUE,"Spawn Anti-Ship Strike", MenuCoalitionBlue , SpwnShipStrike)
 
 -- END ANTI-SHIP STRIKE SECTION
+
+
 -- XXX RANGE SCRIPT SECTION (MOOSE)
 
--- BM54 Range
-local strafepit_BM54_WEST={"RANGE_BM54_strafepit_A",
-	"RANGE_BM54_strafepit_B"
-	}
-local strafepit_BM54_EAST={"RANGE_BM54_strafepit_C",
-	"RANGE_BM54_strafepit_D"
-	}
-local bombtarget_BM54={"RANGE_BM54_EAST_bombing", 
-	"RANGE_BM54_WEST_bombing"
-	}
+local jtf1RangeControlCommon = 250.000
 
-Range_BM54 = RANGE:New("BM54 Range")
-fouldist_BM54 = Range_BM54:GetFoullineDistance("RANGE_BM54_strafepit_A", "RANGE_BM54_FoulLine_AB")
-Range_BM54:AddStrafePit(strafepit_BM54_WEST, 3000, 300, nil, true, 20, fouldist_BM54)
-Range_BM54:AddStrafePit(strafepit_BM54_EAST, 3000, 300, nil, true, 20, fouldist_BM54)
-Range_BM54:AddBombingTargets(bombtarget_BM54, 50)
-Range_BM54:Start()
-
--- BM35 Range
-
-local bombtarget_BM35 = {"BM35_village1",
-	"BM35_village2",
-	"BM35_village3",
-	"BM35_village4",
-	"BM35_village5",
-	"BM35_village6",
-	"BM35_village7",
-	"BM35_village8",
-	"BM35_village9",
-	"BM35_village10"
-	}
-
-Range_BM35 = RANGE:New("BM35 Range")
-Range_BM35:AddBombingTargets(bombtarget_BM35, 50)
-Range_BM35:Start()
-
--- YG77 Range
+-- BEGIN YG77 Range
 
 local bombtarget_YG77={"RANGE_YG77_EAST_bombing", 
 	"RANGE_YG77_WEST_bombing",
@@ -1120,9 +1088,61 @@ fouldist_YG77 = Range_YG77:GetFoullineDistance("RANGE_YG77_strafepit_A", "RANGE_
 Range_YG77:AddStrafePit(strafepit_YG77_WEST, 3000, 300, nil, true, 20, fouldist_YG77)
 Range_YG77:AddStrafePit(strafepit_YG77_EAST, 3000, 300, nil, true, 20, fouldist_YG77)
 Range_YG77:AddBombingTargets(bombtarget_YG77, 50)
+Range_YG77:SetSoundfilesPath("Range Soundfiles/")
+--Range_YG77:SetInstructorRadio(jtf1RangeControlCommon)
+Range_YG77:SetRangeControl(250.100)
 Range_YG77:Start()
 
--- BM64 Range
+-- END YG77 Range
+
+-- BEGIN BM35 Range
+
+local bombtarget_BM35 = {"BM35_village1",
+	"BM35_village2",
+	"BM35_village3",
+	"BM35_village4",
+	"BM35_village5",
+	"BM35_village6",
+	"BM35_village7",
+	"BM35_village8",
+	"BM35_village9",
+	"BM35_village10"
+	}
+
+Range_BM35 = RANGE:New("BM35 Range")
+Range_BM35:AddBombingTargets(bombtarget_BM35, 50)
+Range_BM35:SetSoundfilesPath("Range Soundfiles/")
+--Range_BM35:SetInstructorRadio(jtf1RangeControlCommon)
+Range_BM35:SetRangeControl(250.200)
+Range_BM35:Start()
+
+-- END BM35 Range
+
+-- BEGIN BM54 Range
+
+local strafepit_BM54_WEST={"RANGE_BM54_strafepit_A",
+	"RANGE_BM54_strafepit_B"
+	}
+local strafepit_BM54_EAST={"RANGE_BM54_strafepit_C",
+	"RANGE_BM54_strafepit_D"
+	}
+local bombtarget_BM54={"RANGE_BM54_EAST_bombing", 
+	"RANGE_BM54_WEST_bombing"
+	}
+
+Range_BM54 = RANGE:New("BM54 Range")
+fouldist_BM54 = Range_BM54:GetFoullineDistance("RANGE_BM54_strafepit_A", "RANGE_BM54_FoulLine_AB")
+Range_BM54:AddStrafePit(strafepit_BM54_WEST, 3000, 300, nil, true, 20, fouldist_BM54)
+Range_BM54:AddStrafePit(strafepit_BM54_EAST, 3000, 300, nil, true, 20, fouldist_BM54)
+Range_BM54:AddBombingTargets(bombtarget_BM54, 50)
+Range_BM54:SetSoundfilesPath("Range Soundfiles/")
+--Range_BM54:SetInstructorRadio(jtf1RangeControlCommon)
+Range_BM54:SetRangeControl(250.300)
+Range_BM54:Start()
+
+-- END BM54 Range
+
+-- BEGIN BM64 Range
 
 local bombtarget_BM64={"RANGE_BM64_bombing_01", 
 	"RANGE_BM64_bombing_02",
@@ -1152,7 +1172,12 @@ Range_BM64 = RANGE:New("BM64 Range")
 fouldist_BM64 = Range_BM64:GetFoullineDistance("RANGE_BM64_Strafepit_A", "RANGE_BM64_FoulLine_AB")
 Range_BM64:AddStrafePit(strafepit_BM64, 3000, 300, nil, true, 20, fouldist_BM64)
 Range_BM64:AddBombingTargets(bombtarget_BM64, 50)
+Range_BM64:SetSoundfilesPath("Range Soundfiles/")
+--Range_BM64:SetInstructorRadio(jtf1RangeControlCommon)
+Range_BM64:SetRangeControl(250.400)
 Range_BM64:Start()
+
+-- END BM64 Range
 
 -- END RANGE SCRIPT SECTION
 -- XXX BEGIN GROUND MISSION SECTION

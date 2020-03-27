@@ -87,13 +87,14 @@ The three strike packages are as follows:
 RANGE COMPLEXES
 ===============
 
-- YG77 N24°11'21 E053°42'26
-- BM35 N24°01'34 E054°23'58
-- BM54 N23°56'06 E054°34'29
-- BM64 N23°56'00 E054°43'35
-- Range Control: 250.000
+Range Control common: 250.000MHz
 
-Ranges are script scored and have an F10 menu system you can use to manage them.
+- YG77 N24°11'21 E053°42'26: 250.1MHz
+- BM35 N24°01'34 E054°23'58: 250.2MHz
+- BM54 N23°56'06 E054°34'29: 250.3MHz
+- BM64 N23°56'00 E054°43'35: 250.4MHz
+
+Ranges are script scored and have an F10 menu system you can use to manage them. A range instructor is available at each range to provide hit assessment. 
 
 Bomb targets are scored on the proximity of the last round to the target. Smoke will be used to mark the round's impact.
 
