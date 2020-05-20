@@ -46,13 +46,22 @@ NAVAL OPERATIONS
 Strike: 357.775 (Grape 01)
 Marshall: 285.675
 
+Lincoln CVN-72 (SC)
+- BRC 300'TRUE
+- TACAN 72X 
+- ILCS: Channel 2
+- Towers/Paddles: 308.475 AM
+
+(Use CV Deck freq 274.075 to call AI APPR/TWR/PAD to reqest landing)
+
+
 Stennis CVN-74:
-- BRC 280'
+- BRC 315'TRUE
 - TACAN 74X 
 - ILCS: Channel 4
 - Towers/Paddles: 308.475 AM
  
-(Use CV Deck freq 274.075 to call AI Tower to reqest landing. This also activates lights at night)
+(Use CV Deck freq 274.175 to call AI Tower to reqest landing. This also activates lights at night)
 
 Tarawa LHA-1:
 - BRC 280'
