@@ -52,7 +52,7 @@ Lincoln CVN-72 (SC)
 - ILCS: Channel 2
 - Towers/Paddles: 308.475 AM
 
-(Use CV Deck freq 274.075 to call AI APPR/TWR/PAD to reqest landing)
+(Use CV Deck freq 274.075 to call AI APPR/TWR/PAD)
 
 
 Stennis CVN-74:
