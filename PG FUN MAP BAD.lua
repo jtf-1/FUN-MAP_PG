@@ -4,26 +4,26 @@ vdata =
     {
         at8000 = 
         {
-            speed = 8.7618,
-            dir = 68,
+            speed = 20.616,
+            dir = 162,
         }, -- end of at8000
-        at2000 = 
-        {
-            speed = 14.9466,
-            dir = 88,
-        }, -- end of at2000
         atGround = 
         {
-            speed = 7,
-            dir = 121.99998560866,
+            speed = 7.2156,
+            dir = 121.99998745898,
         }, -- end of atGround
+        at2000 = 
+        {
+            speed = 15.9774,
+            dir = 142,
+        }, -- end of at2000
     }, -- end of wind
     enable_fog = true,
     date = 
     {
-        Year = 2011,
-        Day = 18,
-        Month = 4,
+        Year = 2020,
+        Day = 2,
+        Month = 10,
     }, -- end of date
     season = 
     {
@@ -37,13 +37,13 @@ vdata =
     enable_dust = false,
     clouds = 
     {
-        thickness = 914.4,
         density = 10,
+        thickness = 914.4,
         base = 914.4,
         iprecptns = 1,
     }, -- end of clouds
     atmosphere_type = 0,
-    groundTurbulence = 2.4384,
+    groundTurbulence = 22.86,
     type_weather = 0,
     name = "PG FUN MAP BAD",
     fog = 
@@ -61,9 +61,9 @@ dtime =
 {
     date = 
     {
-        Day = 18,
-        Year = 2011,
-        Month = 4,
+        Year = 2020,
+        Day = 2,
+        Month = 10,
     }, -- end of date
     start_time = 28800,
 } -- end of dtime
