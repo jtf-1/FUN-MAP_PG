@@ -1179,6 +1179,31 @@ Range_BM64:Start()
 
 -- END BM64 Range
 
+-- BEGIN CR94 Range
+
+local bombtarget_CR94={"RANGE_CR94_EAST_bombing", 
+	"RANGE_CR94_WEST_bombing"
+	}
+local strafepit_CR94_WEST={"RANGE_CR94_strafepit_A",
+	"RANGE_CR94_strafepit_B"
+	}
+local strafepit_CR94_EAST={"RANGE_CR94_strafepit_C",
+	"RANGE_CR94_strafepit_D"
+	}
+
+Range_CR94 = RANGE:New("CR94 Range")
+fouldist_CR94 = Range_CR94:GetFoullineDistance("RANGE_CR94_strafepit_A", "RANGE_CR94_FoulLine_AB")
+Range_CR94:AddStrafePit(strafepit_CR94_WEST, 3000, 300, nil, true, 20, fouldist_CR94)
+Range_CR94:AddStrafePit(strafepit_CR94_EAST, 3000, 300, nil, true, 20, fouldist_CR94)
+Range_CR94:AddBombingTargets(bombtarget_CR94, 50)
+Range_CR94:SetSoundfilesPath("Range Soundfiles/")
+--Range_CR94:SetInstructorRadio(jtf1RangeControlCommon)
+Range_CR94:SetRangeControl(250.600)
+Range_CR94:Start()
+
+-- END CR94 Range
+
+
 -- END RANGE SCRIPT SECTION
 -- XXX BEGIN GROUND MISSION SECTION
 
