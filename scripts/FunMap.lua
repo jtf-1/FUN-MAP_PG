@@ -2,6 +2,9 @@ env.info( '*** JTF-1 Fun Map MOOSE script ***' )
 env.info( "*** JTF-1 COMMIT DATE: 2019-09-05T15:00 ***" )
 env.info( '*** JTF-1 MOOSE MISSION SCRIPT START ***' )
 
+local JtfAdmin = true --activate admin menu option in admin slots
+
+_SETTINGS:SetPlayerMenuOff()
 
 -- XXX BEGIN MENU DEFINITIONS
 
@@ -38,14 +41,16 @@ function SpawnSupport (SupportSpawn) -- spawnobject, spawnzone
         local SpawnIndex = SupportSpawnObject:GetSpawnIndexFromGroup( SpawnGroup )
         local CheckTanker = SCHEDULER:New( nil, 
         function()
-          if SpawnGroup:IsNotInZone( SupportSpawn.spawnzone ) then
-            SupportSpawnObject:ReSpawn( SpawnIndex )
-          end
+			if SpawnGroup then
+				if SpawnGroup:IsNotInZone( SupportSpawn.spawnzone ) then
+					SupportSpawnObject:ReSpawn( SpawnIndex )
+				end
+			end
         end,
         {}, 0, 60 )
       end
     )
-    :InitRepeatOnEngineShutDown()
+    :InitRepeatOnLanding()
     :Spawn()
 
 
@@ -1349,6 +1354,43 @@ _args = {
 
 campKerman = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"TERRORIST TRAINING CAMPS",MenuKerman,SpawnCamps, _args)
 takurghar = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"TAKUR GHAR CAS",MenuKerman,TakurGhar, "")
+
+-- ADMIN SECTION
+
+--SeAdmingGroup = SET_GROUP:New():FilterPrefixes("XX_Test"):FilterStart()
+SetAdminClient = SET_CLIENT:New():FilterStart()
+
+local function restartMission()
+	trigger.action.setUserFlag("999", true)
+end
+
+local function BuildAdminMenu()
+	SetAdminClient:ForEachClient(function(client)
+		
+		if (client ~= nil) and (client:IsAlive()) then
+			adminGroup = client:GetGroup()
+			adminGroupName = adminGroup:GetName()
+
+			env.info("ADMIN Player name: " ..client:GetPlayerName())
+			env.info("ADMIN Group Name: " ..adminGroupName)
+
+			
+			if string.find(adminGroupName, "XX_ADMIN") then
+				adminMenu = MENU_GROUP:New(adminGroup, "ADMIN")
+				MENU_GROUP_COMMAND:New(adminGroup, "Restart Mission", adminMenu, restartMission )
+			end
+		SetAdminClient:Remove(client:GetName(), true)
+		end
+	end)
+	timer.scheduleFunction(BuildAdminMenu, nil, timer.getTime() + 10)
+end
+
+if JtfAdmin then
+	env.info("ADMIN enabled")
+	BuildAdminMenu()
+end
+
+--END ADMIN SECTION
 
 -- ## Set trace on/off (true, false)
 BASE:TraceOnOff(false)
