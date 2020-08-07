@@ -1357,7 +1357,7 @@ takurghar = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"TAKUR GHAR CAS",Men
 
 -- ADMIN SECTION
 
---SeAdmingGroup = SET_GROUP:New():FilterPrefixes("XX_Test"):FilterStart()
+--SeAdminGroup = SET_GROUP:New():FilterPrefixes("XX_Test"):FilterStart()
 SetAdminClient = SET_CLIENT:New():FilterStart()
 
 local function restartMission()
