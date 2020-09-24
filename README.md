@@ -6,6 +6,7 @@ ATIS
 
 - Al Dhafra 119.6
 - Al Minhad 121.925
+- Khasab 125.0
 - Dubai Intl. 131.7
 - Abu Dhabi Intl. 125.1 
 

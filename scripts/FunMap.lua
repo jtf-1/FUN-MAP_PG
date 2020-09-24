@@ -789,50 +789,53 @@ FactoryStrikeMedium = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"ASALOYEH 
 FactoryStrikeHard = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"ASALOYEH FACTORY STRIKE HARD - 4+ planes",MenuAsaloyeh,FactoryStrikeHard, "")
 
 -- END FUNCTIONS SECTION
--- BEGIN ATIS SECTION
+-- -- BEGIN ATIS SECTION
 
-atisAldhafra=ATIS:New(AIRBASE.PersianGulf.Al_Dhafra_AB, 119.6)
-atisAldhafra:SetRadioRelayUnitName("Radio Relay Al Dhafra")
---atisAldhafra:SetActiveRunway("R")
-atisAldhafra:SetTACAN(96)
-atisAldhafra:SetVOR(114.9)
-atisAldhafra:SetTowerFrequencies({251.0, 126.5})
-atisAldhafra:Start()
+-- -- DATIS; ATIS {Airfield} ATIS {Frequency}, TRAFFIC {TRAFFIC Frequency}, VOICE Win:{VOICE NAME}
 
 
-atisAlminhad=ATIS:New(AIRBASE.PersianGulf.Al_Minhad_AB, 121.925)
-atisAlminhad:SetRadioRelayUnitName("Radio Relay Al Minhad")
-atisAlminhad:AddILS(110.75, "27")
-atisAlminhad:SetTACAN(99)
-atisAlminhad:SetTowerFrequencies({250.1, 121.8})
-atisAlminhad:Start()
-
-atisAlkhasab=ATIS:New(AIRBASE.PersianGulf.Al_Minhad_AB, 121.925)
-atisAlkhasab:SetRadioRelayUnitName("Radio Relay Al Minhad")
-atisAlkhasab:AddILS(110.75, "27")
-atisAlkhasab:SetTACAN(99)
-atisAlkhasab:SetTowerFrequencies({250.1, 121.8})
-atisAlkhasab:Start()
+-- atisAldhafra=ATIS:New(AIRBASE.PersianGulf.Al_Dhafra_AB, 119.6)
+-- atisAldhafra:SetRadioRelayUnitName("Radio Relay Al Dhafra")
+-- --atisAldhafra:SetActiveRunway("R")
+-- atisAldhafra:SetTACAN(96)
+-- atisAldhafra:SetVOR(114.9)
+-- atisAldhafra:SetTowerFrequencies({251.0, 126.5})
+-- atisAldhafra:Start()
 
 
-atisDubai=ATIS:New(AIRBASE.PersianGulf.Dubai_Intl, 131.7)
-atisDubai:SetRadioRelayUnitName("Radio Relay Dubai Intl")
-atisDubai:SetActiveRunway("R")
-atisDubai:AddILS(110.9, "30")
-atisDubai:SetTowerFrequencies({251.05, 118.75})
-atisDubai:Start()
+-- atisAlminhad=ATIS:New(AIRBASE.PersianGulf.Al_Minhad_AB, 121.925)
+-- atisAlminhad:SetRadioRelayUnitName("Radio Relay Al Minhad")
+-- atisAlminhad:AddILS(110.75, "27")
+-- atisAlminhad:SetTACAN(99)
+-- atisAlminhad:SetTowerFrequencies({250.1, 121.8})
+-- atisAlminhad:Start()
+
+-- atisAlkhasab=ATIS:New(AIRBASE.PersianGulf.Al_Minhad_AB, 121.925)
+-- atisAlkhasab:SetRadioRelayUnitName("Radio Relay Al Minhad")
+-- atisAlkhasab:AddILS(110.75, "27")
+-- atisAlkhasab:SetTACAN(99)
+-- atisAlkhasab:SetTowerFrequencies({250.1, 121.8})
+-- atisAlkhasab:Start()
 
 
-atisAbuDhabi=ATIS:New(AIRBASE.PersianGulf.Abu_Dhabi_International_Airport, 125.1)
-atisAbuDhabi:SetRadioRelayUnitName("Radio Relay Abu Dhabi International Airport")
-atisAbuDhabi:SetActiveRunway("L")
-atisAbuDhabi:SetTowerFrequencies({250.5, 119.2})
-atisAbuDhabi:SetVOR(114.25)
-atisAbuDhabi:Start()
+-- atisDubai=ATIS:New(AIRBASE.PersianGulf.Dubai_Intl, 131.7)
+-- atisDubai:SetRadioRelayUnitName("Radio Relay Dubai Intl")
+-- atisDubai:SetActiveRunway("R")
+-- atisDubai:AddILS(110.9, "30")
+-- atisDubai:SetTowerFrequencies({251.05, 118.75})
+-- atisDubai:Start()
+
+
+-- atisAbuDhabi=ATIS:New(AIRBASE.PersianGulf.Abu_Dhabi_International_Airport, 125.1)
+-- atisAbuDhabi:SetRadioRelayUnitName("Radio Relay Abu Dhabi International Airport")
+-- atisAbuDhabi:SetActiveRunway("L")
+-- atisAbuDhabi:SetTowerFrequencies({250.5, 119.2})
+-- atisAbuDhabi:SetVOR(114.25)
+-- atisAbuDhabi:Start()
 
 
 
--- END ATIS SECTION
+-- -- END ATIS SECTION
 -- XXX BEGIN BOAT SECTION
 
 stennis = GROUP:FindByName("CSG_CarrierGrp_Stennis")
