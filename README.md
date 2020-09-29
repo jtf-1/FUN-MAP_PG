@@ -19,7 +19,7 @@ TANKERS
 =======
 
 Track WK;
-- Arco 1-1  [C130]  35Y, 276.5, FL160
+- Arco 1-1  [KC135]  35Y, 276.5, FL160
 - Shell 1-1 [KC135MPRS] 115Y, 317.5, FL200
 - Texaco 1-1 [KC-135] 105Y, 317.55, FL240
 
@@ -29,12 +29,12 @@ Track XK-YK;
 - Texaco 4-1 [KC-135] 120Y, 317.95, FL240
 
 Track YH-BN;
-- Arco 2-1  [C130]  36Y, 276.6, FL160
+- Arco 2-1  [KC135]  36Y, 276.6, FL160
 - Shell 2-1 [KC135MPRS] 116Y, 317.6, FL200
 - Texaco 2-1 [KC-135] 106Y, 317.65, FL240
 
 Track DP;
-- Arco 3-1  [C130]  37Y, 276.7, FL160
+- Arco 3-1  [KC135]  37Y, 276.7, FL160
 - Shell 3-1 [KC135MPRS] 117Y ,317.7, FL200
 - Texaco 3-1 [KC-135] 107Y, 317.75, FL240
 

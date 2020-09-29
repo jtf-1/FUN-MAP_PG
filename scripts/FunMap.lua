@@ -3,6 +3,7 @@ env.info( "*** JTF-1 COMMIT DATE: 2019-09-05T15:00 ***" )
 env.info( '*** JTF-1 MOOSE MISSION SCRIPT START ***' )
 
 local JtfAdmin = true --activate admin menu option in admin slots
+local LegacyCvn = true -- use AIRBOSS and associated functions with non-SC CVN(s)
 
 _SETTINGS:SetPlayerMenuOff()
 
@@ -789,57 +790,7 @@ FactoryStrikeMedium = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"ASALOYEH 
 FactoryStrikeHard = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"ASALOYEH FACTORY STRIKE HARD - 4+ planes",MenuAsaloyeh,FactoryStrikeHard, "")
 
 -- END FUNCTIONS SECTION
--- -- BEGIN ATIS SECTION
-
--- -- DATIS; ATIS {Airfield} ATIS {Frequency}, TRAFFIC {TRAFFIC Frequency}, VOICE Win:{VOICE NAME}
-
-
--- atisAldhafra=ATIS:New(AIRBASE.PersianGulf.Al_Dhafra_AB, 119.6)
--- atisAldhafra:SetRadioRelayUnitName("Radio Relay Al Dhafra")
--- --atisAldhafra:SetActiveRunway("R")
--- atisAldhafra:SetTACAN(96)
--- atisAldhafra:SetVOR(114.9)
--- atisAldhafra:SetTowerFrequencies({251.0, 126.5})
--- atisAldhafra:Start()
-
-
--- atisAlminhad=ATIS:New(AIRBASE.PersianGulf.Al_Minhad_AB, 121.925)
--- atisAlminhad:SetRadioRelayUnitName("Radio Relay Al Minhad")
--- atisAlminhad:AddILS(110.75, "27")
--- atisAlminhad:SetTACAN(99)
--- atisAlminhad:SetTowerFrequencies({250.1, 121.8})
--- atisAlminhad:Start()
-
--- atisAlkhasab=ATIS:New(AIRBASE.PersianGulf.Al_Minhad_AB, 121.925)
--- atisAlkhasab:SetRadioRelayUnitName("Radio Relay Al Minhad")
--- atisAlkhasab:AddILS(110.75, "27")
--- atisAlkhasab:SetTACAN(99)
--- atisAlkhasab:SetTowerFrequencies({250.1, 121.8})
--- atisAlkhasab:Start()
-
-
--- atisDubai=ATIS:New(AIRBASE.PersianGulf.Dubai_Intl, 131.7)
--- atisDubai:SetRadioRelayUnitName("Radio Relay Dubai Intl")
--- atisDubai:SetActiveRunway("R")
--- atisDubai:AddILS(110.9, "30")
--- atisDubai:SetTowerFrequencies({251.05, 118.75})
--- atisDubai:Start()
-
-
--- atisAbuDhabi=ATIS:New(AIRBASE.PersianGulf.Abu_Dhabi_International_Airport, 125.1)
--- atisAbuDhabi:SetRadioRelayUnitName("Radio Relay Abu Dhabi International Airport")
--- atisAbuDhabi:SetActiveRunway("L")
--- atisAbuDhabi:SetTowerFrequencies({250.5, 119.2})
--- atisAbuDhabi:SetVOR(114.25)
--- atisAbuDhabi:Start()
-
-
-
--- -- END ATIS SECTION
 -- XXX BEGIN BOAT SECTION
-
-stennis = GROUP:FindByName("CSG_CarrierGrp_Stennis")
-stennis:PatrolRoute()
 
 tarawa = GROUP:FindByName( "CSG_CarrierGrp_Tarawa" )
 tarawa:PatrolRoute()
@@ -862,10 +813,10 @@ Zone_AWACS_1 = ZONE:New( "AWACS_1_Zone" )
 ------------------------------------------------------
 
 TableSpawnSupport = { -- {spawnobjectname, spawnzone}
-  {spawnobject = "Tanker_C130_Arco1", spawnzone = Zone_AAR_1},
-  {spawnobject = "Tanker_C130_Arco2", spawnzone = Zone_AAR_2},
-  {spawnobject = "Tanker_C130_Arco3", spawnzone = Zone_AAR_3},
-  {spawnobject = "Tanker_KC135MPRS_Arco4", spawnzone = Zone_AAR_4},
+  {spawnobject = "Tanker_KC135_Arco1", spawnzone = Zone_AAR_1},
+  {spawnobject = "Tanker_KC135_Arco2", spawnzone = Zone_AAR_2},
+  {spawnobject = "Tanker_KC135_Arco3", spawnzone = Zone_AAR_3},
+  {spawnobject = "Tanker_KC135_Arco4", spawnzone = Zone_AAR_4},
   {spawnobject = "Tanker_KC135MPRS_Shell1", spawnzone = Zone_AAR_1},
   {spawnobject = "Tanker_KC135MPRS_Shell2", spawnzone = Zone_AAR_2},
   {spawnobject = "Tanker_KC135MPRS_Shell3", spawnzone = Zone_AAR_3},
@@ -886,32 +837,6 @@ for i, v in ipairs( TableSpawnSupport ) do
   
 end
 
--------------------------------
---- Recovery Tanker Stennis ---
--------------------------------
-
-Spawn_Tanker_S3B_Texaco6 = RECOVERYTANKER:New( UNIT:FindByName( "CSG_CarrierGrp_Stennis"), "Tanker_S3B_Texaco6" )
-
-Spawn_Tanker_S3B_Texaco6:SetCallsign(CALLSIGN.Tanker.Texaco, 6)
-Spawn_Tanker_S3B_Texaco6:SetTACAN(15, "TEX")
-Spawn_Tanker_S3B_Texaco6:SetRadio(317.775)
-Spawn_Tanker_S3B_Texaco6:SetModex(049)
-Spawn_Tanker_S3B_Texaco6:SetTakeoffAir()
-Spawn_Tanker_S3B_Texaco6:SetAltitude(8000)
-Spawn_Tanker_S3B_Texaco6:SetRespawnInAir()
-Spawn_Tanker_S3B_Texaco6:Start()
-
---------------------------
---- Rescue Helo Stennis ---
----------------------------
-
-Spawn_Rescuehelo_Stennis = RESCUEHELO:New(UNIT:FindByName("CSG_CarrierGrp_Stennis"), "RescueHelo_Stennis")
-
-Spawn_Rescuehelo_Stennis:SetTakeoffAir()
-Spawn_Rescuehelo_Stennis:SetRespawnInAir()
-Spawn_Rescuehelo_Stennis:SetRescueStopBoatOff()
-Spawn_Rescuehelo_Stennis:SetOffsetZ(800)
---Spawn_Rescuehelo_Stennis:Start()
 
 ---------------------------
 --- Rescue Helo Tarawa ---
@@ -927,72 +852,109 @@ Spawn_Rescuehelo_Tarawa:SetOffsetZ(800)
   
 
 -- END SUPPORT AC SECTION
--- XXX BEGIN AIRBOSS SECTION
 
------------------------
---- Airboss Stennis ---
------------------------
+-- XXX GEGIN LEGACY CARRIER Support
+if LegacyCvn then
 
--- Create AIRBOSS object for Stennis
-airbossStennis=AIRBOSS:New( "CSG_CarrierGrp_Stennis", "Stennis" )
+	env.info("JTF-1 Legacy CVN support enabled")
 
--- Set load and save path/name for persistent LSO grades
-airbossStennis:Load(nil, "PG_Airboss-USS Stennis_LSOgrades.csv")
-airbossStennis:SetAutoSave(nil, "PG_Airboss-USS Stennis_LSOgrades.csv")
+	stennis = GROUP:FindByName("CSG_CarrierGrp_Stennis")
+	stennis:PatrolRoute()
 
-local stennisOffset_deg = 0 -- Marshal offset
-local stennisDefaultPlayerSkill = AIRBOSS.Difficulty.Normal -- default skill level
-local stennisRadioRelayMarshall = UNIT:FindByName("RadioRelayMarshall_Stennis") -- radio relay unit for Marshal
-local stennisRadioRelayPaddles = UNIT:FindByName("RadioRelayPaddles_Stennis") -- radio relay unit for LSO
-local stennisClouds, stennisVisibility, stennisFog, stennisDust = airbossStennis:_GetStaticWeather() -- get mission weather (assumes static weather is used)
+	-------------------------------
+	--- Recovery Tanker Stennis ---
+	-------------------------------
 
---- Determine Daytime Case
--- adjust case according to weather state
+	Spawn_Tanker_S3B_Texaco6 = RECOVERYTANKER:New( UNIT:FindByName( "CSG_CarrierGrp_Stennis"), "Tanker_S3B_Texaco6" )
 
-local stennisCase = 1 -- default to Case I
+	Spawn_Tanker_S3B_Texaco6:SetCallsign(CALLSIGN.Tanker.Texaco, 6)
+	Spawn_Tanker_S3B_Texaco6:SetTACAN(15, "TEX")
+	Spawn_Tanker_S3B_Texaco6:SetRadio(317.775)
+	Spawn_Tanker_S3B_Texaco6:SetModex(049)
+	Spawn_Tanker_S3B_Texaco6:SetTakeoffAir()
+	Spawn_Tanker_S3B_Texaco6:SetAltitude(8000)
+	Spawn_Tanker_S3B_Texaco6:SetRespawnInAir()
+	Spawn_Tanker_S3B_Texaco6:Start()
 
-if (stennisClouds.base < 305 and stennisClouds.density > 8) or stennisVisibility < 8000 then -- cloudbase < 1000' or viz < 5 miles, Case III
-  stennisCase = 3
-elseif stennisFog and stennisFog.thickness > 60 and stennisFog.visibility < 8000 then -- visibility in fog < 5nm, Case III
-  stennisCase = 3
-elseif (stennisClouds.base < 915 and stennisClouds.density > 8) and stennisVisibility >= 8000 then -- cloudbase < 3000', viz > 5 miles, Case II
-  stennisCase = 2
-end     
+	--------------------------
+	--- Rescue Helo Stennis ---
+	---------------------------
 
--- Stennis AIRBOSS configuration
-airbossStennis:SetMenuRecovery(30, 25, false, 30)
-airbossStennis:SetSoundfilesFolder("Airboss Soundfiles/")
---airbossStennis:SetVoiceOversLSOByRaynor()
---airbossStennis:SetVoiceOversMarshalByFF("Airboss Soundpack Marshal FF/")
-airbossStennis:SetTACAN(74,"X","STN")
-airbossStennis:SetICLS( 4,"STN" )
-airbossStennis:SetCarrierControlledArea( 50 )
-airbossStennis:SetDespawnOnEngineShutdown( true )
-airbossStennis:SetRecoveryTanker( Spawn_Tanker_S3B_Texaco1 )
-airbossStennis:SetMarshalRadio( 285.675, "AM" )
-airbossStennis:SetLSORadio( 308.475, "AM" )
-airbossStennis:SetRadioRelayLSO( stennisRadioRelayPaddles )
-airbossStennis:SetRadioRelayMarshal( stennisRadioRelayMarshall )
-airbossStennis:SetAirbossNiceGuy( true ) -- allow direct to commence
-airbossStennis:SetDefaultPlayerSkill(stennisDefaultPlayerSkill)
-airbossStennis:SetRespawnAI()
-airbossStennis:SetMenuMarkZones(false) -- disable marking zones using smoke or flares
+	Spawn_Rescuehelo_Stennis = RESCUEHELO:New(UNIT:FindByName("CSG_CarrierGrp_Stennis"), "RescueHelo_Stennis")
 
---- Fun Map Recovery Windows 
--- sunrise and sunset dependant on mission date
--- https://www.timeanddate.com/sun/united-arab-emirates/abu-dhabi?month=4&year=2011
--- Sunrise @ 08:00, Sunset @ 19:00, recovery @ sunrise+10 and sunset-10
--- otherwise, intiate recovery through F10 menu
-airbossStennis:AddRecoveryWindow( "5:55", "18:35", stennisCase, stennisOffset_deg, true, 30 ) 
-airbossStennis:AddRecoveryWindow( "18:35", "5:55+1", 3, stennisOffset_deg, true, 30 ) 
-airbossStennis:AddRecoveryWindow( "5:55+1", "18:35+1", stennisCase, stennisOffset_deg, true, 30 ) 
+	Spawn_Rescuehelo_Stennis:SetTakeoffAir()
+	Spawn_Rescuehelo_Stennis:SetRespawnInAir()
+	Spawn_Rescuehelo_Stennis:SetRescueStopBoatOff()
+	Spawn_Rescuehelo_Stennis:SetOffsetZ(800)
+	--Spawn_Rescuehelo_Stennis:Start()
 
--- Start AIRBOSS Stennis
-airbossStennis:Start()
+	-----------------------
+	--- Airboss Stennis ---
+	-----------------------
 
--- Set AIRBOSS control of Hawk tanker recovery 
-Spawn_Tanker_S3B_Texaco6:SetRecoveryAirboss(false)
+	-- Create AIRBOSS object for Stennis
+	airbossStennis=AIRBOSS:New( "CSG_CarrierGrp_Stennis", "Stennis" )
 
+	-- Set load and save path/name for persistent LSO grades
+	airbossStennis:Load(nil, "PG_Airboss-USS Stennis_LSOgrades.csv")
+	airbossStennis:SetAutoSave(nil, "PG_Airboss-USS Stennis_LSOgrades.csv")
+
+	local stennisOffset_deg = 0 -- Marshal offset
+	local stennisDefaultPlayerSkill = AIRBOSS.Difficulty.Normal -- default skill level
+	local stennisRadioRelayMarshall = UNIT:FindByName("RadioRelayMarshall_Stennis") -- radio relay unit for Marshal
+	local stennisRadioRelayPaddles = UNIT:FindByName("RadioRelayPaddles_Stennis") -- radio relay unit for LSO
+	local stennisClouds, stennisVisibility, stennisFog, stennisDust = airbossStennis:_GetStaticWeather() -- get mission weather (assumes static weather is used)
+
+	--- Determine Daytime Case
+	-- adjust case according to weather state
+
+	local stennisCase = 1 -- default to Case I
+
+	if (stennisClouds.base < 305 and stennisClouds.density > 8) or stennisVisibility < 8000 then -- cloudbase < 1000' or viz < 5 miles, Case III
+	  stennisCase = 3
+	elseif stennisFog and stennisFog.thickness > 60 and stennisFog.visibility < 8000 then -- visibility in fog < 5nm, Case III
+	  stennisCase = 3
+	elseif (stennisClouds.base < 915 and stennisClouds.density > 8) and stennisVisibility >= 8000 then -- cloudbase < 3000', viz > 5 miles, Case II
+	  stennisCase = 2
+	end     
+
+	-- Stennis AIRBOSS configuration
+	airbossStennis:SetMenuRecovery(30, 25, false, 30)
+	airbossStennis:SetSoundfilesFolder("Airboss Soundfiles/")
+	--airbossStennis:SetVoiceOversLSOByRaynor()
+	--airbossStennis:SetVoiceOversMarshalByFF("Airboss Soundpack Marshal FF/")
+	airbossStennis:SetTACAN(74,"X","STN")
+	airbossStennis:SetICLS( 4,"STN" )
+	airbossStennis:SetCarrierControlledArea( 50 )
+	airbossStennis:SetDespawnOnEngineShutdown( true )
+	airbossStennis:SetRecoveryTanker( Spawn_Tanker_S3B_Texaco1 )
+	airbossStennis:SetMarshalRadio( 285.675, "AM" )
+	airbossStennis:SetLSORadio( 308.475, "AM" )
+	airbossStennis:SetRadioRelayLSO( stennisRadioRelayPaddles )
+	airbossStennis:SetRadioRelayMarshal( stennisRadioRelayMarshall )
+	airbossStennis:SetAirbossNiceGuy( true ) -- allow direct to commence
+	airbossStennis:SetDefaultPlayerSkill(stennisDefaultPlayerSkill)
+	airbossStennis:SetRespawnAI()
+	airbossStennis:SetMenuMarkZones(false) -- disable marking zones using smoke or flares
+
+	--- Fun Map Recovery Windows 
+	-- sunrise and sunset dependant on mission date
+	-- https://www.timeanddate.com/sun/united-arab-emirates/abu-dhabi?month=4&year=2011
+	-- Sunrise @ 08:00, Sunset @ 19:00, recovery @ sunrise+10 and sunset-10
+	-- otherwise, intiate recovery through F10 menu
+	airbossStennis:AddRecoveryWindow( "5:55", "18:35", stennisCase, stennisOffset_deg, true, 30 ) 
+	airbossStennis:AddRecoveryWindow( "18:35", "5:55+1", 3, stennisOffset_deg, true, 30 ) 
+	airbossStennis:AddRecoveryWindow( "5:55+1", "18:35+1", stennisCase, stennisOffset_deg, true, 30 ) 
+
+	-- Start AIRBOSS Stennis
+	airbossStennis:Start()
+
+	-- Set AIRBOSS control of Hawk tanker recovery 
+	Spawn_Tanker_S3B_Texaco6:SetRecoveryAirboss(false)
+	
+end -- legacy CVN support
+
+-- XX BEGIN AIRBOSS TARAWA 
 
 -----------------------
 --- Airboss Tarawa ---
