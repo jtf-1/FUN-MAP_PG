@@ -1,0 +1,1 @@
+Place the settings folders in the root of the mission file (open it with a ZIP app such 7ZIP, WinZIP etc)
