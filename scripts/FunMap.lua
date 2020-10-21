@@ -1322,11 +1322,13 @@ takurghar = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"TAKUR GHAR CAS",Men
 
 -- ADMIN SECTION
 
---SeAdminGroup = SET_GROUP:New():FilterPrefixes("XX_Test"):FilterStart()
 SetAdminClient = SET_CLIENT:New():FilterStart()
 
-local function restartMission()
-	trigger.action.setUserFlag("999", true)
+local function adminRestartMission(adminClientName, mapFlag)
+  if adminClientName then
+    env.info("ADMIN Restart player name: " ..adminClientName)
+  end
+  trigger.action.setUserFlag(mapFlag, true) -- 999 = PG Day, 998 = PG Night, 997 = PG Weather, 996 = PG Weather + Night,
 end
 
 local function BuildAdminMenu()
@@ -1336,13 +1338,13 @@ local function BuildAdminMenu()
 			adminGroup = client:GetGroup()
 			adminGroupName = adminGroup:GetName()
 
-			env.info("ADMIN Player name: " ..client:GetPlayerName())
-			env.info("ADMIN Group Name: " ..adminGroupName)
-
-			
 			if string.find(adminGroupName, "XX_ADMIN") then
 				adminMenu = MENU_GROUP:New(adminGroup, "ADMIN")
-				MENU_GROUP_COMMAND:New(adminGroup, "Restart Mission", adminMenu, restartMission )
+				MENU_GROUP_COMMAND:New(adminGroup, "Load DAY PG", adminMenu, adminRestartMission, client:GetPlayerName(), 999 )
+        MENU_GROUP_COMMAND:New(adminGroup, "Load NIGHT PG", adminMenu, adminRestartMission, client:GetPlayerName(), 998 )
+        MENU_GROUP_COMMAND:New(adminGroup, "Load WEATHER PG", adminMenu, adminRestartMission, client:GetPlayerName(), 997 )
+        MENU_GROUP_COMMAND:New(adminGroup, "Load WEATHER+NIGHT PG", adminMenu, adminRestartMission, client:GetPlayerName(), 996 )
+				env.info("ADMIN Player name: " ..client:GetPlayerName())
 			end
 		SetAdminClient:Remove(client:GetName(), true)
 		end
