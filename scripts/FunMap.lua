@@ -1013,7 +1013,7 @@ airbossTarawa:Start()
 -- END AIRBOSS SECTION
 -- XXX BEGIN ON DEMAND CAP SECTION
 
-IranCAPAircraft = {"Iran_Mig29","Iran_Mig21","Iran_Mig21","Iran_Mig29"}
+IranCAPAircraft = {"Iran_Mig31","Iran_Mig29","Iran_Mig21","Iran_Mig21","Iran_Mig29"}
 -- IranCAPAircraft = {"Iran_F14","Iran_Mig29","Iran_Mig21","Iran_Mig21","Iran_Mig29"}
 
 
@@ -1229,11 +1229,11 @@ ShirazZones = {
 ShirazCAP1 = SPAWN:New("ShirazCAP1")
 
 ShirazCAPAircraft = {
-  "Iran_F14",
+  "Iran_Mig31",
+  "Iran_Mig31",
   "Iran_Mig29",
   "Iran_Mig21",
-  "Iran_Mig21",
-  "Iran_Mig29",
+  "Iran_Mig31",
   }
 
 _Shiraz_args = {
