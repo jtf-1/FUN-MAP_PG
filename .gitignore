@@ -1,0 +1,28 @@
+#################
+## Eclipse
+#################
+
+*.pydevproject
+.project
+.metadata
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.classpath
+.settings/
+.loadpath
+
+# External tool builders
+.externalToolBuilders/
+
+# AppVeyor
+.appveyor/
+
+# CDT-specific
+.cproject
+
+# PDT-specific
+.buildpath
