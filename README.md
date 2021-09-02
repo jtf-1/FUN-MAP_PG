@@ -77,6 +77,18 @@ AWACS RED
 
 - 305.325AM
 
+MISSILE TRAINER
+===============
+
+A missile trainer is available to assist training in A/S and A/A missile evasion without being destroyed. By default, the missile trainer is disabled, but may be enabled for your aircraft via the F10 menu
+
+While enabled, the missile trainer will;
+
+- Alert on missile launch
+- Provide evasion advice
+- Destroy incoming missiles prior to impact
+
+NOTE: At very high closure rates it may not be possible to destroy the incoming missile without causing (potentially catastrophic) damage to your aircraft. The missile trainer will not protect against cannon rounds or other balistic weapons.
 
 AIRSTRIKE ON FLEET
 ==================
