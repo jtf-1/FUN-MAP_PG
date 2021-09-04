@@ -9,20 +9,20 @@ local adminUnitName = "XX_ADMIN"
 
 _SETTINGS:SetPlayerMenuOff()
 
-
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
---- BEGIN MISSION EVENT HANDLERS
+--- BEGIN MISSILE TRAINER
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-local MissionEventHandler = EVENTHANDLER:New() -- new eventhandler object
-MissionEventHandler:HandleEvent(EVENTS.Birth) -- subscribe to BIRTH event
+-- Create a new missile trainer object.
+MissileTrainer = {
+  menuadded = {},
+  MenuF10 = {},
+}
 
---- Returns the unit of a player and the player name. If the unit does not belong to a player, nil is returned.
--- @param #string unitName Name of the player unit.
--- @return #Wrapper.Unit unit object occupied by player.
--- @return #string Name of the player.
--- @return nil If player does not exist.
-function GetPlayerUnitAndName(unitName)
+MissileTrainer.eventhandler = EVENTHANDLER:New()
+MissileTrainer.eventhandler:HandleEvent(EVENTS.Birth)
+
+function MissileTrainer:GetPlayerUnitAndName(unitName)
   if unitName ~= nil then
     -- Get DCS unit from its name.
     local DCSunit = Unit.getByName(unitName)
@@ -38,41 +38,21 @@ function GetPlayerUnitAndName(unitName)
   return nil,nil
 end
 
---- OnBirth event handler for all spawned units.
--- @param #MissionEventHandler self.
--- @param Core.Event#EVENTDATA EventData Data for unit birth event.
-function MissionEventHandler:OnEventBirth(EventData)
+function MissileTrainer.eventhandler:OnEventBirth(EventData)
   local unitName = EventData.IniUnitName
-  local unit, playername = GetPlayerUnitAndName(unitName)
-  if unit and playername then -- unit is occupied by a client
-    --- add missile trainer menu
-    SCHEDULER:New(nil, MissileTrainer.AddMenu, {MissileTrainer,unit,unitName}, 0.1) -- delay MissileTrainer.AddMenu() call to ensure client has properly entered unit
-    --- if player is in an admin slot, add mission restart menu 
-    if unitName == adminUnitName then 
-      SCHEDULER:New(nil, BuildAdminMenu, {unit,playername}, 0.1) -- delay BuildAdminMenu() call to ensure client has properly entered unit
-      --BuildAdminMenu(unit)
-    end
+  local unit, playername = MissileTrainer:GetPlayerUnitAndName(unitName)
+  
+  if unit and playername then
+    SCHEDULER:New(nil, MissileTrainer.AddMenu, {MissileTrainer, unit, unitName},0.1)
   end
 end
-
---END MISSION EVENT HANDLERS
-
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
---- BEGIN MISSILE TRAINER
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
--- Create a new missile trainer object.
-MissileTrainer = {
-  menuadded = {},
-  MenuF10 = {},
-}
 
 MissileTrainer.fox = FOX:New() -- add new FOX class to the Missile Trainer
 
 --- FOX Default Settings
 MissileTrainer.fox:SetDefaultLaunchAlerts(false) -- launcher alerts OFF
-  :SetDefaultLaunchMarks(false) -- launch marks OFF
   :SetDefaultMissileDestruction(false) -- missile destruction off
+  :SetDefaultLaunchMarks(false) -- launch map marks OFF
   :SetExplosionDistance(300) -- distance from uit at which to destroy incoming missiles
   :SetDebugOnOff() -- set debug on if true
   :SetDisableF10Menu() -- remove default F10 menu as a custom menu will be used
@@ -105,6 +85,35 @@ end
 --- BEGIN ADMIN MENU SECTION
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+Admin = {}
+
+Admin.eventhandler = EVENTHANDLER:New()
+Admin.eventhandler:HandleEvent(EVENTS.Birth)
+
+function Admin:GetPlayerUnitAndName(unitName)
+  if unitName ~= nil then
+    -- Get DCS unit from its name.
+    local DCSunit = Unit.getByName(unitName)
+    if DCSunit then
+      local playername=DCSunit:getPlayerName()
+      local unit = UNIT:Find(DCSunit)
+      if DCSunit and unit and playername then
+        return unit, playername
+      end
+    end
+  end
+  -- Return nil if we could not find a player.
+  return nil,nil
+end
+
+function Admin.eventhandler:OnEventBirth(EventData)
+  local unitName = EventData.IniUnitName
+  local unit, playername = Admin:GetPlayerUnitAndName(unitName)
+  if unit and playername then
+    SCHEDULER:New(nil, Admin.BuildAdminMenu, {Admin, unit, playername}, 0.1)
+  end
+end
+
 --- Set mission flag to load a new mission.
 --- 1 = PG Day.
 --- 2 = PG Night.
@@ -112,29 +121,27 @@ end
 --- 4 = PG Weather + Night.
 -- @param #string playerName Name of client calling restart command
 -- @param #number mapFlagValue Mission number to which flag should be set
-function LoadMission(playerName, mapFlagValue)
-
+function Admin:LoadMission(playerName, mapFlagValue)
   if adminClientName then
     env.info("ADMIN Restart player name: " .. playerName)
   end
   trigger.action.setUserFlag(9999, mapFlagValue) 
-
 end
 
 --- Add admin menu and commands if client is in an ADMIN spawn
--- @param #object unit Wrapper.Unit#UNIT Unit of player.
-function BuildAdminMenu(unit,playername)
+-- @param #object unit Unit of player.
+-- @param #string playername Name of player
+function Admin:BuildAdminMenu(unit,playername)
   local adminGroup = unit:GetGroup()
   local adminGroupName = adminGroup:GetName()
   local adminMenu = MENU_GROUP:New(adminGroup, "Admin")
-  MENU_GROUP_COMMAND:New(adminGroup, "Load DAY PG", adminMenu, LoadMission, playername, 1 )
-  MENU_GROUP_COMMAND:New(adminGroup, "Load NIGHT PG", adminMenu, LoadMission, playername, 2 )
-  MENU_GROUP_COMMAND:New(adminGroup, "Load WEATHER PG", adminMenu, LoadMission, playername, 3 )
-  MENU_GROUP_COMMAND:New(adminGroup, "Load WEATHER+NIGHT PG", adminMenu, LoadMission, playername, 4 )
+  MENU_GROUP_COMMAND:New(adminGroup, "Load DAY PG", adminMenu, self.LoadMission, self, playername, 1 )
+  MENU_GROUP_COMMAND:New(adminGroup, "Load NIGHT PG", adminMenu, self.LoadMission, self, playername, 2 )
+  MENU_GROUP_COMMAND:New(adminGroup, "Load WEATHER PG", adminMenu, self.LoadMission, self, playername, 3 )
+  MENU_GROUP_COMMAND:New(adminGroup, "Load WEATHER+NIGHT PG", adminMenu, self.LoadMission, self, playername, 4 )
 end
 
 --- END ADMIN MENU SECTION
-
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 --- BEGIN MENU DEFINITIONS
@@ -216,7 +223,6 @@ TableSpawnSupport = { -- {spawnobjectname, spawnzone}
     spawnzone = "AWACS_1_Zone"
   },
 }
-
 
 -- ## Spawn Support aircraft
 -- Scheduled function on spawn to check for presence of the support aircraft in its spawn zone. Repeat check every 60 seconds. Respawn if ac has left zone. 
