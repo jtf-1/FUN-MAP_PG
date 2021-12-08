@@ -38,7 +38,7 @@ Track DP;
 - Shell 3-1 [KC135MPRS] 117Y ,317.7, FL200
 - Texaco 3-1 [KC-135] 107Y, 317.75, FL240
 
-Stennis Hawk;
+Forrestal Hawk;
 - Texaco 6-1 [S-3B] 15Y, 317.775, FL080
 
 NAVAL OPERATIONS
@@ -56,9 +56,9 @@ Lincoln CVN-72 (SC)
 (Use CV Deck freq 274.075 to call AI APPR/TWR/PAD)
 
 
-Stennis CVN-74:
+Forrestal CVN-59:
 - BRC 315'TRUE
-- TACAN 74X 
+- TACAN 59X 
 - ILCS: Channel 4
 - Towers/Paddles: 308.475 AM
  
@@ -93,13 +93,13 @@ NOTE: At very high closure rates it may not be possible to destroy the incoming 
 AIRSTRIKE ON FLEET
 ==================
 
-The F10 Menu "Ship Strike" provides for a player callable anti-ship strike on both the Tarawa and the Stennis. The exact target and departure location are randomly selected. A message informing the player on the aircraft type, departure location, and target will transmit.
+The F10 Menu "Ship Strike" provides for a player callable anti-ship strike on both the Tarawa and the Forrestal. The exact target and departure location are randomly selected. A message informing the player on the aircraft type, departure location, and target will transmit.
 
 The three strike packages are as follows:
 
 1. SU24s loaded with ASMs from Bandar Abbas Intl will target the Tarawa.
 2. SU24s loaded with ASMs from Shiraz International Airport will target the Tarawa.
-3. SU24s loaded with ASMs from Shiraz International Airport will target the Stennis
+3. SU24s loaded with ASMs from Shiraz International Airport will target the Forrestal.
 
 *BE AWARE OF INDIRECT ROUTING*
 *RECOMMEND TUNING 282.025 FOR BLUE AWACS SUPPORT*
@@ -126,7 +126,7 @@ Strafe Pits, where available, are configured with two targets. Aircraft must be 
 AIRBOSS
 =======
 
-Scripted recovery of aircraft on CVN-74 John C Stennis is available via the F10 menu.
+Scripted recovery of aircraft on CVN-74 John C Forrestal is available via the F10 menu.
 Use the Marshal and Paddles frequencies as shown above to contact the relevant agencies when using the menu or when told to do so by Marshal. 
 
 Main Features;

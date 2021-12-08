@@ -1,13 +1,43 @@
 env.info( '*** JTF-1 Fun Map MOOSE script ***' )
-env.info( "*** JTF-1 COMMIT DATE: 2019-09-05T15:00 ***" )
 env.info( '*** JTF-1 MOOSE MISSION SCRIPT START ***' )
 
 local JtfAdmin = true --activate admin menu option in admin slots
 local LegacyCvn = true -- use AIRBOSS and associated functions with non-SC CVN(s)
+
+-- mission flag for triggering reload/loading of missions
+local flagLoadMission = 9999
+
+-- flag value to trigger reloading of DEV mission
+local devMission = 99
+
 --- Name of client unit used for admin control
 local adminUnitName = "XX_ADMIN"
 
 _SETTINGS:SetPlayerMenuOff()
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--- Check for Static or Dynamic mission file loading flag
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+-- mission flag for setting dev mode
+local devFlag = 8888
+
+-- If missionflag is true, mission file will load from filesystem with an assert
+local devState = trigger.misc.getUserFlag(devFlag)
+
+if devState ~= 0 then
+  env.warning('*** JTF-1 - DEV flag is ON! ***')
+  MESSAGE:New("Dev Mode is ON!"):ToAll()
+  
+  local function restartDev(flagLoadMission, mapFlagValue)
+    trigger.action.setUserFlag(flagLoadMission, mapFlagValue)    
+  end
+
+  MENU_MISSION_COMMAND:New("Reload DEV Mission",nil,restartDev,flagLoadMission,devMission)
+  
+else
+  env.info('*** JTF-1 - DEV flag is OFF. ***')
+end
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 --- BEGIN MISSILE TRAINER
@@ -85,14 +115,14 @@ end
 --- BEGIN ADMIN MENU SECTION
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-Admin = {
-  flagLoadMission = 9999, -- mission flag for triggering reload/loading of missions
+local ADMIN = {
+  --flagLoadMission = 9999, -- mission flag for triggering reload/loading of missions
 }
 
-Admin.eventhandler = EVENTHANDLER:New()
-Admin.eventhandler:HandleEvent(EVENTS.Birth)
+ADMIN.eventhandler = EVENTHANDLER:New()
+ADMIN.eventhandler:HandleEvent(EVENTS.Birth)
 
-function Admin:GetPlayerUnitAndName(unitName)
+function ADMIN:GetPlayerUnitAndName(unitName)
   if unitName ~= nil then
     -- Get DCS unit from its name.
     local DCSunit = Unit.getByName(unitName)
@@ -108,11 +138,14 @@ function Admin:GetPlayerUnitAndName(unitName)
   return nil,nil
 end
 
-function Admin.eventhandler:OnEventBirth(EventData)
+function ADMIN.eventhandler:OnEventBirth(EventData)
   local unitName = EventData.IniUnitName
-  local unit, playername = Admin:GetPlayerUnitAndName(unitName)
+  local unit, playername = ADMIN:GetPlayerUnitAndName(unitName)
   if unit and playername then
-    SCHEDULER:New(nil, Admin.BuildAdminMenu, {Admin, unit, playername}, 0.1)
+  local adminCheck = (string.find(unitName, adminUnitName) and "true" or "false")
+  if string.find(unitName, adminUnitName) then
+    SCHEDULER:New(nil, ADMIN.BuildAdminMenu, {ADMIN, unit, playername}, 0.1)
+  end
   end
 end
 
@@ -123,17 +156,17 @@ end
 --- 4 = PG Weather + Night.
 -- @param #string playerName Name of client calling restart command
 -- @param #number mapFlagValue Mission number to which flag should be set
-function Admin:LoadMission(playerName, mapFlagValue)
+function ADMIN:LoadMission(playerName, mapFlagValue)
   if adminClientName then
     env.info("ADMIN Restart player name: " .. playerName)
   end
-  trigger.action.setUserFlag(self.flagLoadMission, mapFlagValue) 
+  trigger.action.setUserFlag(flagLoadMission, mapFlagValue) 
 end
 
 --- Add admin menu and commands if client is in an ADMIN spawn
 -- @param #object unit Unit of player.
 -- @param #string playername Name of player
-function Admin:BuildAdminMenu(unit,playername)
+function ADMIN:BuildAdminMenu(unit,playername)
   local adminGroup = unit:GetGroup()
   local adminGroupName = adminGroup:GetName()
   local adminMenu = MENU_GROUP:New(adminGroup, "Admin")
@@ -275,7 +308,7 @@ function SpwnShipStrike ()
   
   if Rand_AntiShipStrike == 1 then SpwnAntiShipStrike_1:Spawn() MessageShipStrike = MESSAGE:New("Su-24's departed Bandar Abbass loaded with anti-ship missiles. Intelligence suggests their target is the Tarawa!"):ToCoalition(coalition.side.BLUE) end
   if Rand_AntiShipStrike == 2 then SpwnAntiShipStrike_2:Spawn() MessageShipStrike = MESSAGE:New("Su-24's Shiraz International Airport loaded with anti-ship missiles. Intel suggests target is the Tarawa!"):ToCoalition(coalition.side.BLUE)  end
-  if Rand_AntiShipStrike == 3 then SpwnAntiShipStrike_3:Spawn() MessageShipStrike = MESSAGE:New("Su-24's Shiraz International Airport loaded with anti-ship missiles. Intel suggests target is the Stennis!"):ToCoalition(coalition.side.BLUE) end
+  if Rand_AntiShipStrike == 3 then SpwnAntiShipStrike_3:Spawn() MessageShipStrike = MESSAGE:New("Su-24's Shiraz International Airport loaded with anti-ship missiles. Intel suggests target is the Forrestal!"):ToCoalition(coalition.side.BLUE) end
   
   MenuSpawnAntiShipStrike:Remove()
   Menu_destroyAntiShipStrike = MENU_COALITION_COMMAND:New(coalition.side.BLUE,"Destroy Anti-Ship Strike", MenuCoalitionBlue, destroyAntiShipStrike)
@@ -440,7 +473,7 @@ function SpawnCamps(_args) --args is a table containing two tables
   for i in pairs(zonetable) do count = count + 1 end
       --MESSAGE:New("count = " .. count .. "" ,245,""):ToAll()
   
-  if count == 7 then --Stennis/Bandar
+  if count == 7 then --Forrestal/Bandar
       MESSAGE:New("ENEMY CAMPS ARE LOCATED OFF THE COAST, IN GRID SQUARES 40 R CQ05 & CQ15, EAST OF BANDAR LENGEH" ,60,""):ToAll()
   end
 
@@ -1025,14 +1058,16 @@ if LegacyCvn then
 
   env.info("JTF-1 Legacy CVN support enabled")
 
-  stennis = GROUP:FindByName("CSG_CarrierGrp_Stennis")
-  stennis:PatrolRoute()
+  -- local CVN = {}
+  
+  -- CVN.forrestal = GROUP:FindByName("CSG_CarrierGrp_Forrestal")
+  -- CVN.forrestal:PatrolRoute()
 
   -------------------------------
-  --- Recovery Tanker Stennis ---
+  --- Recovery Tanker Forrestal ---
   -------------------------------
 
-  Spawn_Tanker_S3B_Texaco6 = RECOVERYTANKER:New( UNIT:FindByName( "CSG_CarrierGrp_Stennis"), "Tanker_S3B_Texaco6" )
+  Spawn_Tanker_S3B_Texaco6 = RECOVERYTANKER:New( UNIT:FindByName( "CSG_CarrierGrp_Forrestal"), "Tanker_S3B_Texaco6" )
 
   Spawn_Tanker_S3B_Texaco6:SetCallsign(CALLSIGN.Tanker.Texaco, 6)
   Spawn_Tanker_S3B_Texaco6:SetTACAN(15, "TEX")
@@ -1044,77 +1079,77 @@ if LegacyCvn then
   Spawn_Tanker_S3B_Texaco6:Start()
 
   --------------------------
-  --- Rescue Helo Stennis ---
+  --- Rescue Helo Forrestal ---
   ---------------------------
 
-  Spawn_Rescuehelo_Stennis = RESCUEHELO:New(UNIT:FindByName("CSG_CarrierGrp_Stennis"), "RescueHelo_Stennis")
+  Spawn_Rescuehelo_Forrestal = RESCUEHELO:New(UNIT:FindByName("CSG_CarrierGrp_Forrestal"), "RescueHelo_Forrestal")
 
-  Spawn_Rescuehelo_Stennis:SetTakeoffAir()
-  Spawn_Rescuehelo_Stennis:SetRespawnInAir()
-  Spawn_Rescuehelo_Stennis:SetRescueStopBoatOff()
-  Spawn_Rescuehelo_Stennis:SetOffsetZ(800)
-  --Spawn_Rescuehelo_Stennis:Start()
+  Spawn_Rescuehelo_Forrestal:SetTakeoffAir()
+  Spawn_Rescuehelo_Forrestal:SetRespawnInAir()
+  Spawn_Rescuehelo_Forrestal:SetRescueStopBoatOff()
+  Spawn_Rescuehelo_Forrestal:SetOffsetZ(800)
+  --Spawn_Rescuehelo_Forrestal:Start()
 
   -----------------------
-  --- Airboss Stennis ---
+  --- Airboss Forrestal ---
   -----------------------
 
-  -- Create AIRBOSS object for Stennis
-  airbossStennis=AIRBOSS:New( "CSG_CarrierGrp_Stennis", "Stennis" )
+  -- Create AIRBOSS object for Forrestal
+  airbossForrestal=AIRBOSS:New( "CSG_CarrierGrp_Forrestal", "Forrestal" )
 
   -- Set load and save path/name for persistent LSO grades
-  airbossStennis:Load(nil, "PG_Airboss-USS Stennis_LSOgrades.csv")
-  airbossStennis:SetAutoSave(nil, "PG_Airboss-USS Stennis_LSOgrades.csv")
+  airbossForrestal:Load(nil, "PG_Airboss-USS Forrestal_LSOgrades.csv")
+  airbossForrestal:SetAutoSave(nil, "PG_Airboss-USS Forrestal_LSOgrades.csv")
 
-  local stennisOffset_deg = 0 -- Marshal offset
-  local stennisDefaultPlayerSkill = AIRBOSS.Difficulty.Normal -- default skill level
-  local stennisRadioRelayMarshall = UNIT:FindByName("RadioRelayMarshall_Stennis") -- radio relay unit for Marshal
-  local stennisRadioRelayPaddles = UNIT:FindByName("RadioRelayPaddles_Stennis") -- radio relay unit for LSO
-  local stennisClouds, stennisVisibility, stennisFog, stennisDust = airbossStennis:_GetStaticWeather() -- get mission weather (assumes static weather is used)
+  local ForrestalOffset_deg = 0 -- Marshal offset
+  local ForrestalDefaultPlayerSkill = AIRBOSS.Difficulty.Normal -- default skill level
+  local ForrestalRadioRelayMarshall = UNIT:FindByName("RadioRelayMarshall_Forrestal") -- radio relay unit for Marshal
+  local ForrestalRadioRelayPaddles = UNIT:FindByName("RadioRelayPaddles_Forrestal") -- radio relay unit for LSO
+  local ForrestalClouds, ForrestalVisibility, ForrestalFog, ForrestalDust = airbossForrestal:_GetStaticWeather() -- get mission weather (assumes static weather is used)
 
   --- Determine Daytime Case
   -- adjust case according to weather state
 
-  local stennisCase = 1 -- default to Case I
+  local ForrestalCase = 1 -- default to Case I
 
-  if (stennisClouds.base < 305 and stennisClouds.density > 8) or stennisVisibility < 8000 then -- cloudbase < 1000' or viz < 5 miles, Case III
-    stennisCase = 3
-  elseif stennisFog and stennisFog.thickness > 60 and stennisFog.visibility < 8000 then -- visibility in fog < 5nm, Case III
-    stennisCase = 3
-  elseif (stennisClouds.base < 915 and stennisClouds.density > 8) and stennisVisibility >= 8000 then -- cloudbase < 3000', viz > 5 miles, Case II
-    stennisCase = 2
+  if (ForrestalClouds.base < 305 and ForrestalClouds.density > 8) or ForrestalVisibility < 8000 then -- cloudbase < 1000' or viz < 5 miles, Case III
+    ForrestalCase = 3
+  elseif ForrestalFog and ForrestalFog.thickness > 60 and ForrestalFog.visibility < 8000 then -- visibility in fog < 5nm, Case III
+    ForrestalCase = 3
+  elseif (ForrestalClouds.base < 915 and ForrestalClouds.density > 8) and ForrestalVisibility >= 8000 then -- cloudbase < 3000', viz > 5 miles, Case II
+    ForrestalCase = 2
   end     
 
-  -- Stennis AIRBOSS configuration
-  airbossStennis:SetMenuRecovery(30, 25, false, 30)
-  airbossStennis:SetSoundfilesFolder("Airboss Soundfiles/")
-  --airbossStennis:SetVoiceOversLSOByRaynor()
-  --airbossStennis:SetVoiceOversMarshalByFF("Airboss Soundpack Marshal FF/")
-  airbossStennis:SetTACAN(74,"X","STN")
-  airbossStennis:SetICLS( 4,"STN" )
-  airbossStennis:SetCarrierControlledArea( 50 )
-  airbossStennis:SetDespawnOnEngineShutdown( true )
-  airbossStennis:SetRecoveryTanker( Spawn_Tanker_S3B_Texaco1 )
-  airbossStennis:SetMarshalRadio( 285.675, "AM" )
-  airbossStennis:SetLSORadio( 308.475, "AM" )
-  airbossStennis:SetRadioRelayLSO( stennisRadioRelayPaddles )
-  airbossStennis:SetRadioRelayMarshal( stennisRadioRelayMarshall )
-  airbossStennis:SetAirbossNiceGuy( true ) -- allow direct to commence
-  airbossStennis:SetDefaultPlayerSkill(stennisDefaultPlayerSkill)
-  airbossStennis:SetRespawnAI()
-  airbossStennis:SetMenuMarkZones(false) -- disable marking zones using smoke or flares
+  -- Forrestal AIRBOSS configuration
+  airbossForrestal:SetMenuRecovery(30, 25, false, 30)
+  airbossForrestal:SetSoundfilesFolder("Airboss Soundfiles/")
+  --airbossForrestal:SetVoiceOversLSOByRaynor()
+  --airbossForrestal:SetVoiceOversMarshalByFF("Airboss Soundpack Marshal FF/")
+  airbossForrestal:SetTACAN(74,"X","STN")
+  airbossForrestal:SetICLS( 4,"STN" )
+  airbossForrestal:SetCarrierControlledArea( 50 )
+  airbossForrestal:SetDespawnOnEngineShutdown( true )
+  airbossForrestal:SetRecoveryTanker( Spawn_Tanker_S3B_Texaco1 )
+  airbossForrestal:SetMarshalRadio( 285.675, "AM" )
+  airbossForrestal:SetLSORadio( 308.475, "AM" )
+  airbossForrestal:SetRadioRelayLSO( ForrestalRadioRelayPaddles )
+  airbossForrestal:SetRadioRelayMarshal( ForrestalRadioRelayMarshall )
+  airbossForrestal:SetAirbossNiceGuy( true ) -- allow direct to commence
+  airbossForrestal:SetDefaultPlayerSkill(ForrestalDefaultPlayerSkill)
+  airbossForrestal:SetRespawnAI()
+  airbossForrestal:SetMenuMarkZones(false) -- disable marking zones using smoke or flares
 
   --- Fun Map Recovery Windows 
   -- sunrise and sunset dependant on mission date
   -- https://www.timeanddate.com/sun/united-arab-emirates/abu-dhabi?month=4&year=2011
   -- Sunrise @ 08:00, Sunset @ 19:00, recovery @ sunrise+10 and sunset-10
   -- otherwise, intiate recovery through F10 menu
-  airbossStennis:AddRecoveryWindow( "5:55", "18:35", stennisCase, stennisOffset_deg, true, 30 ) 
-  airbossStennis:AddRecoveryWindow( "18:35", "5:55+1", 3, stennisOffset_deg, true, 30 ) 
-  airbossStennis:AddRecoveryWindow( "5:55+1", "18:35+1", stennisCase, stennisOffset_deg, true, 30 ) 
+  airbossForrestal:AddRecoveryWindow( "5:55", "18:35", ForrestalCase, ForrestalOffset_deg, true, 30 ) 
+  airbossForrestal:AddRecoveryWindow( "18:35", "5:55+1", 3, ForrestalOffset_deg, true, 30 ) 
+  airbossForrestal:AddRecoveryWindow( "5:55+1", "18:35+1", ForrestalCase, ForrestalOffset_deg, true, 30 ) 
 
-  -- Start AIRBOSS Stennis
-  airbossStennis:Start()
+  -- Start AIRBOSS Forrestal
+  airbossForrestal:Start()
 
   -- Set AIRBOSS control of Hawk tanker recovery 
   Spawn_Tanker_S3B_Texaco6:SetRecoveryAirboss(false)
