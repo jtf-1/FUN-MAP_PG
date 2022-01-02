@@ -115,12 +115,8 @@ end
 --- BEGIN ADMIN MENU SECTION
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-local ADMIN = {
-  --flagLoadMission = 9999, -- mission flag for triggering reload/loading of missions
-}
-
-ADMIN.eventhandler = EVENTHANDLER:New()
-ADMIN.eventhandler:HandleEvent(EVENTS.Birth)
+ADMIN = EVENTHANDLER:New()
+ADMIN:HandleEvent(EVENTS.Birth)
 
 function ADMIN:GetPlayerUnitAndName(unitName)
   if unitName ~= nil then
@@ -138,7 +134,7 @@ function ADMIN:GetPlayerUnitAndName(unitName)
   return nil,nil
 end
 
-function ADMIN.eventhandler:OnEventBirth(EventData)
+function ADMIN:OnEventBirth(EventData)
   local unitName = EventData.IniUnitName
   local unit, playername = ADMIN:GetPlayerUnitAndName(unitName)
   if unit and playername then
