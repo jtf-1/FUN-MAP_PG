@@ -1,1 +1,0 @@
-assert(loadfile("E:\\GitHub\\FUN-MAP_PG\\scripts\\Fun-Map_PG_DEV.lua"))()
