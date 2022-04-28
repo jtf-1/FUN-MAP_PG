@@ -51,6 +51,7 @@ Lincoln CVN-72 (SC)
 - BRC 300'TRUE
 - TACAN 72X 
 - ILCS: Channel 2
+- LINK 4 372.0 MHz
 - Towers/Paddles: 308.475 AM
 
 (Use CV Deck freq 274.075 to call AI APPR/TWR/PAD)
