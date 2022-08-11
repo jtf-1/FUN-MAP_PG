@@ -35,20 +35,20 @@ ECHO %DATE:~6,4%-%DATE:~3,2%-%DATE:~0,2%T%TIME%      Create Static file:     %bu
 ECHO.
 
 :: Add dynamic files
-CALL :buildfile mission_init.lua
-CALL :buildfile devcheck.lua
-CALL :buildfile disableai.lua
-CALL :buildfile adminmenu.lua
-CALL :buildfile missiontimer.lua
-CALL :buildfile missiletrainer.lua
-CALL :buildfile supportaircraft.lua
-CALL :buildfile staticranges.lua
-CALL :buildfile dynamicranges.lua
-CALL :buildfile movingtargets.lua
-CALL :buildfile ecs.lua
-CALL :buildfile bfmacm.lua
-CALL :buildfile bvrgci.lua
-CALL :buildfile mission_end.lua
+::CALL :buildfile mission_init.lua
+::CALL :buildfile devcheck.lua
+::CALL :buildfile disableai.lua
+::CALL :buildfile adminmenu.lua
+::CALL :buildfile missiontimer.lua
+::CALL :buildfile missiletrainer.lua
+::CALL :buildfile supportaircraft.lua
+::CALL :buildfile staticranges.lua
+::CALL :buildfile dynamicranges.lua
+::CALL :buildfile movingtargets.lua
+::CALL :buildfile ecs.lua
+::CALL :buildfile bfmacm.lua
+::CALL :buildfile bvrgci.lua
+::CALL :buildfile mission_end.lua
 
 ECHO.
 
