@@ -286,7 +286,7 @@ function SpawnSupport (SupportSpawn) -- spawnobject, spawnzone
   SupportSpawnObject.Zone = ZONE:FindByName(SupportSpawn.spawnzone) and ZONE:FindByName(SupportSpawn.spawnzone) or ZONE:New(SupportSpawn.spawnzone)
   
 
-  SupportSpawnObject:InitLimit( 1, 50 )
+  SupportSpawnObject:InitLimit( 1, 0 )
     :OnSpawnGroup(
       function ( SpawnGroup )
         local SpawnIndex = SupportSpawnObject:GetSpawnIndexFromGroup( SpawnGroup )
