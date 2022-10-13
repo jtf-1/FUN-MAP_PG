@@ -5,9 +5,6 @@
 @ECHO OFF
 SETLOCAL ENABLEEXTENSIONS
 
-:: Name of project static mission script
-SET missionsscript=Fun-Map_NTTR.lua
-
 :: name of this file for message output
 SET me=%~n0
 :: folder in which this file is being executed
@@ -24,27 +21,38 @@ ECHO Project Root:          %projectroot%
 :: path to static scripts
 SET staticscriptpath=%parent%static\
 ECHO Static path:           %staticscriptpath%
+:: path to kneeboards
+SET kneeboardpath=%projectroot%KNEEBOARD\IMAGES\
+ECHO Kneeboard path:        %kneeboardpath%
 
 :: Initialise build file & log
 ECHO MISSION FILE BUILD STARTED: %DATE:~6,4%-%DATE:~3,2%-%DATE:~0,2%T%TIME% > %log%
 ECHO. >> %log%
 
 CD %projectroot%
-DIR *.miz 
+DIR  %projectroot%*.miz 
 
-:: Add static mission script to MIZ
+:: Prepare build content
+mkdir %projectroot%Temp\l10n\DEFAULT
+copy %staticscriptpath%*.lua %projectroot%Temp\l10n\DEFAULT
+mkdir %projectroot%TEMP\KNEEBOARD\IMAGES
+copy %kneeboardpath%*.png %projectroot%Temp\KNEEBOARD\IMAGES
+
+:: Add build content to MIZ
 For %%I IN (%projectroot%*.miz) do (
   ECHO %DATE:~6,4%-%DATE:~3,2%-%DATE:~0,2%T%TIME%      Building MIZ file:    %%I >> %log%
-  echo "Mission: %%I"
-  mkdir Temp
-  cd Temp
-  mkdir l10n
-  mkdir l10n\DEFAULT
-  copy %staticscriptpath%%missionsscript% l10n\DEFAULT
-  7z.exe -bb0 u "%%I" "l10n\DEFAULT\*.lua"
-  cd %projectroot%
-  rmdir /S /Q Temp
+  echo Mission: %%I
+  echo.
+  echo.
+  echo +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  echo ++                     Build File                        ++
+  echo +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  cd %projectroot%Temp
+  7z.exe -bb0 u "%%I" *
 )
+  
+cd %projectroot%
+rmdir /S /Q Temp
 
 :: Close log
 ECHO. >> %log%
