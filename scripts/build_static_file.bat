@@ -13,7 +13,7 @@ SET parent=%~dp0
 SET log=%parent%logs\%me%.log
 
 :: name of static mission file to create
-SET build_filename=Fun-Map_PG.lua
+SET build_filename=mission.lua
 ECHO Static file name:           %build_filename%
 
 SET build_path=%parent%static\
@@ -35,6 +35,7 @@ ECHO %DATE:~6,4%-%DATE:~3,2%-%DATE:~0,2%T%TIME%      Create Static file:     %bu
 ECHO.
 
 :: Add dynamic files
+CALL :buildfile mission_main.lua
 ::CALL :buildfile mission_init.lua
 ::CALL :buildfile devcheck.lua
 ::CALL :buildfile disableai.lua
