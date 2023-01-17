@@ -29,12 +29,15 @@ flagBaseMissionValue = 1
 flagDevMissionValue = 99
 
 --- Name of client unit used for admin control
-adminUnitName = "XX_" -- string to locate within unit name for admin slots
+adminUnitName = "XX_" -- prefix to locate within unit name for admin slots
 
 --- Dynamic list of all clients
 --JTF.SetClient = SET_CLIENT:New():FilterStart()
 
 -- flag value to trigger reloading of DEV mission
 devMission = 99
+
+-- use AIRBOSS and associated functions with non-SC CVN(s)
+LegacyCvn = true 
 
 --- END INIT
