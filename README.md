@@ -50,7 +50,7 @@ Marshall: 285.675
 Lincoln CVN-72 (SC)
 - BRC 300'TRUE
 - TACAN 72X 
-- ILCS: Channel 2
+- ILCS: Channel 4
 - LINK 4 372.0 MHz
 - Towers/Paddles: 308.475 AM
 
