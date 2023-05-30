@@ -17,44 +17,56 @@
 -- *prefixed* with the value set in ADMIN.adminMenuName.
 --
 -- If the menu should be available in all mission slots, set ADMIN.menuAllSlots
--- to TRUE.
---
+-- to TRUE.|
 -- 
 
 ADMIN = EVENTHANDLER:New()
 ADMIN:HandleEvent(EVENTS.PlayerEnterAircraft)
 
+ADMIN.menuAllSlots = false -- Set to true for admin menu to appear in all player slots
+
 ADMIN.defaultMissionRestart = "MISSION_RESTART"
 ADMIN.defaultMissionLoad = "MISSION_LOAD"
+ADMIN.defaultMissionFile = "missions.lua"
+ADMIN.defaultMissionFolder = "missions"
 ADMIN.adminUnitName = "XX_" -- String to locate within unit name for admin slots
+
 ADMIN.missionRestart = (JTF1.missionRestart and JTF1.missionRestart or ADMIN.defaultMissionRestart)
 ADMIN.missionLoad = (JTF1.missionLoad and JTF1.missionLoad or ADMIN.defaultMissionLoad)
-ADMIN.flagLoadMission = 9999
-ADMIN.menuAllSlots = false -- Set to true for admin menu to appear for all players
+ADMIN.missionFile = (JTF1.missionFile and JTF1.missionFile or ADMIN.defaultMissionFile)
 
+-- check if mission is in devmode.
 local devState = trigger.misc.getUserFlag(8888)
-
 -- add admin menu to all slots if dev mode is active
 if devState == 1 then
   ADMIN.menuAllSlots = true
 end
 
-if JTF1.missionList then
-  ADMIN.missionList = JTF1.missionList
-  BASE:T(ADMIN.missionList)
-end
-
+-- check if a server config file has defined the path to the missions file.
 if JTF1.missionPath then
   ADMIN.missionPath = JTF1.missionPath
   BASE:T(ADMIN.missionPath)
 else
-  if lfs then
-    ADMIN.missionPath = (lfs.writedir() .. "\\missions")
+  if lfs then -- check if game environment is desanitised
+    ADMIN.missionPath = (lfs.writedir() .. "\\" .. ADMIN.defaultMissionFolder) -- set mission path to current write directory
   else
-    ADMIN.missionPath = ""
+    ADMIN.missionPath = "" -- empty mission path will bypass all but restart mission menu option
   end
 end
 
+
+-- set full path to mission list
+local missionPathFile = ADMIN.missionPath .. "\\" .. ADMIN.missionFile
+BASE:T("[ADMIN] mission list file: " .. missionPathFile)
+-- check mission list lua file exists. If it does run it. 
+if UTILS.CheckFileExists(ADMIN.missionPath, ADMIN.missionFile) then
+    BASE:E( "[ADMIN] Mission list file exists")
+    dofile(missionPathFile)
+    ADMIN.missionList = MISSIONLIST -- map mission list values to ADMIN.missionList
+    BASE:E(ADMIN.missionList)
+else
+    BASE:E("[ADMIN] Error! Mission list file not found.")        
+end
 
 function ADMIN:GetPlayerUnitAndName(unitName)
   if unitName ~= nil then
@@ -72,12 +84,14 @@ function ADMIN:GetPlayerUnitAndName(unitName)
   return nil,nil
 end
 
+-- when player enters a slot, check if it's an admin slot and add F10 admin menu if it is
 function ADMIN:OnEventPlayerEnterAircraft(EventData)
   local unitName = EventData.IniUnitName
   local unit, playername = ADMIN:GetPlayerUnitAndName(unitName)
   if unit and playername then
-    --local adminCheck = (string.find(unitName, ADMIN.adminUnitName) and "true" or "false")
+    -- add a scheduled task to create F10 menu if it's an admin slot or if menuAllslots is set to true
     if string.find(unitName, ADMIN.adminUnitName) or ADMIN.menuAllSlots then
+      -- delay task to allow client to finish spawning
       SCHEDULER:New(nil, ADMIN.BuildAdminMenu, {self, unit, playername}, 0.5)
     end
   end
@@ -104,6 +118,7 @@ function ADMIN:BuildAdminMenu(unit,playername)
   adminMenu = MENU_GROUP:New(adminGroup, "Admin")
   -- add command to restart current mission  
   MENU_GROUP_COMMAND:New( adminGroup, "Restart Current Mission", adminMenu, ADMIN.LoadMission, self, playername)
+  -- if a mission list has been found add submenus for it
   if ADMIN.missionList then
     BASE:T("[JTF1] ADMIN Build missionList.")
     -- add menus to load missions
@@ -121,7 +136,6 @@ function ADMIN:BuildAdminMenu(unit,playername)
       end
     end
   end
-
 end
 
 --- END ADMIN MENU SECTION
