@@ -24,19 +24,37 @@
 ADMIN = EVENTHANDLER:New()
 ADMIN:HandleEvent(EVENTS.PlayerEnterAircraft)
 
+ADMIN.defaultMissionRestart = "MISSION_RESTART"
+ADMIN.defaultMissionLoad = "MISSION_LOAD"
 ADMIN.adminUnitName = "XX_" -- String to locate within unit name for admin slots
-ADMIN.missionRestart = (JTF1.missionRestart and JTF1.missionRestart or "ADMIN9999") -- Message to trigger mission restart via jtf1-hooks
+ADMIN.missionRestart = (JTF1.missionRestart and JTF1.missionRestart or ADMIN.defaultMissionRestart)
+ADMIN.missionLoad = (JTF1.missionLoad and JTF1.missionLoad or ADMIN.defaultMissionLoad)
 ADMIN.flagLoadMission = 9999
 ADMIN.menuAllSlots = false -- Set to true for admin menu to appear for all players
 
-ADMIN.missionList = { -- List of missions for load mission menu commands
-  {menuText = "Restart current mission", missionFlagValue = 0},
-  {menuText = "Load DAY PG", missionFlagValue = 1},
-  {menuText = "Load NIGHT PG", missionFlagValue = 2},
-  {menuText = "Load WEATHER PG", missionFlagValue = 3},
-  {menuText = "Load NIGHT WEATHER PG", missionFlagValue = 4},
-  {menuText = "Load DEV MISSION PG", missionFlagValue = 99},
-}
+local devState = trigger.misc.getUserFlag(8888)
+
+-- add admin menu to all slots if dev mode is active
+if devState == 1 then
+  ADMIN.menuAllSlots = true
+end
+
+if JTF1.missionList then
+  ADMIN.missionList = JTF1.missionList
+  BASE:T(ADMIN.missionList)
+end
+
+if JTF1.missionPath then
+  ADMIN.missionPath = JTF1.missionPath
+  BASE:T(ADMIN.missionPath)
+else
+  if lfs then
+    ADMIN.missionPath = (lfs.writedir() .. "\\missions")
+  else
+    ADMIN.missionPath = ""
+  end
+end
+
 
 function ADMIN:GetPlayerUnitAndName(unitName)
   if unitName ~= nil then
@@ -55,57 +73,55 @@ function ADMIN:GetPlayerUnitAndName(unitName)
 end
 
 function ADMIN:OnEventPlayerEnterAircraft(EventData)
-  if not ADMIN.menuAllSlots then
-    local unitName = EventData.IniUnitName
-    local unit, playername = ADMIN:GetPlayerUnitAndName(unitName)
-    if unit and playername then
-      local adminCheck = (string.find(unitName, ADMIN.adminUnitName) and "true" or "false")
-      if string.find(unitName, ADMIN.adminUnitName) then
-        SCHEDULER:New(nil, ADMIN.BuildAdminMenu, {self, unit, playername}, 0.5)
-      end
+  local unitName = EventData.IniUnitName
+  local unit, playername = ADMIN:GetPlayerUnitAndName(unitName)
+  if unit and playername then
+    --local adminCheck = (string.find(unitName, ADMIN.adminUnitName) and "true" or "false")
+    if string.find(unitName, ADMIN.adminUnitName) or ADMIN.menuAllSlots then
+      SCHEDULER:New(nil, ADMIN.BuildAdminMenu, {self, unit, playername}, 0.5)
     end
   end
 end
 
---- Set mission flag to load a new mission.
---- If mapFlagValue is current mission, restart the mission via jtf1-hooks
--- @param #string playerName Name of client calling restart command.
--- @param #number mapFlagValue Mission number to which flag should be set.
-function ADMIN:LoadMission(playerName, mapFlagValue)
+--- Load mission requested from menu
+function ADMIN:LoadMission(playerName, missionFile)
+  local adminMessage = ADMIN.missionRestart
   if playerName then
-    env.info("[JTF-1] ADMIN Restart player name: " .. playerName)
-  end
-  if mapFlagValue == 0 then -- use jtf1-hooks to restart current mission
-    MESSAGE:New(ADMIN.missionRestart):ToAll()
+    BASE:E("[JTF1] ADMIN Restart or load called by player name: " .. playerName)
   else
-    trigger.action.setUserFlag(ADMIN.flagLoadMission, mapFlagValue)
+    BASE:E("[JTF1] ADMIN Restart or load called by non-player!")
   end
+  if missionFile then
+    adminMessage = ADMIN.missionLoad .. "-" .. missionFile
+  end
+  MESSAGE:New(adminMessage):ToAll()
 end
 
 --- Add admin menu and commands if client is in an ADMIN spawn
--- @param #object unit Unit of player.
--- @param #string playername Name of player
 function ADMIN:BuildAdminMenu(unit,playername)
-  if not (unit or playername) then
-    -- create menu at Mission level
-    local adminMenu = MENU_MISSION:New("Admin")
-    for i, menuCommand in ipairs(ADMIN.missionList) do
-      MENU_MISSION_COMMAND:New( menuCommand.menuText, adminMenu, ADMIN.LoadMission, self, playername, menuCommand.missionFlagValue )
-    end
-  else
-    -- Create menu for admin slot
-    local adminGroup = unit:GetGroup()
-    local adminMenu = MENU_GROUP:New(adminGroup, "Admin")
-    local testMenu = MENU_GROUP:New(adminGroup, "Test", adminMenu)
-    for i, menuCommand in ipairs(ADMIN.missionList) do
-      MENU_GROUP_COMMAND:New( adminGroup, menuCommand.menuText, adminMenu, ADMIN.LoadMission, self, playername, menuCommand.missionFlagValue )
-      MENU_GROUP_COMMAND:New( adminGroup, "SRS Broadcast test", testMenu, MISSIONSRS.SendRadio, "All players, test broadcast over default radio.")
+  local adminGroup = unit:GetGroup()
+  -- add ADMIN menu to F10
+  adminMenu = MENU_GROUP:New(adminGroup, "Admin")
+  -- add command to restart current mission  
+  MENU_GROUP_COMMAND:New( adminGroup, "Restart Current Mission", adminMenu, ADMIN.LoadMission, self, playername)
+  if ADMIN.missionList then
+    BASE:T("[JTF1] ADMIN Build missionList.")
+    -- add menus to load missions
+    for i, missionList in ipairs(ADMIN.missionList) do
+      BASE:E(missionList)
+      -- add menu for mission group  
+      local missionName = MENU_GROUP:New(adminGroup, missionList.missionName, adminMenu)
+      -- add menus for each mission file in the group
+      for j, missionMenu in ipairs(missionList.missionMenu) do
+        BASE:E(missionMenu)
+        -- add full path to mission file if defined
+        local missionFile = ADMIN.missionPath .. "\\" .. missionMenu.missionFile
+        -- add command to load mission
+        MENU_GROUP_COMMAND:New( adminGroup, missionMenu.menuText, missionName, ADMIN.LoadMission, self, playername, missionFile )
+      end
     end
   end
-end
 
-if ADMIN.menuAllSlots then
-  ADMIN:BuildAdminMenu()
 end
 
 --- END ADMIN MENU SECTION

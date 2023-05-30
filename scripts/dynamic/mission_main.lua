@@ -14,7 +14,7 @@ function SpwnShipStrike ()
   if Rand_AntiShipStrike == 3 then SpwnAntiShipStrike_3:Spawn() MessageShipStrike = MESSAGE:New("Su-24's Shiraz International Airport loaded with anti-ship missiles. Intel suggests target is the Forrestal!"):ToCoalition(coalition.side.BLUE) end
   
   MenuSpawnAntiShipStrike:Remove()
-  Menu_destroyAntiShipStrike = MENU_COALITION_COMMAND:New(coalition.side.BLUE,"Destroy Anti-Ship Strike", MenuCoalitionBlue, destroyAntiShipStrike)
+  Menu_destroyAntiShipStrike = MENU_COALITION_COMMAND:New(coalition.side.BLUE,"Destroy Anti-Ship Strike", MenuShipStrike, destroyAntiShipStrike)
 
 end -- function
 
@@ -26,7 +26,7 @@ function destroyAntiShipStrike (AntiShipStrike_1)
     AntiShipStrike_1:Destroy()
     AntiShipStrike_1, Index = SpwnAntiShipStrike_1:GetNextAliveGroup(Index)
     Menu_destroyAntiShipStrike:Remove()
-    MenuSpawnAntiShipStrike = MENU_COALITION_COMMAND:New(coalition.side.BLUE,"Spawn Anti-Ship Strike",MenuCoalitionBlue, SpwnShipStrike)
+    MenuSpawnAntiShipStrike = MENU_COALITION_COMMAND:New(coalition.side.BLUE,"Spawn Anti-Ship Strike",MenuShipStrike, SpwnShipStrike)
     end
 end -- function
 
@@ -743,7 +743,7 @@ IranCAPAircraft = {"Iran_Mig31","Iran_Mig29","Iran_Mig21","Iran_Mig21","Iran_Mig
 -- XXX BEGIN ANTI-SHIP STRIKE SECTION
 
 --Spawn MENU Display
-MenuSpawnAntiShipStrike = MENU_COALITION_COMMAND:New(coalition.side.BLUE,"Spawn Anti-Ship Strike", MenuCoalitionBlue , SpwnShipStrike)
+MenuSpawnAntiShipStrike = MENU_COALITION_COMMAND:New(coalition.side.BLUE,"Spawn Anti-Ship Strike", MenuShipStrike , SpwnShipStrike)
 
 -- END ANTI-SHIP STRIKE SECTION
 
@@ -791,7 +791,7 @@ FactoryStrike = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"ASALOYEH FACTOR
 LIVESEAD = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"BANDAR LENGEH SEAD",MenuBandarL,BLSEAD, "")
 
 --EWR Sites 
-EWRIran = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"ACTIVATE IRAN EWR SITES",MenuCoalitionTopLevel,IranEWR, "")
+EWRIran = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"ACTIVATE IRAN EWR SITES",MenuGroundAttack,IranEWR, "")
 
 --CAP menu items
 --Shiraz

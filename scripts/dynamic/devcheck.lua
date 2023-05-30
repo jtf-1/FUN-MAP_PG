@@ -13,8 +13,6 @@ if devState == 1 then
   MESSAGE:New("Dev Mode is ON!"):ToAll()
   DEV_MENU = {
     traceOn = true, -- default tracestate false == trace off, true == trace on.
-    flagLoadMission = (JTF1.flagLoadMission and JTF1.flagLoadMission or 9999), -- flag for load misison trigger
-    missionRestartMsg = (JTF1.missionRestartMsg and JTF1.missionRestartMsg or "ADMIN9999"), -- Message to trigger mission restart via jtf1-hooks
   }
   
   function DEV_MENU:toggleTrace(traceOn)
@@ -45,7 +43,6 @@ if devState == 1 then
   DEV_MENU.topmenu = MENU_MISSION:New("DEVMENU")
   MENU_MISSION_COMMAND:New("Toggle TRACE.", DEV_MENU.topmenu, DEV_MENU.toggleTrace, DEV_MENU, DEV_MENU.traceOn)
   MENU_MISSION_COMMAND:New("Reload Test LUA.", DEV_MENU.topmenu, DEV_MENU.testLua)
-  MENU_MISSION_COMMAND:New("Restart Mission", DEV_MENU.topmenu, DEV_MENU.restartMission)
 
   -- trace all events
   BASE:TraceAll(true)

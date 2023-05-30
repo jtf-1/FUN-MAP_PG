@@ -4,7 +4,7 @@
 
 
 local JTFbase = _G
-local __JTFfilepath = 'E:/GitHub/FUN-MAP_NTTR/scripts/dynamic/'
+local __JTFfilepath = 'D:/GitHub/FUN-MAP_PG/scripts/dynamic/'
 
 __JTFLoader = {}
 
@@ -23,6 +23,6 @@ end
 
 __JTFLoader.Includes = {}
 
-__JTFLoader.Include( 'mission_files.lua' ) -- "E:\GitHub\FUN-MAP_NTTR\scripts\dynamic\mission_files.lua"
+__JTFLoader.Include( 'mission_files.lua' ) 
 
 --- End mission script dynamic loader
