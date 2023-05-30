@@ -6390,7 +6390,7 @@ function DYNDECK.sc_rec_low(shipID, templateName)
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires Tech-G 1", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires Tech-G 1", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["livery_id"] = "green",
@@ -6421,7 +6421,7 @@ function DYNDECK.sc_rec_low(shipID, templateName)
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires Tech-G 2", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires Tech-G 2", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["livery_id"] = "green",
@@ -6452,7 +6452,7 @@ function DYNDECK.sc_rec_low(shipID, templateName)
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires Tech-G 3", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires Tech-G 3", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["livery_id"] = "green",
@@ -6483,7 +6483,7 @@ function DYNDECK.sc_rec_low(shipID, templateName)
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires Tech-G 4", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires Tech-G 4", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["livery_id"] = "green",
@@ -6514,7 +6514,7 @@ function DYNDECK.sc_rec_low(shipID, templateName)
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires Tech-G 5", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires Tech-G 5", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["livery_id"] = "green",
@@ -6545,7 +6545,7 @@ function DYNDECK.sc_rec_low(shipID, templateName)
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires LSO1-1", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires LSO1-1", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["category"] = "Personnel",
@@ -6575,7 +6575,7 @@ function DYNDECK.sc_rec_low(shipID, templateName)
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires LSO4-2", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires LSO4-2", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["category"] = "Personnel",
@@ -8033,7 +8033,7 @@ function DYNDECK.sc_rec_med(shipID, templateName)
 	-- Creats aircraft and techs on Corral on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Corral F-18 1", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Corral F-18 1", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["livery_id"] = "VFA-25 403 Matt Wurst _Matty_",
@@ -8063,7 +8063,7 @@ function DYNDECK.sc_rec_med(shipID, templateName)
 	-- Creats aircraft and techs on Corral on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Corral F-18 2", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Corral F-18 2", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["livery_id"] = "VMFA-122C_DC_13_Dart",
@@ -8093,7 +8093,7 @@ function DYNDECK.sc_rec_med(shipID, templateName)
 	-- Creats aircraft and techs on Corral on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Corral Tech-B 1", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Corral Tech-B 1", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["livery_id"] = "brown",
@@ -8124,7 +8124,7 @@ function DYNDECK.sc_rec_med(shipID, templateName)
 	-- Creats aircraft and techs on Corral on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Corral Tech-W 2", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Corral Tech-W 2", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["livery_id"] = "white",
@@ -8155,7 +8155,7 @@ function DYNDECK.sc_rec_med(shipID, templateName)
 	-- Creats aircraft and techs on Corral on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Corral Tech-B 3", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Corral Tech-B 3", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["livery_id"] = "brown",
@@ -8279,7 +8279,7 @@ function DYNDECK.sc_rec_med(shipID, templateName)
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires Tech-G 1", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires Tech-G 1", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["livery_id"] = "green",
@@ -8310,7 +8310,7 @@ function DYNDECK.sc_rec_med(shipID, templateName)
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires Tech-G 2", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires Tech-G 2", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["livery_id"] = "green",
@@ -8341,7 +8341,7 @@ function DYNDECK.sc_rec_med(shipID, templateName)
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires Tech-G 3", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires Tech-G 3", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 										["livery_id"] = "green",
@@ -8372,7 +8372,7 @@ function DYNDECK.sc_rec_med(shipID, templateName)
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires Tech-G 4", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires Tech-G 4", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["livery_id"] = "green",
@@ -8403,7 +8403,7 @@ function DYNDECK.sc_rec_med(shipID, templateName)
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires Tech-G 5", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires Tech-G 5", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["livery_id"] = "green",
@@ -8434,7 +8434,7 @@ function DYNDECK.sc_rec_med(shipID, templateName)
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires LSO1-1", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires LSO1-1", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["category"] = "Personnel",
@@ -8464,7 +8464,7 @@ function DYNDECK.sc_rec_med(shipID, templateName)
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires LSO4-2", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires LSO4-2", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["category"] = "Personnel",
@@ -8903,7 +8903,7 @@ function DYNDECK.sc_rec_hvy(shipID, templateName)
     -- Creats aircraft and techs on street on Nimitz Carriers.
 
     local staticObj = {
-    	["name"] = "Street F-18 2", -- unit name (Name this something identifiable if you wish to remove it later)
+    	["name"] = namePrefix .. "Street F-18 2", -- unit name (Name this something identifiable if you wish to remove it later)
 
     -- Copy and paste over this with the units information
                                             ["livery_id"] = "VFA-25 406 Ryan 'GreenHead' Kitts",
@@ -8933,7 +8933,7 @@ function DYNDECK.sc_rec_hvy(shipID, templateName)
     -- Creats aircraft and techs on street on Nimitz Carriers.
 
     local staticObj = {
-    	["name"] = "Street F-18 3", -- unit name (Name this something identifiable if you wish to remove it later)
+    	["name"] = namePrefix .. "Street F-18 3", -- unit name (Name this something identifiable if you wish to remove it later)
 
     -- Copy and paste over this with the units information
                                             ["livery_id"] = "VFA-25 413 Adam 'sickdog' Soloway",
@@ -8963,7 +8963,7 @@ function DYNDECK.sc_rec_hvy(shipID, templateName)
     -- Creats aircraft and techs on street on Nimitz Carriers.
 
     local staticObj = {
-    	["name"] = "Street F-18 4", -- unit name (Name this something identifiable if you wish to remove it later)
+    	["name"] = namePrefix .. "Street F-18 4", -- unit name (Name this something identifiable if you wish to remove it later)
 
     -- Copy and paste over this with the units information
                                             ["livery_id"] = "vmfa-122 high visibility",
@@ -8993,7 +8993,7 @@ function DYNDECK.sc_rec_hvy(shipID, templateName)
 	-- Creats aircraft and techs on street on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Street Tech-Y 1", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Street Tech-Y 1", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["livery_id"] = "yellow",
@@ -9024,7 +9024,7 @@ function DYNDECK.sc_rec_hvy(shipID, templateName)
 	-- Creats aircraft and techs on street on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Street Tech-Y 2", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Street Tech-Y 2", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["livery_id"] = "yellow",
@@ -9055,7 +9055,7 @@ function DYNDECK.sc_rec_hvy(shipID, templateName)
 	-- Creats aircraft and techs on street on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Street Tech-Y 3", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Street Tech-Y 3", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["livery_id"] = "yellow",
@@ -10384,7 +10384,7 @@ function DYNDECK.sc_rec_hvy(shipID, templateName)
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires Tech-G 1", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires Tech-G 1", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["livery_id"] = "green",
@@ -10415,7 +10415,7 @@ function DYNDECK.sc_rec_hvy(shipID, templateName)
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires Tech-G 2", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires Tech-G 2", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["livery_id"] = "green",
@@ -10446,7 +10446,7 @@ function DYNDECK.sc_rec_hvy(shipID, templateName)
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires Tech-G 3", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires Tech-G 3", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 										["livery_id"] = "green",
@@ -10477,7 +10477,7 @@ function DYNDECK.sc_rec_hvy(shipID, templateName)
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires Tech-G 4", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires Tech-G 4", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["livery_id"] = "green",
@@ -10508,7 +10508,7 @@ function DYNDECK.sc_rec_hvy(shipID, templateName)
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires Tech-G 5", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires Tech-G 5", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["livery_id"] = "green",
@@ -10539,7 +10539,7 @@ function DYNDECK.sc_rec_hvy(shipID, templateName)
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires LSO1-1", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires LSO1-1", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["category"] = "Personnel",
@@ -10569,7 +10569,7 @@ function DYNDECK.sc_rec_hvy(shipID, templateName)
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires LSO4-2", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires LSO4-2", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["category"] = "Personnel",
@@ -15128,7 +15128,7 @@ function DYNDECK.sc_wires(shipID, templateName) -- template for deck template fu
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires Tech-G 1", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires Tech-G 1", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["livery_id"] = "green",
@@ -15159,7 +15159,7 @@ function DYNDECK.sc_wires(shipID, templateName) -- template for deck template fu
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires Tech-G 2", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires Tech-G 2", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["livery_id"] = "green",
@@ -15190,7 +15190,7 @@ function DYNDECK.sc_wires(shipID, templateName) -- template for deck template fu
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires Tech-G 3", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires Tech-G 3", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 										["livery_id"] = "green",
@@ -15221,7 +15221,7 @@ function DYNDECK.sc_wires(shipID, templateName) -- template for deck template fu
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires Tech-G 4", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires Tech-G 4", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["livery_id"] = "green",
@@ -15252,7 +15252,7 @@ function DYNDECK.sc_wires(shipID, templateName) -- template for deck template fu
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires Tech-G 5", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires Tech-G 5", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["livery_id"] = "green",
@@ -15283,7 +15283,7 @@ function DYNDECK.sc_wires(shipID, templateName) -- template for deck template fu
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires LSO1-1", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires LSO1-1", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["category"] = "Personnel",
@@ -15313,7 +15313,7 @@ function DYNDECK.sc_wires(shipID, templateName) -- template for deck template fu
 	-- Creats techs along landing area on Nimitz Carriers.
 
 	local staticObj = {
-		["name"] = "Wires LSO4-2", -- unit name (Name this something identifiable if you wish to remove it later)
+		["name"] = namePrefix .. "Wires LSO4-2", -- unit name (Name this something identifiable if you wish to remove it later)
 
 	-- Copy and paste over this with the units information
 											["category"] = "Personnel",
