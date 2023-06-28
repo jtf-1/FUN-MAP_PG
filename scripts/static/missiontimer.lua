@@ -11,7 +11,7 @@
 --
 
 MISSIONTIMER = {
-  durationHrs = 13, -- Mission run time in HOURS
+  durationHrs = 11, -- Mission run time in HOURS
   msgSchedule = {60, 30, 10, 5}, -- Schedule for mission restart warning messages. Time in minutes.
   msgWarning = {}, -- schedule container
   missionRestart = ( JTF1.missionRestart and JTF1.missionRestart or "ADMIN9999" ), -- Message to trigger mission restart via jtf1-hooks
