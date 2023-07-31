@@ -60,10 +60,10 @@ local missionPathFile = ADMIN.missionPath .. "\\" .. ADMIN.missionFile
 BASE:T("[ADMIN] mission list file: " .. missionPathFile)
 -- check mission list lua file exists. If it does run it. 
 if UTILS.CheckFileExists(ADMIN.missionPath, ADMIN.missionFile) then
-    BASE:E( "[ADMIN] Mission list file exists")
+    BASE:T( "[ADMIN] Mission list file exists")
     dofile(missionPathFile)
     ADMIN.missionList = MISSIONLIST -- map mission list values to ADMIN.missionList
-    BASE:E(ADMIN.missionList)
+    BASE:T(ADMIN.missionList)
 else
     BASE:E("[ADMIN] Error! Mission list file not found.")        
 end
@@ -101,9 +101,9 @@ end
 function ADMIN:LoadMission(playerName, missionFile)
   local adminMessage = ADMIN.missionRestart
   if playerName then
-    BASE:E("[JTF1] ADMIN Restart or load called by player name: " .. playerName)
+    BASE:T("[JTF1] ADMIN Restart or load called by player name: " .. playerName)
   else
-    BASE:E("[JTF1] ADMIN Restart or load called by non-player!")
+    BASE:T("[JTF1] ADMIN Restart or load called by non-player!")
   end
   if missionFile then
     adminMessage = ADMIN.missionLoad .. "-" .. missionFile
@@ -123,12 +123,12 @@ function ADMIN:BuildAdminMenu(unit,playername)
     BASE:T("[JTF1] ADMIN Build missionList.")
     -- add menus to load missions
     for i, missionList in ipairs(ADMIN.missionList) do
-      BASE:E(missionList)
+      BASE:T(missionList)
       -- add menu for mission group  
       local missionName = MENU_GROUP:New(adminGroup, missionList.missionName, adminMenu)
       -- add menus for each mission file in the group
       for j, missionMenu in ipairs(missionList.missionMenu) do
-        BASE:E(missionMenu)
+        BASE:T(missionMenu)
         -- add full path to mission file if defined
         local missionFile = ADMIN.missionPath .. "\\" .. missionMenu.missionFile
         -- add command to load mission

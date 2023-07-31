@@ -20,7 +20,6 @@
 
 
 MISSIONSRS = {
-  fileName = "ServerLocalSettings.lua",                           -- name of file containing local server settings
   LocalServerConfigPath = nil,                                    -- path to server srs settings. nil if file is in root of server's savedgames profile.
   LocalServerConfigFile = "LocalServerSettings.txt",              -- srs server settings file name
   defaultSrsPath = "C:/Program Files/DCS-SimpleRadio-Standalone", -- default path to SRS install directory if setting file is not avaialable "C:/Program Files/DCS-SimpleRadio-Standalone"
@@ -39,21 +38,10 @@ MISSIONSRS = {
 }
 
 function MISSIONSRS:LoadSettings()
-  local loadFile  = self.LocalServerConfigFile
-  if UTILS.CheckFileExists(self.LocalServerConfigPath, self.LocalServerConfigFile) then
-    local loadFile, serverSettings = UTILS.LoadFromFile(self.LocalServerConfigPath, self.LocalServerConfigFile)
-    BASE:T({"[MISSIONSRS] Load Server Settings",{serverSettings}})
-    if not loadFile then
-      BASE:E(string.format("[MISSIONSRS] ERROR: Could not load %s", loadFile))
-    else
-      self.SRS_DIRECTORY = serverSettings[1] or self.defaultSrsPath
-      self.SRS_PORT = serverSettings[2] or self.defaultSrsPort
-      self:AddRadio()
-      BASE:T({"[MISSIONSRS]",{self}})
-    end
-  else
-    BASE:E(string.format("[MISSIONSRS] ERROR: Could not find %s", loadFile))
-  end
+  self.SRS_DIRECTORY = JTF1.srsPath and JTF1.srsPath or self.defaultSrsPath
+  self.SRS_PORT = JTF1.srsPort and JTF1.srsPort or self.defaultSrsPort
+  self:AddRadio()
+  BASE:T({"[MISSIONSRS]",{self}})
 end
 
 function MISSIONSRS:AddRadio()
