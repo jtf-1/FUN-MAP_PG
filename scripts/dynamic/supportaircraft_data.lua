@@ -44,7 +44,7 @@ SUPPORTAC.type = {
 -- Support aircraft missions. Each mission block defines a support aircraft mission. Each block is processed
 -- and an aircraft will be spawned for the mission. When the mission is cancelled, eg after RTB or if it is destroyed,
 -- a new aircraft will be spawned and a fresh AUFTRAG created.
-SUPPORTAC.missions = {
+SUPPORTAC.mission = {
     -- {
     --   name = "ARWK", -- text name for this support mission. Combined with this block's index and the mission type to define the group name on F10 map
     --   category = SUPPORTAC.category.tanker, -- support mission category. Used to determine the auftrag type. Options are listed in SUPPORTAC.category

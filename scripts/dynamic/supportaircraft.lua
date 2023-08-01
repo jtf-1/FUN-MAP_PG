@@ -13,7 +13,7 @@
 -- in which it will be used.
 
 -- In the mission editor, place a zone where you want the support aircraft to spawn.
--- Under SUPPORTAC.missions, add a config block for the aircraft you intend to spawn.
+-- Under SUPPORTAC.mission, add a config block for the aircraft you intend to spawn.
 -- See the comments in the example block for explanations of each config option.
 
 -- A late activated template is required for each support type that is to be spawned.
@@ -189,7 +189,7 @@ function SUPPORTAC:Start()
   local _msg = string.format("[SUPPORTAC] Start")
   BASE:I(_msg)
 
-  for index, mission in ipairs(SUPPORTAC.missions) do
+  for index, mission in ipairs(SUPPORTAC.mission) do
     _msg = "[SUPPORTAC] Start - mission"
     BASE:I({_msg, mission})
 
