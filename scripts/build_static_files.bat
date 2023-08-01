@@ -36,6 +36,7 @@ copy %source_path%missiontimer.lua %destination_path%missiontimer.lua
 copy %source_path%missiletrainer.lua %destination_path%missiletrainer.lua
 copy %source_path%mission_menu.lua %destination_path%mission_menu.lua
 copy %source_path%supportaircraft.lua %destination_path%supportaircraft.lua
+copy %source_path%supportaircraft.lua %destination_path%supportaircraft_data.lua
 copy %source_path%bfmacm.lua %destination_path%bfmacm.lua
 copy %source_path%Hercules_Cargo.lua %destination_path%Hercules_Cargo.lua
 copy %source_path%rescue_helo.lua %destination_path%rescue_helo.lua
