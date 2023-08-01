@@ -30,7 +30,7 @@ SUPPORTAC.defaults = {
   despawnDelay = 60, -- delay, in seconds, before the old ac will be despawned
   tankerLeg = 50, -- default tanker racetrack leg length
   awacsLeg = 70, -- default awacs racetrack leg length
-  fuelLowThreshold = 95, -- default % fuel low level to trigger RTB
+  fuelLowThreshold = 30, -- default % fuel low level to trigger RTB
   spawnDistance = 5, -- default distance in NM from the mission zone at which to spawn aircraft
   heading = 90, --default heading on which to spawn aircraft
 }
