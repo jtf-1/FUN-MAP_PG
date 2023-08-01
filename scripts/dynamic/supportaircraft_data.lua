@@ -26,7 +26,7 @@ SUPPORTAC.default = {
 }
 
 -- Support categories used to define which AUFTRAG type is used
-SUPPORTAC.categories = {
+SUPPORTAC.category = {
   tanker = 1,
   awacs = 2,
 }
@@ -47,7 +47,7 @@ SUPPORTAC.type = {
 SUPPORTAC.missions = {
     -- {
     --   name = "ARWK", -- text name for this support mission. Combined with this block's index and the mission type to define the group name on F10 map
-    --   category = SUPPORTAC.categories.tanker, -- support mission category. Used to determine the auftrag type. Options are listed in SUPPORTAC.categories
+    --   category = SUPPORTAC.category.tanker, -- support mission category. Used to determine the auftrag type. Options are listed in SUPPORTAC.category
     --   type = SUPPORTAC.type.tankerBoom, -- type defines the spawn template that will be used
     --   zone = "ARWK", -- ME zone that defines the start waypoint for the spawned aircraft
     --   callsign = CALLSIGN.Tanker.Arco, -- callsign under which the aircraft will operate
@@ -63,7 +63,7 @@ SUPPORTAC.missions = {
     -- },
     {
       name = "ARWK", -- TANKER
-      category = SUPPORTAC.categories.tanker,
+      category = SUPPORTAC.category.tanker,
       type = SUPPORTAC.type.tankerProbe,
       zone = "ARWK",
       callsign = CALLSIGN.Tanker.Shell,
@@ -79,7 +79,7 @@ SUPPORTAC.missions = {
     },
     {
       name = "ARWK", -- TANKER
-      category = SUPPORTAC.categories.tanker,
+      category = SUPPORTAC.category.tanker,
       type = SUPPORTAC.type.tankerBoom,
       zone = "ARWK",
       callsign = CALLSIGN.Tanker.Texaco,
@@ -95,7 +95,7 @@ SUPPORTAC.missions = {
     },
     -- {
     --   name = "ARXKYK", -- TANKER
-    --   category = SUPPORTAC.categories.tanker,
+    --   category = SUPPORTAC.category.tanker,
     --   type = SUPPORTAC.type.tankerBoom,
     --   zone = "ARXKYK",
     --   callsign = CALLSIGN.Tanker.Arco,
@@ -111,7 +111,7 @@ SUPPORTAC.missions = {
     -- },
     {
       name = "ARXKYK", -- TANKER
-      category = SUPPORTAC.categories.tanker,
+      category = SUPPORTAC.category.tanker,
       type = SUPPORTAC.type.tankerProbe,
       zone = "ARXKYK",
       callsign = CALLSIGN.Tanker.Shell,
@@ -127,7 +127,7 @@ SUPPORTAC.missions = {
     },
     {
       name = "ARXKYK", -- TANKER
-      category = SUPPORTAC.categories.tanker,
+      category = SUPPORTAC.category.tanker,
       type = SUPPORTAC.type.tankerBoom,
       zone = "ARXKYK",
       callsign = CALLSIGN.Tanker.Texaco,
@@ -143,7 +143,7 @@ SUPPORTAC.missions = {
     },
     -- {
     --   name = "ARYHBN", -- TANKER
-    --   category = SUPPORTAC.categories.tanker,
+    --   category = SUPPORTAC.category.tanker,
     --   type = SUPPORTAC.type.tankerBoom,
     --   zone = "ARYHBN",
     --   callsign = CALLSIGN.Tanker.Arco,
@@ -159,7 +159,7 @@ SUPPORTAC.missions = {
     -- },
     {
       name = "ARYHBN", -- TANKER
-      category = SUPPORTAC.categories.tanker,
+      category = SUPPORTAC.category.tanker,
       type = SUPPORTAC.type.tankerProbe,
       zone = "ARYHBN",
       callsign = CALLSIGN.Tanker.Shell,
@@ -175,7 +175,7 @@ SUPPORTAC.missions = {
     },
     {
       name = "ARYHBN", -- TANKER
-      category = SUPPORTAC.categories.tanker,
+      category = SUPPORTAC.category.tanker,
       type = SUPPORTAC.type.tankerBoom,
       zone = "ARYHBN",
       callsign = CALLSIGN.Tanker.Texaco,
@@ -191,7 +191,7 @@ SUPPORTAC.missions = {
     },
     -- {
     --   name = "ARDP", -- TANKER
-    --   category = SUPPORTAC.categories.tanker,
+    --   category = SUPPORTAC.category.tanker,
     --   type = SUPPORTAC.type.tankerBoom,
     --   zone = "ARDP",
     --   callsign = CALLSIGN.Tanker.Arco,
@@ -207,7 +207,7 @@ SUPPORTAC.missions = {
     -- },
     {
       name = "ARDP", -- TANKER
-      category = SUPPORTAC.categories.tanker,
+      category = SUPPORTAC.category.tanker,
       type = SUPPORTAC.type.tankerProbe,
       zone = "ARDP",
       callsign = CALLSIGN.Tanker.Shell,
@@ -223,7 +223,7 @@ SUPPORTAC.missions = {
     },
     {
       name = "ARDP", -- TANKER
-      category = SUPPORTAC.categories.tanker,
+      category = SUPPORTAC.category.tanker,
       type = SUPPORTAC.type.tankerProbe,
       zone = "ARDP",
       callsign = CALLSIGN.Tanker.Texaco,
@@ -239,7 +239,7 @@ SUPPORTAC.missions = {
     },
     {
       name = "AWACSWKYJ", -- AWACS
-      category = SUPPORTAC.categories.awacs,
+      category = SUPPORTAC.category.awacs,
       type = SUPPORTAC.type.awacsE3a,
       zone = "AWACSWKYJ",
       callsign = CALLSIGN.AWACS.Magic,

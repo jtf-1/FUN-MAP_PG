@@ -46,7 +46,7 @@ function SUPPORTAC:NewMission(mission, initDelay)
   local missionHeading = mission.heading
   
   -- use appropriate AUFTRAG type for mission
-  if mission.category == SUPPORTAC.categories.tanker then
+  if mission.category == SUPPORTAC.category.tanker then
     local missionLeg = (mission.leg and mission.leg or SUPPORTAC.default.tankerLeg) -- set leg length. Either mission defined or use default for tanker.
     -- create new tanker AUFTRAG mission
     newMission = AUFTRAG:NewTANKER(
@@ -58,7 +58,7 @@ function SUPPORTAC:NewMission(mission, initDelay)
       )
     _msg = string.format("[SUPPORTAC] New mission created: %s", newMission:GetName())
     BASE:I(_msg)
-  elseif mission.category == SUPPORTAC.categories.awacs then
+  elseif mission.category == SUPPORTAC.category.awacs then
     local missionLeg = (mission.leg and mission.leg or SUPPORTAC.default.awacsLeg) -- set leg length. Either mission defined or use default for AWACS.
     -- create new AWACS AUFTRAG mission
     newMission = AUFTRAG:NewAWACS(
