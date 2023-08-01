@@ -17,10 +17,10 @@ end
 SUPPORTAC.default = {
   radio = 251, -- default radio freq the ac will use when not on mission
   activateDelay = 10, -- delay, in seconds, after the previous ac has despawned before the new ac will be activated 
-  despawnDelay = 60, -- delay, in seconds, before the old ac will be despawned
+  despawnDelay = 30, -- delay, in seconds, before the old ac will be despawned
   tankerLeg = 50, -- default tanker racetrack leg length
   awacsLeg = 70, -- default awacs racetrack leg length
-  fuelLowThreshold = 30, -- default % fuel low level to trigger RTB
+  fuelLowThreshold = 95, -- default % fuel low level to trigger RTB
   spawnDistance = 5, -- default distance in NM from the mission zone at which to spawn aircraft
   heading = 90, --default heading on which to spawn aircraft
 }
@@ -34,7 +34,7 @@ SUPPORTAC.category = {
 -- Support aircraft types. Used to define the late activated group to be used as the spawn template
 -- for the type. A check is made to ensure the template exists in the miz
 SUPPORTAC.type = {
-  tankerBoom = "KC-135", -- template to be used for trype = "tankerBoom"
+  tankerBoom = "KC-135", -- template to be used for type = "tankerBoom" OR SUPPORTAC.template.kc_135
   tankerProbe = "KC-135MPRS", -- template to be used for type = "tankerProbe"
   tankerProbeC130 = "KC-130", -- template for type = "tankerProbeC130"
   tankerProbeC130J = "KC-130J", -- template for type = "tankerProbeC130J"
@@ -59,7 +59,7 @@ SUPPORTAC.mission = {
     --   speed = 315, -- IAS when on mission
     --   heading = 94, -- mission outbound leg in degrees
     --   leg = 40, -- mission leg length in NM
-    --   --fuelLowThreshold = 30, -- lowest fuel threshold at which RTB is triggered
+    --   fuelLowThreshold = 30, -- lowest fuel threshold at which RTB is triggered
     -- },
     {
       name = "ARWK", -- TANKER
@@ -75,7 +75,6 @@ SUPPORTAC.mission = {
       speed = 315,
       heading = 94,
       leg = 40,
-      --fuelLowThreshold = 30,
     },
     {
       name = "ARWK", -- TANKER
@@ -91,24 +90,7 @@ SUPPORTAC.mission = {
       speed = 315,
       heading = 94,
       leg = 40,
-      --fuelLowThreshold = 30,
     },
-    -- {
-    --   name = "ARXKYK", -- TANKER
-    --   category = SUPPORTAC.category.tanker,
-    --   type = SUPPORTAC.type.tankerBoom,
-    --   zone = "ARXKYK",
-    --   callsign = CALLSIGN.Tanker.Arco,
-    --   callsignNumber = 4,
-    --   tacan = 118,
-    --   tacanid = "ARC",
-    --   radio = 317.8,
-    --   flightLevel = 160,
-    --   speed = 315,
-    --   heading = 94,
-    --   leg = 40,
-    --   fuelLowThreshold = 0,
-    -- },
     {
       name = "ARXKYK", -- TANKER
       category = SUPPORTAC.category.tanker,
@@ -123,7 +105,6 @@ SUPPORTAC.mission = {
       speed = 315,
       heading = 94,
       leg = 40,
-      --fuelLowThreshold = 30,
     },
     {
       name = "ARXKYK", -- TANKER
@@ -139,24 +120,7 @@ SUPPORTAC.mission = {
       speed = 315,
       heading = 94,
       leg = 40,
-      --fuelLowThreshold = 30,
     },
-    -- {
-    --   name = "ARYHBN", -- TANKER
-    --   category = SUPPORTAC.category.tanker,
-    --   type = SUPPORTAC.type.tankerBoom,
-    --   zone = "ARYHBN",
-    --   callsign = CALLSIGN.Tanker.Arco,
-    --   callsignNumber = 2,
-    --   tacan = 36,
-    --   tacanid = "ARC",
-    --   radio = 276.6,
-    --   flightLevel = 160,
-    --   speed = 315,
-    --   heading = 94,
-    --   leg = 40,
-    --   --fuelLowThreshold = 30,
-    -- },
     {
       name = "ARYHBN", -- TANKER
       category = SUPPORTAC.category.tanker,
@@ -171,7 +135,6 @@ SUPPORTAC.mission = {
       speed = 315,
       heading = 94,
       leg = 40,
-      --fuelLowThreshold = 30,
     },
     {
       name = "ARYHBN", -- TANKER
@@ -187,24 +150,7 @@ SUPPORTAC.mission = {
       speed = 315,
       heading = 94,
       leg = 40,
-      --fuelLowThreshold = 30,
     },
-    -- {
-    --   name = "ARDP", -- TANKER
-    --   category = SUPPORTAC.category.tanker,
-    --   type = SUPPORTAC.type.tankerBoom,
-    --   zone = "ARDP",
-    --   callsign = CALLSIGN.Tanker.Arco,
-    --   callsignNumber = 3,
-    --   tacan = 37,
-    --   tacanid = "ARC",
-    --   radio = 276.7,
-    --   flightLevel = 160,
-    --   speed = 315,
-    --   heading = 324,
-    --   leg = 40,
-    --   --fuelLowThreshold = 30,
-    -- },
     {
       name = "ARDP", -- TANKER
       category = SUPPORTAC.category.tanker,
@@ -219,7 +165,6 @@ SUPPORTAC.mission = {
       speed = 315,
       heading = 324,
       leg = 40,
-      --fuelLowThreshold = 30,
     },
     {
       name = "ARDP", -- TANKER
@@ -235,7 +180,6 @@ SUPPORTAC.mission = {
       speed = 315,
       heading = 324,
       leg = 40,
-      --fuelLowThreshold = 30,
     },
     {
       name = "AWACSWKYJ", -- AWACS
@@ -251,10 +195,18 @@ SUPPORTAC.mission = {
       speed = 400,
       heading = 123,
       leg = SUPPORTAC.default.awacsLeg,
-      activateDelay = 0,
-      despawnDelay = 0,
-      --fuelLowThreshold = 30,
+      activateDelay = 5,
+      despawnDelay = 10,
     },
+}
+
+-- pre-defined spawn templates to be used as an alternative to placing one in the miz
+SUPPORTAC.template = {
+  kc_135 = {},
+  kc_135MPRS = {},
+  kc_130 = {},
+  awacs_E3A = {},
+  awacs_E2D = {},
 }
 
 -- call the function that initialises the SUPPORTAC module

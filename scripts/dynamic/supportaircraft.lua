@@ -40,14 +40,14 @@ function SUPPORTAC:NewMission(mission, initDelay)
 
   -- create new mission
   local newMission = {}
-  local missionCoordinate = ZONE:FindByName(mission.zone):GetCoordinate()
+  local missionCoordinate = mission.missionCoordinate
   local missionAltitude = mission.flightLevel * 100
   local missionSpeed = mission.speed
   local missionHeading = mission.heading
   
   -- use appropriate AUFTRAG type for mission
   if mission.category == SUPPORTAC.category.tanker then
-    local missionLeg = (mission.leg and mission.leg or SUPPORTAC.default.tankerLeg) -- set leg length. Either mission defined or use default for tanker.
+    local missionLeg = mission.leg or SUPPORTAC.default.tankerLeg -- set leg length. Either mission defined or use default for tanker.
     -- create new tanker AUFTRAG mission
     newMission = AUFTRAG:NewTANKER(
       missionCoordinate, 
@@ -59,7 +59,7 @@ function SUPPORTAC:NewMission(mission, initDelay)
     _msg = string.format("[SUPPORTAC] New mission created: %s", newMission:GetName())
     BASE:I(_msg)
   elseif mission.category == SUPPORTAC.category.awacs then
-    local missionLeg = (mission.leg and mission.leg or SUPPORTAC.default.awacsLeg) -- set leg length. Either mission defined or use default for AWACS.
+    local missionLeg = mission.leg or SUPPORTAC.default.awacsLeg -- set leg length. Either mission defined or use default for AWACS.
     -- create new AWACS AUFTRAG mission
     newMission = AUFTRAG:NewAWACS(
       missionCoordinate,
@@ -75,19 +75,21 @@ function SUPPORTAC:NewMission(mission, initDelay)
     BASE:E(_msg)
   end
 
+  newMission:SetEvaluationTime(5)
+
   if mission.tacan ~= nil then
     newMission:SetTACAN(mission.tacan, mission.tacanid)
   end
 
   newMission:SetRadio(mission.radio)
 
-  local despawnDelay = SUPPORTAC.default.despawnDelay
-  local activateDelay = SUPPORTAC.default.activateDelay + despawnDelay
+  local despawnDelay = mission.despawnDelay or SUPPORTAC.default.despawnDelay
+  local activateDelay = (mission.activateDelay or SUPPORTAC.default.activateDelay) + despawnDelay
 
   -- spawn new group
-  local spawnGroup = mission.missionSpawnTemplate:Spawn()
+  local spawnGroup = mission.missionSpawnTemplate:SpawnFromCoordinate(mission.spawnCoordinate)
   _msg = string.format("[SUPPORTAC] New late activated group %s spawned.", spawnGroup:GetName())
-  BASE:I(_msg)
+  BASE:I({_msg, spawnGroup})
 
   -- create new flightGroup
   local flightGroup = FLIGHTGROUP:New(spawnGroup)
@@ -111,6 +113,7 @@ function SUPPORTAC:NewMission(mission, initDelay)
   function flightGroup:OnAfterSpawned()
     local _msg = string.format("[SUPPORTAC] Flightgroup %s activated.", self:GetName())
     BASE:I(_msg)
+    self:AddWaypoint(missionCoordinate, missionSpeed)
     -- assign mission to flightGroup
     self:AddMission(newMission)
   end
@@ -118,57 +121,73 @@ function SUPPORTAC:NewMission(mission, initDelay)
   -- function called after flightGroup starts mission
   -- set RTB criteria
   function flightGroup:OnAfterMissionStart()
-    local _msg = string.format("[SUPPORTAC] Mission %s for Flightgroup %s, %s has started.", self:GetMissionCurrent():GetName(), self:GetName(), self:GetCallsignName(true))
+    local missionName = newMission:GetName()
+    local flightGroupName = self:GetName()
+    local flightGroupCallSign = SUPPORTAC:GetCallSign(self)
+
+    local _msg = string.format("[SUPPORTAC] Mission %s for Flightgroup %s, %s has started.", missionName, flightGroupName, flightGroupCallSign) -- self:GetCallsignName(true)
     BASE:I(_msg)
-    self:SetFuelLowRTB()
+
+    --self:SetFuelLowRTB()
     self:SetFuelLowRefuel(false)
-    local fuelLowThreshold = (mission.fuelLowThreshold and mission.fuelLowThreshold or SUPPORTAC.default.fuelLowThreshold)
+    local fuelLowThreshold = mission.fuelLowThreshold or SUPPORTAC.default.fuelLowThreshold
 
     if fuelLowThreshold > 0 then
       self:SetFuelLowThreshold(fuelLowThreshold) -- tune fuel RTB trigger for each support mission
     end
 
-    -- function called after mission has started
+    -- function called after mission has been cancelled
     function flightGroup:OnAfterMissionCancel(From, Event, To, Mission)
-      local _msg = string.format("[SUPPORTAC] OnAfterMissionCancel - Mission %s cancelled for Flightgroup %s with event: ", Mission:GetName(), self:GetName())
-      local _array = {_msg, Event}
-      BASE:I(_array)
-
-      local msgText = "All players, %s is going off station. A new aircraft will be on station shortly."
-
-      if self.group:IsAlive() == true then
-        _msg = string.format("[SUPPORTAC] OnAfterMissionCancel - group %s IsAlive == true with health %d.",  self:GetName(), self.group:GetLife())
+      -- skip any further triggers of mission cancel event
+      if flightGroup.missionCancelled then
+        local _msg = string.format("[SUPPORTAC] OnAfterMissionCancel - Mission %s already cancelled!", Mission:GetName())
         BASE:I(_msg)
-        if self.group:GetLife() <= 1 then -- the flightgroup has been killed!
+        return
+      end
+      local _msg = string.format("[SUPPORTAC] OnAfterMissionCancel - Mission %s cancelled for Flightgroup %s with event: ", Mission:GetName(), flightGroupName)
+      BASE:I({_msg, Event})
+      local msgText = "All players, %s is going off station. A new aircraft will be on station shortly."
+      if self.group:IsAlive() == true then
+        local groupLife = self.group:GetLife()
+        _msg = string.format("[SUPPORTAC] OnAfterMissionCancel - group %s IsAlive == true with health %d.",  flightGroupName, groupLife)
+        BASE:I(_msg)
+        if groupLife <= 1 then -- the flightgroup has been killed!
           msgText = "All  players, %s is dead! A new aircraft will be on station shortly."
         else -- the flightgroup is in good health
-          _msg = string.format("[SUPPORTAC] OnAfterMissionCancel - despawn of group %s set to %d.",  self:GetName(), SUPPORTAC.default.despawnDelay)
+          _msg = string.format("[SUPPORTAC] OnAfterMissionCancel - despawn of group %s set to %d.",  flightGroupName, despawnDelay)
           BASE:I(_msg)
           -- turn off the flightgroup's TACAN
           self:TurnOffTACAN()
           -- despawn current flightgroup if still alive
-          self:Despawn(SUPPORTAC.default.despawnDelay)
+          self:Despawn(despawnDelay)
         end
       elseif self:IsAlive() == false then
-        _msg = string.format("[SUPPORTAC] OnAfterMissionCancel - group %s IsAlive == false!",  self:GetName())
+        _msg = string.format("[SUPPORTAC] OnAfterMissionCancel - group %s IsAlive == false!",  flightGroupName)
         BASE:E(_msg)
+        msgText = "All  players, %s is dead! A new aircraft will be on station shortly."
       else -- IsAlive == nil
-        _msg = string.format("[SUPPORTAC] OnAfterMissionCancel - group %s IsAlive == nil!",  self:GetName())
+        _msg = string.format("[SUPPORTAC] OnAfterMissionCancel - group %s IsAlive == nil!",  flightGroupName)
         BASE:E(_msg)
+        msgText = "All  players, %s is dead! A new aircraft will be on station shortly."
       end
-
       -- send off station advisory message
-      local msgText = string.format(msgText, self:GetCallsignName(true))
+      local msgText = string.format(msgText, flightGroupCallSign)
       local msgFreq = self:GetRadio()
-      SUPPORTAC:SendMessage(msgText, msgFreq, noSRS)
-
+      SUPPORTAC:SendMessage(msgText, msgFreq)
       -- create a new mission to replace the departing support aircraft 
       SUPPORTAC:NewMission(mission)
+      -- set flag to skip any further triggers of the mission cancelled event
+      flightGroup.missionCancelled = true
+    end
 
+    -- function called after Fuel Low Threshold has been reached
+    function flightGroup:OnAfterFuelLow()
+      local _msg = string.format("[SUPPORTAC] OnAfterFuelLow - Flightgroup %s is at Fuel Low Threshold.", self:GetName())
+      BASE:I(_msg)
+      self:MissionCancel(newMission)
     end
 
   end
-
 end
 
 -- function called to send message
@@ -184,6 +203,21 @@ function SUPPORTAC:SendMessage(msgText, msgFreq)
   end
 end  
 
+-- function called to return callsign name with major number only
+function SUPPORTAC:GetCallSign(flightGroup)
+  local callSign=flightGroup:GetCallsignName()
+  if callSign then
+    local callsignroot = string.match(callSign, '(%a+)') or "Ghost" -- Uzi
+    --self:I("CallSign = " .. callsignroot)
+    local callnumber = string.match(callSign, "(%d+)$" ) or "91" -- 91
+    local callnumbermajor = string.char(string.byte(callnumber,1)) -- 9
+    callSign = callsignroot.." "..callnumbermajor -- Uzi/Victory 9
+    return callSign
+  end
+  -- default callsign to return if it cannot be determined
+  return "Ghostrider 1"
+end
+
 -- step through SUPPORTAC.aircraft
 function SUPPORTAC:Start()
   local _msg = string.format("[SUPPORTAC] Start")
@@ -193,41 +227,47 @@ function SUPPORTAC:Start()
     _msg = "[SUPPORTAC] Start - mission"
     BASE:I({_msg, mission})
 
+    local missionZone = ZONE:FindByName(mission.zone)
     -- check zone is present in miz
-    if ZONE:FindByName(mission.zone) then 
+    if missionZone then 
       -- if trace is on, draw the zone on the map
       if BASE:IsTrace() then 
         -- draw mission zone on map
-        ZONE:FindByName(mission.zone):DrawZone()
+        missionZone:DrawZone()
       end
       local missionSpawnType = mission.type
       -- check spawn template is present in miz
       if GROUP:FindByName(missionSpawnType) then
-      
+        -- set spawn prefix unique to support mission
+        local missionSpawnAlias = string.format("M%02d_%s_%s", index, mission.name, mission.type)
+        -- spawn location
+        local missionAltitude = UTILS.FeetToMeters(mission.flightLevel * 100)
+        local spawnDistance = UTILS.NMToMeters((mission.spawnDistance or SUPPORTAC.default.spawnDistance))
+        local spawnHeading = mission.heading or SUPPORTAC.default.heading
+        local spawnAngle = spawnHeading + 180
+        if spawnAngle > 360 then 
+          spawnAngle = spawnHeading - 180
+        end
+        local missionCoordinate = missionZone:GetCoordinate()
+        missionCoordinate:SetAltitude(missionAltitude)
+        local spawnCoordinate = missionCoordinate
+        spawnCoordinate:Translate(spawnDistance, spawnAngle, true, true)
+        mission.missionCoordinate = missionCoordinate
+        mission.spawnCoordinate = spawnCoordinate
+        mission.missionSpawnTemplate = SPAWN:NewWithAlias(missionSpawnType, missionSpawnAlias)
+          :InitLateActivated()
+          :InitPositionCoordinate(mission.spawnCoordinate)
+          :InitHeading(mission.heading)
+          _msg = string.format("[SUPPORTAC] New late activated mission spawn template added %s", missionSpawnAlias)
+          BASE:I({_msg, mission.missionSpawnTemplate})
+        -- create new mission
+        SUPPORTAC:NewMission(mission, 0) -- create new mission with specified delay to flightgroup activation
+      else
+        _msg = string.format("[SUPPORTAC] start - mission spawn template %s not found!", mission.type)
+        BASE:E(_msg)
       end
-      -- set spawn prefix unique to support mission
-      local missionSpawnAlias = string.format("M%02d_%s_%s", index, mission.name, mission.type)
-      -- spawn location
-      local spawnAltitude = UTILS.FeetToMeters(mission.flightLevel * 100)
-      local spawnDistance = UTILS.NMToMeters((mission.spawnDistance and mission.spawnDistance or SUPPORTAC.default.spawnDistance))
-      local spawnHeading = (mission.heading and mission.heading or SUPPORTAC.default.heading)
-      local spawnAngle = spawnHeading + 180
-      if spawnAngle > 360 then 
-        spawnAngle = spawnHeading - 180
-      end
-      local spawnCoordinate = ZONE:FindByName(mission.zone):GetCoordinate()
-      spawnCoordinate:SetAltitude(spawnAltitude, true)
-      spawnCoordinate:Translate(spawnDistance, spawnAngle, true, true)
-      mission.missionSpawnTemplate = SPAWN:NewWithAlias(missionSpawnType, missionSpawnAlias)
-        :InitLateActivated()
-        :InitPositionCoordinate(spawnCoordinate)
-        :InitHeading(mission.heading)
-        _msg = string.format("[SUPPORTAC] New late activated mission spawn template added %s", missionSpawnAlias)
-        BASE:I(_msg)
-      -- create new mission
-      SUPPORTAC:NewMission(mission, 0) -- create new mission with specified delay to flightgroup activation
     else
-      _msg = string.format("[SUPPORTAC] DrawZone - Zone %s not found!", mission.zone)
+      _msg = string.format("[SUPPORTAC] Start - Zone %s not found!", mission.zone)
       BASE:E(_msg)
     end
 
