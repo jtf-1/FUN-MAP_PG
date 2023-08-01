@@ -8,8 +8,8 @@
 
 -- Spawn support aircraft (tankers, awacs) at zone markers placed in the mission editor.
 
--- This file contains all functions, default values, categories and types (template names)
--- supportaircraft_missions.lua contains the config data specific to the miz 
+-- This file contains all functions and key values
+-- supportaircraft_data.lua contains the config data specific to the miz 
 -- in which it will be used.
 
 -- In the mission editor, place a zone where you want the support aircraft to spawn.
@@ -19,34 +19,9 @@
 -- A late activated template is required for each support type that is to be spawned.
 -- The template should have a base airfield set as its base airfield
 
-
 SUPPORTAC = {}
 
 SUPPORTAC.useSRS = false -- if true, messages will be sent over SRS using the MISSIONSRS module. If false, messages will be sent as in-game text.
-
-SUPPORTAC.defaults = {
-  radio = 251, -- default radio freq the ac will use when not on mission
-  activateDelay = 10, -- delay, in seconds, after the previous ac has despawned before the new ac will be activated 
-  despawnDelay = 60, -- delay, in seconds, before the old ac will be despawned
-  tankerLeg = 50, -- default tanker racetrack leg length
-  awacsLeg = 70, -- default awacs racetrack leg length
-  fuelLowThreshold = 30, -- default % fuel low level to trigger RTB
-  spawnDistance = 5, -- default distance in NM from the mission zone at which to spawn aircraft
-  heading = 90, --default heading on which to spawn aircraft
-}
-
-SUPPORTAC.categories = {
-  tanker = 1,
-  awacs = 2,
-}
-
-SUPPORTAC.type = {
-  tankerBoom = "KC-135", -- template to be used for trype = "tankerBoom"
-  tankerProbe = "KC-135MPRS", -- template to be used for type = "tankerProbe"
-  tankerProbeC130 = "KC-130", -- template for type = "tankerProbeC130"
-  tankerProbeC130J = "KC-130J", -- template for type = "tankerProbeC130J"
-  awacsE3a = "AWACS-E3A", -- template to be used for type = "awacsE3a"
-}
 
 -- inherit everything from BASE class
 -- SUPPORTAC = BASE:Inherit(SUPPORTAC, BASE:New()) -- #SUPPORTAC
@@ -213,41 +188,51 @@ end
 function SUPPORTAC:Start()
   local _msg = string.format("[SUPPORTAC] Start")
   BASE:I(_msg)
+
   for index, mission in ipairs(SUPPORTAC.missions) do
-      _msg = "[SUPPORTAC] Start - mission"
-      BASE:I({_msg, mission})
-      if BASE:IsTrace() then
-      if ZONE:FindByName(mission.zone) then
+    _msg = "[SUPPORTAC] Start - mission"
+    BASE:I({_msg, mission})
+
+    -- check zone is present in miz
+    if ZONE:FindByName(mission.zone) then 
+      -- if trace is on, draw the zone on the map
+      if BASE:IsTrace() then 
         -- draw mission zone on map
         ZONE:FindByName(mission.zone):DrawZone()
-      else
-        _msg = string.format("[SUPPORTAC] DrawZone - Zone %s not found!", mission.zone)
-        BASE:E(_msg)
       end
+      local missionSpawnType = mission.type
+      -- check spawn template is present in miz
+      if GROUP:FindByName(missionSpawnType) then
+      
+      end
+      -- set spawn prefix unique to support mission
+      local missionSpawnAlias = string.format("M%02d_%s_%s", index, mission.name, mission.type)
+      -- spawn location
+      local spawnAltitude = UTILS.FeetToMeters(mission.flightLevel * 100)
+      local spawnDistance = UTILS.NMToMeters((mission.spawnDistance and mission.spawnDistance or SUPPORTAC.defaults.spawnDistance))
+      local spawnHeading = (mission.heading and mission.heading or SUPPORTAC.defaults.heading)
+      local spawnAngle = spawnHeading + 180
+      if spawnAngle > 360 then 
+        spawnAngle = spawnHeading - 180
+      end
+      local spawnCoordinate = ZONE:FindByName(mission.zone):GetCoordinate()
+      spawnCoordinate:SetAltitude(spawnAltitude, true)
+      spawnCoordinate:Translate(spawnDistance, spawnAngle, true, true)
+      mission.missionSpawnTemplate = SPAWN:NewWithAlias(missionSpawnType, missionSpawnAlias)
+        :InitLateActivated()
+        :InitPositionCoordinate(spawnCoordinate)
+        :InitHeading(mission.heading)
+        _msg = string.format("[SUPPORTAC] New late activated mission spawn template added %s", missionSpawnAlias)
+        BASE:I(_msg)
+      -- create new mission
+      SUPPORTAC:NewMission(mission, 0) -- create new mission with specified delay to flightgroup activation
+    else
+      _msg = string.format("[SUPPORTAC] DrawZone - Zone %s not found!", mission.zone)
+      BASE:E(_msg)
     end
-    -- set spawn prefix unique to support mission
-    local missionSpawnAlias = string.format("M%02d_%s_%s", index, mission.name, mission.type)
-    local missionSpawnType = mission.type
-    -- spawn location
-    local spawnAltitude = UTILS.FeetToMeters(mission.flightLevel * 100)
-    local spawnDistance = UTILS.NMToMeters((mission.spawnDistance and mission.spawnDistance or SUPPORTAC.defaults.spawnDistance))
-    local spawnHeading = (mission.heading and mission.heading or SUPPORTAC.defaults.heading)
-    local spawnAngle = spawnHeading + 180
-    if spawnAngle > 360 then 
-      spawnAngle = spawnHeading - 180
-    end
-    local spawnCoordinate = ZONE:FindByName(mission.zone):GetCoordinate()
-    spawnCoordinate:SetAltitude(spawnAltitude, true)
-    spawnCoordinate:Translate(spawnDistance, spawnAngle, true, true)
-    mission.missionSpawnTemplate = SPAWN:NewWithAlias(missionSpawnType, missionSpawnAlias)
-      :InitLateActivated()
-      :InitPositionCoordinate(spawnCoordinate)
-      :InitHeading(mission.heading)
-      _msg = string.format("[SUPPORTAC] New late activated mission spawn template added %s", missionSpawnAlias)
-      BASE:I(_msg)
-    -- create new mission
-    SUPPORTAC:NewMission(mission, 0) -- create new mission with specified delay to flightgroup activation
+
   end
+
 end
 
 -- END SUPPORT AIRCRAFT SECTION
