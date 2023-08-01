@@ -47,7 +47,7 @@ function SUPPORTAC:NewMission(mission, initDelay)
   
   -- use appropriate AUFTRAG type for mission
   if mission.category == SUPPORTAC.categories.tanker then
-    local missionLeg = (mission.leg and mission.leg or SUPPORTAC.defaults.tankerLeg) -- set leg length. Either mission defined or use default for tanker.
+    local missionLeg = (mission.leg and mission.leg or SUPPORTAC.default.tankerLeg) -- set leg length. Either mission defined or use default for tanker.
     -- create new tanker AUFTRAG mission
     newMission = AUFTRAG:NewTANKER(
       missionCoordinate, 
@@ -59,7 +59,7 @@ function SUPPORTAC:NewMission(mission, initDelay)
     _msg = string.format("[SUPPORTAC] New mission created: %s", newMission:GetName())
     BASE:I(_msg)
   elseif mission.category == SUPPORTAC.categories.awacs then
-    local missionLeg = (mission.leg and mission.leg or SUPPORTAC.defaults.awacsLeg) -- set leg length. Either mission defined or use default for AWACS.
+    local missionLeg = (mission.leg and mission.leg or SUPPORTAC.default.awacsLeg) -- set leg length. Either mission defined or use default for AWACS.
     -- create new AWACS AUFTRAG mission
     newMission = AUFTRAG:NewAWACS(
       missionCoordinate,
@@ -81,8 +81,8 @@ function SUPPORTAC:NewMission(mission, initDelay)
 
   newMission:SetRadio(mission.radio)
 
-  local despawnDelay = SUPPORTAC.defaults.despawnDelay
-  local activateDelay = SUPPORTAC.defaults.activateDelay + despawnDelay
+  local despawnDelay = SUPPORTAC.default.despawnDelay
+  local activateDelay = SUPPORTAC.default.activateDelay + despawnDelay
 
   -- spawn new group
   local spawnGroup = mission.missionSpawnTemplate:Spawn()
@@ -92,7 +92,7 @@ function SUPPORTAC:NewMission(mission, initDelay)
   -- create new flightGroup
   local flightGroup = FLIGHTGROUP:New(spawnGroup)
     :SetDefaultCallsign(mission.callsign, mission.callsignNumber)
-    :SetDefaultRadio(SUPPORTAC.defaults.radio)
+    :SetDefaultRadio(SUPPORTAC.default.radio)
     --:SetDefaultAltitude(mission.flightLevel * 100)
     :SetDefaultSpeed(mission.speed) -- mission.speed + (mission.flightLevel / 2)
     
@@ -122,7 +122,7 @@ function SUPPORTAC:NewMission(mission, initDelay)
     BASE:I(_msg)
     self:SetFuelLowRTB()
     self:SetFuelLowRefuel(false)
-    local fuelLowThreshold = (mission.fuelLowThreshold and mission.fuelLowThreshold or SUPPORTAC.defaults.fuelLowThreshold)
+    local fuelLowThreshold = (mission.fuelLowThreshold and mission.fuelLowThreshold or SUPPORTAC.default.fuelLowThreshold)
 
     if fuelLowThreshold > 0 then
       self:SetFuelLowThreshold(fuelLowThreshold) -- tune fuel RTB trigger for each support mission
@@ -142,12 +142,12 @@ function SUPPORTAC:NewMission(mission, initDelay)
         if self.group:GetLife() <= 1 then -- the flightgroup has been killed!
           msgText = "All  players, %s is dead! A new aircraft will be on station shortly."
         else -- the flightgroup is in good health
-          _msg = string.format("[SUPPORTAC] OnAfterMissionCancel - despawn of group %s set to %d.",  self:GetName(), SUPPORTAC.defaults.despawnDelay)
+          _msg = string.format("[SUPPORTAC] OnAfterMissionCancel - despawn of group %s set to %d.",  self:GetName(), SUPPORTAC.default.despawnDelay)
           BASE:I(_msg)
           -- turn off the flightgroup's TACAN
           self:TurnOffTACAN()
           -- despawn current flightgroup if still alive
-          self:Despawn(SUPPORTAC.defaults.despawnDelay)
+          self:Despawn(SUPPORTAC.default.despawnDelay)
         end
       elseif self:IsAlive() == false then
         _msg = string.format("[SUPPORTAC] OnAfterMissionCancel - group %s IsAlive == false!",  self:GetName())
@@ -209,8 +209,8 @@ function SUPPORTAC:Start()
       local missionSpawnAlias = string.format("M%02d_%s_%s", index, mission.name, mission.type)
       -- spawn location
       local spawnAltitude = UTILS.FeetToMeters(mission.flightLevel * 100)
-      local spawnDistance = UTILS.NMToMeters((mission.spawnDistance and mission.spawnDistance or SUPPORTAC.defaults.spawnDistance))
-      local spawnHeading = (mission.heading and mission.heading or SUPPORTAC.defaults.heading)
+      local spawnDistance = UTILS.NMToMeters((mission.spawnDistance and mission.spawnDistance or SUPPORTAC.default.spawnDistance))
+      local spawnHeading = (mission.heading and mission.heading or SUPPORTAC.default.heading)
       local spawnAngle = spawnHeading + 180
       if spawnAngle > 360 then 
         spawnAngle = spawnHeading - 180

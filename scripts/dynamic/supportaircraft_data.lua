@@ -14,7 +14,7 @@ if not SUPPORTAC then
 end
 
 -- default values to be used if not specified in the flight's mission data block
-SUPPORTAC.defaults = {
+SUPPORTAC.default = {
   radio = 251, -- default radio freq the ac will use when not on mission
   activateDelay = 10, -- delay, in seconds, after the previous ac has despawned before the new ac will be activated 
   despawnDelay = 60, -- delay, in seconds, before the old ac will be despawned
@@ -250,7 +250,7 @@ SUPPORTAC.missions = {
       flightLevel = 300,
       speed = 400,
       heading = 123,
-      leg = SUPPORTAC.defaults.awacsLeg,
+      leg = SUPPORTAC.default.awacsLeg,
       activateDelay = 0,
       despawnDelay = 0,
       --fuelLowThreshold = 30,
