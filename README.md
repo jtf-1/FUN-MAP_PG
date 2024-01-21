@@ -38,8 +38,11 @@ Track DP;
 - Shell 3-1 [KC135MPRS] 117Y ,317.7, FL220
 - Texaco 3-1 [KC-135] 107Y, 317.75, FL240
 
+Lincoln Hawk;
+- Texaco 6-1 [S-3B] 38Y, 317.775, FL060
+
 Forrestal Hawk;
-- Texaco 6-1 [S-3B] 15Y, 317.775, FL080
+- Texaco 6-2 [S-3B] 15Y, 278.325, FL060
 
 NAVAL OPERATIONS
 ================
@@ -124,6 +127,31 @@ Bomb targets are scored on the proximity of the last round to the target. Smoke 
 
 Strafe Pits, where available, are configured with two targets. Aircraft must be below 3000ft AGL and within 500ft either side of the inbound heading to the target to avoid a foul pass. Rounds fired after the foul line will not count.
 
+CARRIER CONTROL
+===============
+
+Launch and Recovery windows can be requested from the F10|Other|Carrier Control menu. The carrier will cruise West/East to hold station and will turn into wind when a window is requested. The following window lengths are available;
+
+- 15 minutes
+- 30 minutes
+- 60 minutes
+- 90 mninutes
+
+The current window can also be cancelled from the menu. After a window has been cancelled the carrier will retun to the point at which the window was requested and continue holding station.
+
+Deck lighting can be controlled via the Change Lights submenu. By default, the carrier lights mode is set to Navigation when cruising and will change to Recovery mode at the start of a recovery window. The mode can be changed to Launch, or back to Recovery, via the menu.
+
+DYNAMIC DECK TEMPLATES
+======================
+
+Application and removal of Dynamic Deck Templates is available in the F10|Other|JTF-1 menu under "Dynamic Deck". Complete and partial templates can be applied to supported ships. 
+
+Complete templates contain a full set of static objects for Launch or Recovery. If a Complete template is applied all existing statics will be cleared from the deck first.
+
+Partial templates can be added to or subtracted from a clear deck or a deck containing other partial templates. Partial templates cannot be added to, or removed from, a Complete template that has already been applied.
+
+The "Clear Deck" command will remove all statics from the deck.
+
 AIRBOSS
 =======
 
@@ -196,3 +224,113 @@ F8 [Reset My Status]
 --------------------
 
 This will reset the current player status. If player is currently in a marshal stack, he will be removed from the marshal queue and the stack above will collapse. The player needs to re-register later if desired. If player is currently in the landing pattern, he will be removed from the pattern queue.
+
+MAP MARK SPAWNING
+=================
+
+WIP - Use F10 map marks to spawn BVR opponents or ground threats anywhere on the map. Add mark to map then type the CMD syntax below in the map mark text field. The command will execute on mouse-clicking out of the text box.
+
+NOTE: currently no syntax error feedback if you get it wrong.
+
+
+Airspawn syntax
+---------------
+
+CMD ASPAWN: [type][, [option]: [value]][...]
+
+
+Airspawn Types
+--------------
+
+- F4
+- SU27
+- MIG29
+- SU25
+- MIG23
+
+
+Airspawn Options
+----------------
+
+- HDG: [degrees] - default 000
+- ALT: [flight level] - default 280 (28,000ft)
+- DIST:[nm] - default 0 (spawn on mark point)
+- NUM: [1-4] - default 1
+- SPD: [knots] - default 425
+- SKILL: [AVERAGE, GOOD, HIGH, EXCELLENT, RANDOM] - default AVERAGE
+- TASK: [CAP] - default NOTHING
+
+
+Example
+-------
+
+CMD ASPAWN: MIG29, NUM: 2, HDG: 180, SKILL: GOOD
+
+Will spawn 2x MiG29 at the default speed of 425 knots, with heading 180 and skill level GOOD.
+
+
+Groundspawn Syntax
+------------------
+
+CMD GSPAWN: [groundspawn type][, [option]: [value]][...]
+
+
+Groundspawn Types
+-----------------
+
+- SA2
+- SA6
+- SA10
+- SA11
+- SA15
+
+
+Groundspawn Options
+----------------
+
+- ALERT: [GREEN, AUTO, RED] - default RED 
+- SKILL: [AVERAGE, GOOD, HIGH, EXCELLENT, RANDOM] - default AVERAGE
+
+
+Example
+-------
+
+CMD GSPAWN: SA6, ALERT: GREEN, SKILL: HIGH
+
+Will spawn an SA6 Battery on the location of the map mark, in alert state GREEN and with skill level HIGH.
+
+
+Delete Spawn Syntax
+-------------------
+
+CMD DELETE: [object type] [group name from F10 map]
+
+
+Delete Spawn Object Types
+-------------------------
+
+- GROUP
+
+
+Example
+-------
+
+CMD DELETE: GROUP MIG29A#001
+
+Will remove the spawned group named MIG29A#001
+
+
+Cut-n-Paste Command Examples
+----------------------------
+
+CMD GSPAWN: SA8, ALERT: RED, SKILL: HIGH
+
+CMD GSPAWN: SA15, ALERT: RED, SKILL: HIGH
+
+CMD ASPAWN: MQ9, ALERT: RED, SKILL: HIGH
+
+CMD ASPAWN: WINGLOON, ALERT: RED, SKILL: HIGH
+
+CMD ASPAWN: MIG29, NUM: 2, HDG: 90, SKILL: GOOD, ALT: 280, TASK: CAP
+
+CMD DELETE: GROUP BVR_MIG29A#001
