@@ -894,6 +894,6 @@ campKerman = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"TERRORIST TRAINING
 takurghar = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"TAKUR GHAR CAS",MenuKerman,TakurGhar, "")
 
 -- ## Set trace on/off (true, false)
-BASE:TraceOnOff(false)
+--BASE:TraceOnOff(false)
 
 --env.info( '*** CSG-1 MOOSE MISSION SCRIPT END *** ' )
