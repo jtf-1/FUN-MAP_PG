@@ -19,22 +19,18 @@ TANKERS
 =======
 
 Track WK;
-- Arco 1-1  [KC135]  35Y, 276.5, FL160
 - Shell 1-1 [KC135MPRS] 115Y, 317.5, FL220
 - Texaco 1-1 [KC-135] 105Y, 317.55, FL240
 
-Track XK-YK;
-- Arco 4-1 [KC135] 118Y ,317.8, FL160
+Track XJ-YJ;
 - Shell 4-1 [KC135MPRS] 119Y ,317.9, FL220
 - Texaco 4-1 [KC-135] 120Y, 317.95, FL240
 
 Track YH-BN;
-- Arco 2-1  [KC135]  36Y, 276.6, FL160
 - Shell 2-1 [KC135MPRS] 116Y, 317.6, FL220
 - Texaco 2-1 [KC-135] 106Y, 317.65, FL240
 
 Track DP;
-- Arco 3-1  [KC135]  37Y, 276.7, FL160
 - Shell 3-1 [KC135MPRS] 117Y ,317.7, FL220
 - Texaco 3-1 [KC-135] 107Y, 317.75, FL240
 
@@ -63,7 +59,7 @@ Lincoln CVN-72 (SC)
 Forrestal CVN-59:
 - BRC 315'TRUE
 - TACAN 59X 
-- ILCS: Channel 4
+- ILCS: Channel 3
 - Towers/Paddles: 308.475 AM
  
 (Use CV Deck freq 274.175 to call AI Tower to reqest landing. This also activates lights at night)
@@ -94,8 +90,8 @@ While enabled, the missile trainer will;
 
 NOTE: At very high closure rates it may not be possible to destroy the incoming missile without causing (potentially catastrophic) damage to your aircraft. The missile trainer will not protect against cannon rounds or other balistic weapons.
 
-AIRSTRIKE ON FLEET
-==================
+AIRSTRIKE ON FLEET (LEGACY)
+===========================
 
 The F10 Menu "Ship Strike" provides for a player callable anti-ship strike on both the Tarawa and the Forrestal. The exact target and departure location are randomly selected. A message informing the player on the aircraft type, departure location, and target will transmit.
 
@@ -115,11 +111,10 @@ RANGE COMPLEXES
 
 Range Control common: 250.000MHz
 
-- YG77 N24°11'21 E053°42'26: 250.1MHz
-- BM35 N24°01'34 E054°23'58: 250.2MHz
-- BM54 N23°56'06 E054°34'29: 250.3MHz
-- BM64 N23°56'00 E054°43'35: 250.4MHz
-- CR94 N27°29'39 E055°58'46: 250.5MHz
+- YG77 N24 11.350 E053 42.433: 250.1MHz
+- BM22 N23 43.710 E054 19.728: 250.2MHz
+- BM52 N23 43.020 E054 36.000: 250.3MHz
+- CR94 N27 29.606 E055 56.181: 250.4MHz
 
 Ranges are script scored and have an F10 menu system you can use to manage them. A range instructor is available at each range to provide hit assessment. 
 
@@ -320,6 +315,20 @@ CMD DELETE: GROUP MIG29A#001
 Will remove the spawned group named MIG29A#001
 
 
+List Spawn Object Types
+-----------------------
+
+CMD [SPAWN COMMAND] OPTIONS
+
+
+Example
+-------
+
+CMD ASPAWN: OPTIONS
+
+Will list spawnable AIRSPAWN object types
+
+
 Cut-n-Paste Command Examples
 ----------------------------
 
@@ -327,9 +336,9 @@ CMD GSPAWN: SA8, ALERT: RED, SKILL: HIGH
 
 CMD GSPAWN: SA15, ALERT: RED, SKILL: HIGH
 
-CMD ASPAWN: MQ9, ALERT: RED, SKILL: HIGH
+CMD ASPAWN: MQ9, ALERT: RED, SKILL: HIGH, ALT: 120
 
-CMD ASPAWN: WINGLOON, ALERT: RED, SKILL: HIGH
+CMD ASPAWN: WINGLOON, ALERT: RED, SKILL: HIGH, ALT: 120
 
 CMD ASPAWN: MIG29, NUM: 2, HDG: 90, SKILL: GOOD, ALT: 280, TASK: CAP
 
