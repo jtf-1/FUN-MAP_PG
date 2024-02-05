@@ -1,3 +1,38 @@
+env.info( "[JTF-1] legacy_mission" )
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--- BEGIN MENU DEFINITIONS
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+legacyMenuTop = MENU_COALITION:New( coalition.side.BLUE, "LEGACY MISSION MENU")
+
+-- ## CAP CONTROL
+EnemyCAPS = MENU_COALITION:New( coalition.side.BLUE, "CAP CONTROL", legacyMenuTop )
+  CAP_Shiraz = MENU_COALITION:New( coalition.side.BLUE, "SHIRAZ", EnemyCAPS )
+  CAP_Lar = MENU_COALITION:New( coalition.side.BLUE, "LAR AB", EnemyCAPS )
+  CAP_BandarA = MENU_COALITION:New( coalition.side.BLUE, "BANDAR ABBAS", EnemyCAPS )
+
+-- ## GROUND ATTACK MISSIONS
+MenuGroundAttack = MENU_COALITION:New( coalition.side.BLUE, "STRIKE MISSIONS", legacyMenuTop )
+  MenuBandarL = MENU_COALITION:New( coalition.side.BLUE, "BANDAR LENGEH/LAR", MenuGroundAttack )
+  MenuKerman = MENU_COALITION:New( coalition.side.BLUE, "KERMAN", MenuGroundAttack )
+  MenuShiraz = MENU_COALITION:New( coalition.side.BLUE, "SHIRAZ", MenuGroundAttack )
+  MenuAsaloyeh = MENU_COALITION:New( coalition.side.BLUE, "ASALOYEH", MenuGroundAttack )
+  
+
+-- ## SHIP STRIKE MISSIONS
+MenuShipStrike = MENU_COALITION:New(coalition.side.BLUE,"SHIP STRIKE", legacyMenuTop)
+  MenuSpawnAntiShipStrike = MENU_COALITION_COMMAND:New(coalition.side.BLUE,"Spawn Anti-Ship Strike", MenuShipStrike , SpwnShipStrike)
+
+-- ## Factory Strike Missions
+FactoryStrikeEasy = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"ASALOYEH FACTORY STRIKE EASY - 1-2 planes",MenuAsaloyeh,FactoryStrikeEasy, "")
+FactoryStrikeMedium = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"ASALOYEH FACTORY STRIKE MEDIUM - 2-4 planes",MenuAsaloyeh,FactoryStrikeMedium, "")
+FactoryStrikeHard = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"ASALOYEH FACTORY STRIKE HARD - 4+ planes",MenuAsaloyeh,FactoryStrikeHard, "")
+
+
+--- END MENU DEFINITIONS
+
+
 -- XXX Spawn Anti-Ship Strike
 
 function SpwnShipStrike ()
@@ -11,7 +46,7 @@ function SpwnShipStrike ()
   
   if Rand_AntiShipStrike == 1 then SpwnAntiShipStrike_1:Spawn() MessageShipStrike = MESSAGE:New("Su-24's departed Bandar Abbass loaded with anti-ship missiles. Intelligence suggests their target is the Tarawa!"):ToCoalition(coalition.side.BLUE) end
   if Rand_AntiShipStrike == 2 then SpwnAntiShipStrike_2:Spawn() MessageShipStrike = MESSAGE:New("Su-24's Shiraz International Airport loaded with anti-ship missiles. Intel suggests target is the Tarawa!"):ToCoalition(coalition.side.BLUE)  end
-  if Rand_AntiShipStrike == 3 then SpwnAntiShipStrike_3:Spawn() MessageShipStrike = MESSAGE:New("Su-24's Shiraz International Airport loaded with anti-ship missiles. Intel suggests target is the Forrestal!"):ToCoalition(coalition.side.BLUE) end
+  if Rand_AntiShipStrike == 3 then SpwnAntiShipStrike_3:Spawn() MessageShipStrike = MESSAGE:New("Su-24's Shiraz International Airport loaded with anti-ship missiles. Intel suggests target is the Lincoln!"):ToCoalition(coalition.side.BLUE) end
   
   MenuSpawnAntiShipStrike:Remove()
   Menu_destroyAntiShipStrike = MENU_COALITION_COMMAND:New(coalition.side.BLUE,"Destroy Anti-Ship Strike", MenuShipStrike, destroyAntiShipStrike)
@@ -104,7 +139,8 @@ function QeshmIslandHot()
 end --function
 
 -- XXX GENERIC FUNCTION THAT CAN BE CALLED TO SPAWN ENEMY POSITIONS ANYWHERE
-function SpawnCamps(_args) --args is a table containing two tables
+--args is a table containing two tables
+function SpawnCamps(_args) 
 
   local zonetable = _args[1] 
   local camptemps = _args[2]
@@ -726,9 +762,6 @@ function FactoryStrikeHard ()
   
 end --function
 
-FactoryStrikeEasy = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"ASALOYEH FACTORY STRIKE EASY - 1-2 planes",MenuAsaloyeh,FactoryStrikeEasy, "")
-FactoryStrikeMedium = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"ASALOYEH FACTORY STRIKE MEDIUM - 2-4 planes",MenuAsaloyeh,FactoryStrikeMedium, "")
-FactoryStrikeHard = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"ASALOYEH FACTORY STRIKE HARD - 4+ planes",MenuAsaloyeh,FactoryStrikeHard, "")
 
 -- END FUNCTIONS SECTION
 
@@ -742,8 +775,6 @@ IranCAPAircraft = {"Iran_Mig31","Iran_Mig29","Iran_Mig21","Iran_Mig21","Iran_Mig
 -- END ON DEMAND CAP SECTION
 -- XXX BEGIN ANTI-SHIP STRIKE SECTION
 
---Spawn MENU Display
-MenuSpawnAntiShipStrike = MENU_COALITION_COMMAND:New(coalition.side.BLUE,"Spawn Anti-Ship Strike", MenuShipStrike , SpwnShipStrike)
 
 -- END ANTI-SHIP STRIKE SECTION
 
@@ -894,6 +925,6 @@ campKerman = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"TERRORIST TRAINING
 takurghar = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"TAKUR GHAR CAS",MenuKerman,TakurGhar, "")
 
 -- ## Set trace on/off (true, false)
-BASE:TraceOnOff(false)
+--BASE:TraceOnOff(false)
 
 --env.info( '*** CSG-1 MOOSE MISSION SCRIPT END *** ' )

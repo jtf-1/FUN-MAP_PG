@@ -1,19 +1,32 @@
-__JTFLoader.Include( 'mission_init.lua' )
-__JTFLoader.Include( 'devcheck.lua' )
-__JTFLoader.Include( 'adminmenu.lua' )
-__JTFLoader.Include( 'msrs.lua' )
-__JTFLoader.Include( 'missiontimer.lua' )
-__JTFLoader.Include( 'missiletrainer.lua' )
-__JTFLoader.Include( 'mission_menu.lua' )
-__JTFLoader.Include( 'supportaircraft.lua' )
+__JTFLoader.Include( 'lib/Moose.lua' ) -- library file
+__JTFLoader.Include( 'core/mission_init.lua' ) -- core file
+__JTFLoader.Include( 'mission_init_data.lua' )
+__JTFLoader.Include( 'core/devcheck.lua' ) -- core file
+__JTFLoader.Include( 'core/missionsrs.lua' )                -- core file
+__JTFLoader.Include( 'missionsrs_data.lua' )
+__JTFLoader.Include( 'core/adminmenu.lua' ) -- core file
+__JTFLoader.Include( 'adminmenu_data.lua' )
+__JTFLoader.Include( 'core/missiontimer.lua' )              -- core file
+__JTFLoader.Include( 'missiontimer_data.lua' )
+__JTFLoader.Include( 'core/supportaircraft.lua' )           -- core file
+__JTFLoader.Include( 'core/supportaircraft_templates.lua' ) -- core file
 __JTFLoader.Include( 'supportaircraft_data.lua' )
-__JTFLoader.Include( 'Hercules_cargo.lua' )
-__JTFLoader.Include( 'rescue_helo.lua' )
+__JTFLoader.Include( 'core/staticranges.lua' )              -- core file
+__JTFLoader.Include( 'staticranges_data.lua' )
+__JTFLoader.Include( 'core/missionstrike.lua' )             -- core file
+__JTFLoader.Include( 'core/missionstrike_templates.lua' )   -- core file
+__JTFLoader.Include( 'missionstrike_data.lua' )
+__JTFLoader.Include( 'core/cvncontrol.lua' )                -- core file
+__JTFLoader.Include( 'cvncontrol_data.lua' )
+__JTFLoader.Include( 'core/dynamic_deck.lua' )              -- core file
+__JTFLoader.Include( 'core/dynamic_deck_templates.lua' )    -- core file
+__JTFLoader.Include( 'dynamic_deck_data.lua' )
+__JTFLoader.Include( 'core/missiletrainer.lua' )            -- core file
+__JTFLoader.Include( 'missiletrainer_data.lua' )
+__JTFLoader.Include( 'core/markspawn.lua' )                 -- core file
+__JTFLoader.Include( 'core/markspawn_templates.lua' )       -- core file
+__JTFLoader.Include( 'core/Hercules_cargo.lua' )            -- core file
+__JTFLoader.Include( 'core/mission_end.lua' )               -- core file
+__JTFLoader.Include( 'legacy_mission.lua' )
+__JTFLoader.Include( 'legacy_rescue_helo.lua' )
 __JTFLoader.Include( 'legacy_carrier.lua' )
-__JTFLoader.Include( 'staticranges.lua' )
---__JTFLoader.Include( 'bfmacm.lua' )
---__JTFLoader.Include( 'bvrgci.lua' )
-__JTFLoader.Include( 'mission_main.lua' )
-__JTFLoader.Include( 'dynamic_deck_population.lua' )
-__JTFLoader.Include( 'dynamic_deck_templates.lua' )
-__JTFLoader.Include( 'mission_end.lua' )

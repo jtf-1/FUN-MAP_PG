@@ -1,6 +1,8 @@
+env.info( "*** STARTING DYNAMIC LOADER ***" )
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 --- Mission script dynamic loader
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 
 local JTFbase = _G
@@ -15,7 +17,7 @@ __JTFLoader.Include = function( JTFIncludeFile )
 		if f == nil then
 			error ("Mission Loader: could not load mission file " .. JTFIncludeFile )
 		else
-			env.info( "[JTF-1] Mission Loader: " .. JTFIncludeFile .. " dynamically loaded." )
+			env.info( "[JTF1] Mission Loader: " .. JTFIncludeFile .. " dynamically loaded." )
 			return f()
 		end
 	end
@@ -23,6 +25,6 @@ end
 
 __JTFLoader.Includes = {}
 
-__JTFLoader.Include( 'mission_files.lua' ) 
+__JTFLoader.Include( 'mission_files.lua' )
 
 --- End mission script dynamic loader

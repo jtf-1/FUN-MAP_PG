@@ -13,34 +13,6 @@ if not SUPPORTAC then
     SUPPORTAC = {}
 end
 
--- default values to be used if not specified in the flight's mission data block
-SUPPORTAC.default = {
-  radio = 251, -- default radio freq the ac will use when not on mission
-  activateDelay = 10, -- delay, in seconds, after the previous ac has despawned before the new ac will be activated 
-  despawnDelay = 30, -- delay, in seconds, before the old ac will be despawned
-  tankerLeg = 50, -- default tanker racetrack leg length
-  awacsLeg = 70, -- default awacs racetrack leg length
-  fuelLowThreshold = 95, -- default % fuel low level to trigger RTB
-  spawnDistance = 5, -- default distance in NM from the mission zone at which to spawn aircraft
-  heading = 90, --default heading on which to spawn aircraft
-}
-
--- Support categories used to define which AUFTRAG type is used
-SUPPORTAC.category = {
-  tanker = 1,
-  awacs = 2,
-}
-
--- Support aircraft types. Used to define the late activated group to be used as the spawn template
--- for the type. A check is made to ensure the template exists in the miz
-SUPPORTAC.type = {
-  tankerBoom = "KC-135", -- template to be used for type = "tankerBoom" OR SUPPORTAC.template.kc_135
-  tankerProbe = "KC-135MPRS", -- template to be used for type = "tankerProbe"
-  tankerProbeC130 = "KC-130", -- template for type = "tankerProbeC130"
-  tankerProbeC130J = "KC-130J", -- template for type = "tankerProbeC130J"
-  awacsE3a = "AWACS-E3A", -- template to be used for type = "awacsE3a"
-}
-
 -- Support aircraft missions. Each mission block defines a support aircraft mission. Each block is processed
 -- and an aircraft will be spawned for the mission. When the mission is cancelled, eg after RTB or if it is destroyed,
 -- a new aircraft will be spawned and a fresh AUFTRAG created.
@@ -60,6 +32,8 @@ SUPPORTAC.mission = {
     --   heading = 94, -- mission outbound leg in degrees
     --   leg = 40, -- mission leg length in NM
     --   fuelLowThreshold = 30, -- lowest fuel threshold at which RTB is triggered
+    --   activateDelay = 5, -- delay, after this aircraft has been despawned, before new aircraft is spawned
+    --   despawnDelay = 10, -- delay before this aircraft is despawned
     -- },
     {
       name = "ARWK", -- TANKER
@@ -92,10 +66,10 @@ SUPPORTAC.mission = {
       leg = 40,
     },
     {
-      name = "ARXKYK", -- TANKER
+      name = "ARXJYJ", -- TANKER
       category = SUPPORTAC.category.tanker,
       type = SUPPORTAC.type.tankerProbe,
-      zone = "ARXKYK",
+      zone = "ARXJYJ",
       callsign = CALLSIGN.Tanker.Shell,
       callsignNumber = 4,
       tacan = 119,
@@ -107,10 +81,10 @@ SUPPORTAC.mission = {
       leg = 40,
     },
     {
-      name = "ARXKYK", -- TANKER
+      name = "ARXJYJ", -- TANKER
       category = SUPPORTAC.category.tanker,
       type = SUPPORTAC.type.tankerBoom,
-      zone = "ARXKYK",
+      zone = "ARXJYJ",
       callsign = CALLSIGN.Tanker.Texaco,
       callsignNumber = 4,
       tacan = 120,
@@ -133,7 +107,7 @@ SUPPORTAC.mission = {
       radio = 317.6,
       flightLevel = 215,
       speed = 315,
-      heading = 94,
+      heading = 270 ,
       leg = 40,
     },
     {
@@ -148,7 +122,7 @@ SUPPORTAC.mission = {
       radio = 317.65,
       flightLevel = 240,
       speed = 315,
-      heading = 94,
+      heading = 270,
       leg = 40,
     },
     {
@@ -194,25 +168,19 @@ SUPPORTAC.mission = {
       flightLevel = 300,
       speed = 400,
       heading = 123,
-      leg = SUPPORTAC.default.awacsLeg,
+      leg = 70,
       activateDelay = 5,
       despawnDelay = 10,
+      fuelLowThreshold = 15,
     },
-}
-
--- pre-defined spawn templates to be used as an alternative to placing one in the miz
-SUPPORTAC.template = {
-  kc_135 = {},
-  kc_135MPRS = {},
-  kc_130 = {},
-  awacs_E3A = {},
-  awacs_E2D = {},
 }
 
 -- call the function that initialises the SUPPORTAC module
 if SUPPORTAC.Start ~= nil then
-    SUPPORTAC:Start()
+  _msg = "[SUPPORTAC] SUPPORTAIRCRAFT_DATA - call SUPPORTAC:Start()."
+  BASE:I(_msg)
+  SUPPORTAC:Start()
 else
-    _msg = "[SUPPORTAC] function SUPPORTAC.Start() is missing!"
-    BASE:E(_msg)
+  _msg = "[SUPPORTAC] function SUPPORTAC.Start() is missing!"
+  BASE:E(_msg)
 end
