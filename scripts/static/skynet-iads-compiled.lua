@@ -1,1 +1,0 @@
-d:/GitHub/Skynet-IADS/demo-missions/skynet-iads-compiled.lua
