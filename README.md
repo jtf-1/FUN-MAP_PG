@@ -274,6 +274,7 @@ Groundspawn Types
 -----------------
 
 - SA2
+- SA3
 - SA6
 - SA10
 - SA11
