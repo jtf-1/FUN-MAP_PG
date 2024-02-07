@@ -107,7 +107,7 @@ SUPPORTAC.mission = {
       radio = 317.6,
       flightLevel = 215,
       speed = 315,
-      heading = 270 ,
+      heading = 94 ,
       leg = 40,
     },
     {
@@ -122,7 +122,7 @@ SUPPORTAC.mission = {
       radio = 317.65,
       flightLevel = 240,
       speed = 315,
-      heading = 270,
+      heading = 94,
       leg = 40,
     },
     {
