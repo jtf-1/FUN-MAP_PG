@@ -1,4 +1,4 @@
- env.info("[JTF-1] MISSION BUILD 2024-02-07T18:49:37.42")  
+ env.info("[JTF-1] MISSION BUILD 2024-02-07T19:09:21.53")  
   
 --------------------------------[core\mission_init.lua]-------------------------------- 
  
@@ -11782,10 +11782,10 @@ function MISSIONSTRIKE:SpawnConvoy(selectedTarget) -- ConvoyTemplates, SpawnHost
 		-- get coordinate of destination zone
 		local toCoordinate = strikeZoneEnd:GetCoordinate()
 		-- draw start and destination zones if trace is on
-		if BASE:IsTrace() then 
-			strikeZone:DrawZone()
-			strikeZoneEnd:DrawZone()
-		end
+		-- if BASE:IsTrace() then 
+		-- 	strikeZone:DrawZone()
+		-- 	strikeZoneEnd:DrawZone()
+		-- end
 		-- set functions to trigger when convoy spawns
 		convoySpawn:OnSpawnGroup(
 			function(SpawnGroup)
