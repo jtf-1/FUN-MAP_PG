@@ -1,4 +1,4 @@
- env.info("[JTF-1] MISSION BUILD 2024-02-07T19:09:21.53")  
+ env.info("[JTF-1] MISSION BUILD 2024-02-08T19:56:06.82")  
   
 --------------------------------[core\mission_init.lua]-------------------------------- 
  
@@ -27,14 +27,19 @@ function JTF1:Start()
 		local settingsFile = lfs.writedir() .. JTF1.defaultServerConfigFile
 
 		if UTILS.CheckFileExists(lfs.writedir(), JTF1.defaultServerConfigFile) then
-			_msg = string.format("%sMission INIT settingsFile = %s", JTF1.traceTitle, settingsFile) 
+			_msg = string.format("%sServer Settings File = %s", JTF1.traceTitle, settingsFile) 
 			BASE:I(_msg)
+			local msgServerSettings = ""
 			dofile(settingsFile)
 			for _name, _value in pairs(LOCALSERVER) do
 				JTF1[_name] = _value
+				msgServerSettings = msgServerSettings .. _name .. " = " .. tostring(_value) .. "\n"
 			end
-			_msg = JTF1.traceTitle .. "Local server settings"
-			BASE:I({_msg, JTF1})
+			_msg = string.format("%sServer Settings follow;\n\n%s\n",
+				JTF1.traceTitle,
+				msgServerSettings
+			)
+			BASE:I(_msg)
 		else
 			_msg = JTF1.traceTitle .. "Error! Server config file not found. Using mission defaults"
 			BASE:E(_msg)
@@ -265,43 +270,6 @@ end
 
 --MISSIONSRS:Start() -- uncomment if missionsrs_data.lua is not used
   
---------------------------------[missionsrs_data.lua]-------------------------------- 
- 
-env.info( "[JTF-1] missionsrs_data" )
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
---- MISSION TIMER SETTINGS FOR MIZ
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
---
--- This file MUST be loaded AFTER missionsrs.lua
---
--- These values are specific to the miz and will override the default values in MISSIONSRS.default
---
-
--- Error prevention. Create empty container if module core lua not loaded.
-if not MISSIONSRS then 
-	_msg = "[JTF-1 MISSIONSRS] CORE FILE NOT LOADED!"
-	BASE:E(_msg)
-	MISSIONSRS = {}
-end
-
--- table of values for missionsrs to use this miz. Overrides default values.
--- MISSIONSRS.srsPath = "C:/Program Files/DCS-SimpleRadio-Standalone" -- default path to SRS install directory if setting file is not avaialable "C:/Program Files/DCS-SimpleRadio-Standalone"
--- MISSIONSRS.srsPort = 5002                                          -- default SRS port to use if settings file is not available
--- MISSIONSRS.msg = "No Message Defined!"                             -- default message if text is nil
-MISSIONSRS.freqs = {243,251,3,30}                          -- transmit on guard, CTAF, NTTR TWR, NTTR BLACKJACK and 30FM as default frequencies
--- MISSIONSRS.modulations = {AM,AM,AM,AM,FM}                          -- default modulation (count *must* match qty of freqs)
--- MISSIONSRS.vol = "1.0"                                             -- default to full volume
--- MISSIONSRS.name = "Server"                                         -- default to server as sender
--- MISSIONSRS.coalition = 0                                           -- default to spectators
--- MISSIONSRS.vec3 = nil                                              -- point from which transmission originates
--- MISSIONSRS.speed = 2                                               -- speed at which message should be played
--- MISSIONSRS.gender = "female"                                       -- default gender of sender
--- MISSIONSRS.culture = "en-US"                                       -- default culture of sender
--- MISSIONSRS.voice = ""                                              -- default voice to use
-
-if MISSIONSRS.Start then
-	MISSIONSRS:Start()
-end  
 --------------------------------[core\adminmenu.lua]-------------------------------- 
  
 env.info( "[JTF-1] adminmenu.lua" )
@@ -471,36 +439,6 @@ function ADMIN:BuildAdminMenu(unit,playername)
 end
 
 --- END ADMIN MENU SECTION  
---------------------------------[adminmenu_data.lua]-------------------------------- 
- 
-env.info( "[JTF-1] adminmenu_data" )
-
---- MISSION ADMIN MENU SETTINGS FOR MIZ
---
--- This file MUST be loaded AFTER adminmenu.lua
---
--- These values are specific to the miz and will override the default values in ADMIN
---
-
--- Error prevention. Create empty container if module core lua not loaded.
-if not ADMIN then 
-	ADMIN = {}
-	ADMIN.traceTitle = "[JTF-1 ADMIN] "
-	_msg = ADMIN.traceTitle .. "CORE FILE NOT LOADED!"
-	BASE:E(_msg)
-end
-
--- table of values to override default ADMIN values for this miz
-ADMIN.menuAllSlots = false
-ADMIN.jtfmenu = false
-
--- start the mission timer
-if ADMIN.Start then
-	_msg = ADMIN.traceTitle .. "Call Start()"
-	BASE:T(_msg)
-	ADMIN:Start()  
-end
-  
 --------------------------------[core\missiontimer.lua]-------------------------------- 
  
 env.info( "[JTF-1] missiontimer.lua" )
@@ -592,38 +530,8363 @@ function MISSIONTIMER:Restart()
 end
 
 --- END MISSION TIMER  
---------------------------------[missiontimer_data.lua]-------------------------------- 
+--------------------------------[core\supportaircraft.lua]-------------------------------- 
  
-env.info( "[JTF-1] missiontimer_data" )
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
---- MISSION TIMER SETTINGS FOR MIZ
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+env.info( "[JTF-1] supportaircraft.lua" )
+
 --
--- This file MUST be loaded AFTER missiontimer.lua
+--- Support Aircraft
 --
--- These values are specific to the miz and will override the default values in MISSIONTIMER.default
+-- **NOTE** THIS FILE MUST BE LOADED BEFORE SUPPORTAIRCRAFT_DATA.LUA IS LOADED
+--
+-- Spawn support aircraft (tankers, awacs) at zone markers placed in the mission editor.
+--
+-- Two files are required for this module;
+--     supportaircraft.lua
+--     supportaircraft_data.lua
+--
+-- 1. supportaircraft.lua
+-- Core file. Contains functions, key values and GLOBAL settings.
+--
+-- 2. supportaircraft_data.lua
+-- Contains settings that are specific to the miz.
+--
+-- Load order in miz MUST be;
+--     1. supportaircraft.lua
+--     2. supportaircraft_data.lua
+--
+-- In the mission editor, place a zone where you want the support aircraft to spawn.
+-- Under SUPPORTAC.mission, add a config block for the aircraft you intend to spawn.
+-- See the comments in the example block for explanations of each config option.
+--
+-- if the predefined templates are not being used a late activated template must be added 
+-- to the miz for for each support *type* that is to be spawned.
+-- The template should use the same name as the type in the SUPPORTAC.type data block, 
+-- eg "KC-135" or "AWACS-E3A" etc.
+--
+-- Available support aircraft categories and types for which predefined templates are available [category] = [template name];
+--
+-- Category: tanker
+--    tankerBoom = "KC-135" - SPAWNTEMPLATES.templates["KC-135"]
+--    tankerProbe = KC-135MPRS" - SPAWNTEMPLATES.templates["KC-135MPRS"]
+--    WIP** tankerProbeC130 = "KC-130" - SPAWNTEMPLATES.templates["KC-130"]
+--
+-- Category: awacs
+-- awacsE3a = "AWACS-E3A" - SPAWNTEMPLATES.templates["AWACS-E3A"]
+-- awacsE2d = "AWACS-E3A" - SPAWNTEMPLATES.templates["AWACS-E3A"]
 --
 
--- Error prevention. Create empty container if module core lua not loaded.
-if not MISSIONTIMER then 
-	MISSIONTIMER = {}
-	MISSIONTIMER.traceTitle = "[JTF-1 MISSIONTIMER] "
-	_msg = MISSIONTIMER.traceTitle .. "CORE FILE NOT LOADED!"
-	BASE:E(_msg)
-end
+SUPPORTAC = {}
+SUPPORTAC.traceTitle = "[JTF-1 SUPPORTAC] "
+SUPPORTAC.ClassName = "SUPPORTAC"
+SUPPORTAC.useSRS = true -- if true, messages will be sent over SRS using the MISSIONSRS module. If false, messages will be sent as in-game text.
 
--- table of values for timer shedule in this miz
-MISSIONTIMER.durationHrs = 11 -- Mission run time in HOURS
--- MISSIONTIMER.msgSchedule = {60, 30, 10, 5} -- Schedule for mission restart warning messages prior to the mission restart. Time in minutes.
--- MISSIONTIMER.restartDelay =  4 -- time in minutes to delay restart if active clients are present.
--- MISSIONTIMER.useSRS = false -- set to false to disable use of SRS for this module in this miz
+SUPPORTAC = BASE:Inherit(SUPPORTAC, BASE:New())
 
--- start the mission timer
-if MISSIONTIMER.Start then
-	_msg = MISSIONTIMER.traceTitle .. "Call Start()"
+local _msg -- used for debug messages only
+local useSRS
+
+-- function to start the SUPPORTAC module.
+function SUPPORTAC:Start()
+	_msg = string.format(self.traceTitle .. "Start()")
+	self:T(_msg)
+
+	-- default to not using SRS unless both the server AND the module request it AND MISSIONSRS.Radio.active is true
+	useSRS = (JTF1.useSRS and self.useSRS) and MISSIONSRS.Radio.active 
+	self:I({self.traceTitle .. "useSRS", self.useSRS})
+
+	for index, mission in ipairs(SUPPORTAC.mission) do -- FOR-DO LOOP
+		_msg = string.format(self.traceTitle .. "Start - mission %s", mission.name)
+		SUPPORTAC:T({_msg, mission})
+
+		local skip = false -- check value to exit early from the current for/do iteration
+
+		local missionZone = ZONE:FindByName(mission.zone)
+		-- check zone is present in miz
+		if missionZone then -- CHECK MISSION ZONE
+		
+			-- if trace is on, draw the zone on the map
+			-- if BASE:IsTrace() then 
+			-- 	-- draw mission zone on map
+			-- 	missionZone:DrawZone()
+			-- end
+
+			-- airbase to which aircraft will fly on RTB
+			local missionTheatre = env.mission.theatre
+			_msg = SUPPORTAC.traceTitle .. tostring(missionTheatre)
+			self:T(_msg)
+			local missionHomeAirbase = mission.homeAirbase or SUPPORTAC.homeAirbase[missionTheatre]
+			_msg = SUPPORTAC.traceTitle .. tostring(missionHomeAirbase)
+			self:T(_msg)
+			_msg = string.format(self.traceTitle .. "start - Mission %s set to use %s as home base.", mission.name, missionHomeAirbase)
+			SUPPORTAC:T(_msg)
+			if missionHomeAirbase then -- CHECK HOME AIRBASE
+				_msg = string.format(self.traceTitle .. "start - Mission %s using %s as home base.", mission.name, missionHomeAirbase)
+				SUPPORTAC:T(_msg)
+
+				-- set home airbase in mission
+				mission.homeAirbase = missionHomeAirbase
+
+				-- values used to create mission spawn prefix
+				local missionName = mission.name or SUPPORTAC.missionDefault.name
+				local missionSpawnType = mission.type or SUPPORTAC.missionDefault.type
+				-- set spawn prefix unique to support mission
+				local missionSpawnAlias = string.format("M%02d_%s_%s", index, missionName, missionSpawnType)
+
+				-- values used to define mission, spawn and waypoint locations
+				local missionFlightLevel = mission.flightLevel or SUPPORTAC.missionDefault.flightLevel
+				local missionSpawnDistance = mission.spawnDistance or SUPPORTAC.missionDefault.spawnDistance
+				local missionAltitude = UTILS.FeetToMeters(missionFlightLevel * 100)
+				local spawnDistance = UTILS.NMToMeters(missionSpawnDistance)
+				local spawnHeading = mission.heading or SUPPORTAC.missionDefault.heading
+				local spawnAngle = spawnHeading + 180
+				if spawnAngle > 360 then 
+					spawnAngle = spawnHeading - 180
+				end
+				local spawnUnlimitedFuel = mission.unlimitedFuel or SUPPORTAC.missionDefault.unlimitedFuel
+
+				-- coordinate used for the AUFTRAG
+				local missionCoordinate = missionZone:GetCoordinate()
+				missionCoordinate:SetAltitude(missionAltitude)
+				mission.missionCoordinate = missionCoordinate
+
+				-- coordinate used for the mission spawn template
+				local spawnCoordinate = missionCoordinate
+				spawnCoordinate:Translate(spawnDistance, spawnAngle, true, true)
+				mission.spawnCoordinate = spawnCoordinate
+
+				-- coordinate used for an initial waypoint for the flightgroup
+				local waypointCoordinate = missionCoordinate
+				waypointCoordinate = waypointCoordinate:Translate(spawnDistance/2, spawnAngle, true, true)
+				mission.waypointCoordinate = waypointCoordinate
+
+				if GROUP:FindByName(missionSpawnType) then -- FIND MISSION SPAWN TEMPLATE - use from mission block
+					_msg = string.format(self.traceTitle .. "start - Using spawn template from miz for %s.", missionSpawnType)
+					SUPPORTAC:T(_msg)
+
+					-- add mission spawn object using template in miz
+					mission.missionSpawnTemplate = SPAWN:NewWithAlias(missionSpawnType, missionSpawnAlias)
+				elseif SPAWNTEMPLATES.templates[missionSpawnType] then -- ELSEIF FIND MISSION SPAWN TEMPLATE-- Use predfined template from SPAWNTEMPLATES.templates[missionSpawnType]
+					_msg = string.format(self.traceTitle .. "start - Using spawn template from SPAWNTEMPLATES.templates for %s.", missionSpawnType)
+					SUPPORTAC:T(_msg)
+
+					-- get template to use for spawn
+					local spawnTemplate = SPAWNTEMPLATES.templates[missionSpawnType]
+
+					-- check "category" has been set in template
+					-- if not spawnTemplate["category"] then
+					-- 	spawnTemplate["category"] = Group.Category.AIRPLANE
+					-- end
+					
+					-- apply mission callsign to template (for correct display in F10 map)
+					local missionCallsignId = mission.callsign
+					local missionCallsignNumber = mission.callsignNumber or 1
+
+					-- default callsign name to use if not found
+					local missionCallsignName = "Ghost"
+
+					if missionCallsignId then
+						-- table of callsigns to search for callsign name
+						local callsignTable = CALLSIGN.Tanker
+						if mission.category == SUPPORTAC.category.awacs then
+							callsignTable = CALLSIGN.AWACS
+						end
+
+						for name, value in pairs(callsignTable) do
+							if value == missionCallsignId then
+								missionCallsignName = name
+							end
+						end
+						
+					else
+						missionCallsignId = 1
+					end
+
+					local missionUnit = spawnTemplate.units[1]
+
+					if type(missionUnit["callsign"]) == "table" then
+						-- local missionCallsign = string.format("%s%d1", missionCallsignName, missionCallsignNumber)
+						missionUnit["callsign"]["name"] = string.format("%s%d1", missionCallsignName, missionCallsignNumber)
+						missionUnit["callsign"][1] = missionCallsignId
+						missionUnit["callsign"][2] = missionCallsignNumber
+						missionUnit["callsign"][3] = 1
+						_msg = string.format(self.traceTitle .. "Callsign for mission %s is %s", mission.name, spawnTemplate.units[1]["callsign"]["name"])
+						SUPPORTAC:T(_msg)
+					elseif type(missionUnit["callsign"]) == "number" then
+						missionUnit["callsign"] = tonumber(missionCallsignId)
+					else
+						missionUnit["callsign"] = missionCallsignId
+					end
+					
+					local missionCountryid = mission.countryid or SUPPORTAC.missionDefault.countryid
+					local missionCoalition = mission.coalition or SUPPORTAC.missionDefault.coalition
+					local missionGroupCategory = mission.groupCategory or SUPPORTAC.missionDefault.groupCategory
+
+					-- add mission spawn object using template in SPAWNTEMPLATES.templates[missionSpawnType]
+					mission.missionSpawnTemplate = SPAWN:NewFromTemplate(spawnTemplate, missionSpawnType, missionSpawnAlias)
+						:InitCountry(missionCountryid) -- set spawn countryid
+						:InitCoalition(missionCoalition) -- set spawn coalition
+						:InitCategory(missionGroupCategory) -- set category
+				else -- FIND MISSION SPAWN TEMPLATE
+						skip = true -- can't exit to the next iteration so skip the rest of the mission creation
+				end -- FIND MISSION SPAWN TEMPLATE
+
+				-- if missionSpawnTamplate was not created continue to next iteration, otherwise set spawn inits and create a new mission
+				if skip then -- CHECK SKIP
+					_msg = string.format(self.traceTitle .. "Start - template for type %s for mission %s is not present in MIZ or as a predefined template!", missionSpawnType, missionSpawnAlias)
+					SUPPORTAC:E(_msg)
+				else -- CHECK SKIP
+					-- mission spawn object defaults
+					mission.missionSpawnTemplate:InitLateActivated() -- set template to late activated
+					mission.missionSpawnTemplate:InitPositionCoordinate(mission.spawnCoordinate) -- set the default location at which the template is created
+					mission.missionSpawnTemplate:InitHeading(mission.heading) -- set the default heading for the spawn template
+					mission.missionSpawnTemplate:OnSpawnGroup(
+						function(spawngroup)
+							local spawnGroupName = spawngroup:GetName()
+							_msg = string.format(SUPPORTAC.traceTitle .. "Spawned Group %s", spawnGroupName)
+							BASE:T(_msg)
+		
+							spawngroup:CommandSetUnlimitedFuel(spawnUnlimitedFuel)
+							spawngroup:CommandSetCallsign(mission.callsign, mission.callsignNumber) -- set the template callsign
+						end
+						,mission
+					)
+
+					_msg = string.format(self.traceTitle .. "New late activated mission spawn template added for %s", missionSpawnAlias)
+					SUPPORTAC:T({_msg, mission.missionSpawnTemplate})
+					
+					-- call NewMission() to create the initial mission for the support aircraft
+					-- subsequent mission restarts will be called after the mission's AUFTRAG is cancelled
+					SUPPORTAC:NewMission(mission, 0) -- create new mission with specified delay to flightgroup activation
+				end -- CHECK SKIP
+			
+			else -- CHECK HOME AIRBASE
+				
+				_msg = string.format(self.traceTitle .. "Start - Default Home Airbase for %s not defined! Mission skipped.", missionTheatre)
+				SUPPORTAC:E(_msg)
+
+			end -- CHECK HOME AIRBASE
+
+		else -- CHECK MISSION ZONE
+			_msg = string.format(self.traceTitle .. "Start - Zone %s not found! Mission skipped.", mission.zone)
+			SUPPORTAC:E(_msg)
+		end -- CHECK MISSION ZONE
+
+	end -- FOR-DO LOOP
+
+end -- SUPPORTAC:Start()
+
+-- function to create new support mission and flightGroup
+function SUPPORTAC:NewMission(mission, initDelay)
+	_msg = string.format(self.traceTitle .. "Create new mission for %s", mission.name)
+	SUPPORTAC:T(_msg)
+
+	-- create new mission
+	local newMission = {}
+	local missionCoordinate = mission.missionCoordinate
+	local missionAltitude = mission.flightLevel * 100
+	local missionSpeed = mission.speed
+	local missionHeading = mission.heading
+	local missionDespawn = mission.despawn or SUPPORTAC.missionDefault.despawn
+	
+	-- use appropriate AUFTRAG type for mission
+	if mission.category == SUPPORTAC.category.tanker then
+		local missionLeg = mission.leg or SUPPORTAC.missionDefault.tankerLeg -- set leg length. Either mission defined or use default for tanker.
+		-- create new tanker AUFTRAG mission
+		newMission = AUFTRAG:NewTANKER(
+		missionCoordinate, 
+		missionAltitude, 
+		missionSpeed, 
+		missionHeading, 
+		missionLeg
+		)
+		_msg = string.format(self.traceTitle .. "New mission created: %s", newMission:GetName())
+		SUPPORTAC:T(_msg)
+	elseif mission.category == SUPPORTAC.category.awacs then
+		local missionLeg = mission.leg or SUPPORTAC.missionDefault.awacsLeg -- set leg length. Either mission defined or use default for AWACS.
+		-- create new AWACS AUFTRAG mission
+		newMission = AUFTRAG:NewAWACS(
+		missionCoordinate,
+		missionAltitude,
+		missionSpeed,
+		missionHeading,
+		missionLeg
+		)
+		_msg = string.format(self.traceTitle .. "New mission created: %s", newMission:GetName())
+		SUPPORTAC:T(_msg)
+	else
+		_msg = self.traceTitle .. "Mission category not defined!"
+		SUPPORTAC:E(_msg)
+		return -- exit mission creation
+	end
+
+	newMission:SetEvaluationTime(5)
+
+	if mission.tacan ~= nil then
+		newMission:SetTACAN(mission.tacan, mission.tacanid)
+	end
+
+	newMission:SetRadio(mission.radio)
+
+	local despawnDelay = mission.despawnDelay or SUPPORTAC.missionDefault.despawnDelay
+	local activateDelay = (mission.activateDelay or SUPPORTAC.missionDefault.activateDelay) + despawnDelay
+
+	-- spawn new group
+	local spawnGroup = mission.missionSpawnTemplate:SpawnFromCoordinate(mission.spawnCoordinate)
+	_msg = string.format(self.traceTitle .. "New late activated group %s spawned.", spawnGroup:GetName())
+	SUPPORTAC:T({_msg, spawnGroup})
+
+	-- create new flightGroup
+	local flightGroup = FLIGHTGROUP:New(spawnGroup)
+		:SetDefaultCallsign(mission.callsign, mission.callsignNumber)
+		:SetDefaultRadio(SUPPORTAC.missionDefault.radio)
+		--:SetDefaultAltitude(mission.flightLevel * 100)
+		:SetDefaultSpeed(mission.speed) -- mission.speed + (mission.flightLevel / 2)
+		
+	-- add an initial waypoint between the aircraft and the mission zone
+	--flightGroup:AddWaypoint(mission.waypointCoordinate, missionSpeed)
+	flightGroup:SetHomebase(mission.homeAirbase)
+
+	flightGroup:Activate(activateDelay)
+
+	-- function call after flightGroup is spawned
+	-- assign mission to new ac
+	function flightGroup:OnAfterSpawned()
+		_msg = string.format(SUPPORTAC.traceTitle .. "Flightgroup %s activated.", self:GetName())
+		SUPPORTAC:T(_msg)
+		-- assign mission to flightGroup
+		self:AddMission(newMission)
+	end
+
+	-- function called after flightGroup starts mission
+	-- set RTB criteria
+	function flightGroup:OnAfterMissionStart()
+		local missionName = newMission:GetName()
+		local flightGroupName = self:GetName()
+		local flightGroupCallSign = SUPPORTAC:GetCallSign(self)
+
+		_msg = string.format(SUPPORTAC.traceTitle .. "Mission %s for Flightgroup %s, %s has started.", missionName, flightGroupName, flightGroupCallSign) -- self:GetCallsignName(true)
+		SUPPORTAC:T(_msg)
+
+		self:SetFuelLowRefuel(false)
+		local fuelLowThreshold = mission.fuelLowThreshold or SUPPORTAC.missionDefault.fuelLowThreshold
+
+		if fuelLowThreshold > 0 then
+			self:SetFuelLowThreshold(fuelLowThreshold) -- tune fuel RTB trigger for each support mission
+		end
+
+		self:SetFuelLowRTB()
+
+		function flightGroup:OnAfterRTB()
+			_msg = string.format(SUPPORTAC.traceTitle .. "Flightgroup %s is RTB.", flightGroupName)
+			SUPPORTAC:T(_msg)
+		end
+
+		function newMission:OnAfterDone()
+			local missionName = self.name
+			local missionFreq = mission.radio
+			local flightGroupName = flightGroup:GetName()
+			local flightGroupCallSign = SUPPORTAC:GetCallSign(flightGroup)
+		
+			_msg = string.format(SUPPORTAC.traceTitle .. "newMission OnAfterDone - Mission %s for Flightgroup %s is done.", missionName, flightGroupName)
+			SUPPORTAC:T(_msg)
+
+			-- prepare off-station advisory message
+			local msgText = string.format("All players, %s is going off station. A new aircraft will be on station shortly.", flightGroupCallSign)
+			-- send off station advisory message
+			SUPPORTAC:SendMessage(msgText, missionFreq)
+			-- create a new mission to replace the departing support aircraft 
+			SUPPORTAC:NewMission(mission)
+
+			-- despawn this flightgroup, if it's still alive
+			if flightGroup:IsAlive() and missionDespawn then
+				_msg = string.format(SUPPORTAC.traceTitle .. "newMission OnAfterDone - Flightgroup %s will be despawned after %d seconds.", flightGroupName, despawnDelay)
+				SUPPORTAC:T(_msg)
+
+				flightGroup:Despawn(despawnDelay)
+			end
+
+		end -- newMission:OnAfterDone()
+
+	end -- flightGroup:OnAfterMissionStart()
+
+end -- SUPPORTAC:NewMission()
+
+-- function called to send message
+-- if MISSIONSRS is loaded, message will be sent on aupport aircraft freq.
+-- Otherwise, message will be sent as text to all.
+function SUPPORTAC:SendMessage(msgText, msgFreq)
+	local _msg = string.format(self.traceTitle .. "SendMessage: %s", msgText)
+	SUPPORTAC:T(_msg)
+	if useSRS then
+		MISSIONSRS:SendRadio(msgText, msgFreq)
+	else
+		MESSAGE:New(msgText):ToAll()
+	end
+end -- SUPPORTAC:SendMessage()
+
+-- function called to return callsign name with major number only
+function SUPPORTAC:GetCallSign(flightGroup)
+	local callSign=flightGroup:GetCallsignName()
+	if callSign then
+		local callsignroot = string.match(callSign, '(%a+)') or "Ghost" -- Uzi
+		local callnumber = string.match(callSign, "(%d+)$" ) or "91" -- 91
+		local callnumbermajor = string.char(string.byte(callnumber,1)) -- 9
+		callSign = callsignroot.." "..callnumbermajor -- Uzi/Victory 9
+		return callSign
+	end
+	-- default callsign to return if it cannot be determined
+	return "Ghostrider 1"
+end -- SUPPORTAC:GetCallSign()
+
+-- Support categories used to define which AUFTRAG type is used
+SUPPORTAC.category = {
+	tanker = 1,
+	awacs = 2,
+} -- end SUPPORTAC.category
+
+-- Support aircraft types. Used to define the late activated group to be used as the spawn template
+-- for the type. A check is made to ensure the template exists in the miz or that the value is the
+-- same as the ID in the SPAWNTEMPLATES.templates block (see supportaircraft.lua)
+SUPPORTAC.type = {
+	tankerBoom = "KC-135", -- template to be used for type = "tankerBoom" OR SPAWNTEMPLATES.templates["KC-135"]
+	tankerProbe = "KC-135MPRS", -- template to be used for type = "tankerProbe" OR SPAWNTEMPLATES.templates["KC-135MPRS"]
+	tankerProbeC130 = "KC-130", -- template for type = "tankerProbeC130" OR SPAWNTEMPLATES.templates["KC-130"]
+	awacsE3a = "AWACS-E3A", -- template to be used for type = "awacsE3a" OR SPAWNTEMPLATES.templates["AWACS-E3A"]
+	awacsE2d = "AWACS-E2D", -- template to be used for type = "awacsE2d" OR SPAWNTEMPLATES.templates["AWACS-E2D"]
+	awacsA50 = "AWACS-A50", -- template to be used for type = "awacsA50" OR SPAWNTEMPLATES.templates["AWACS-A50"]
+} -- end SUPPORTAC.type
+
+-- Default home airbase. Added to the mission spawn template if not defined in
+-- the mission data block
+SUPPORTAC.homeAirbase = {
+	["Nevada"] = AIRBASE.Nevada.Nellis_AFB,
+	["Caucasus"] = AIRBASE.Caucasus.Tbilisi_Lochini,
+	["PersianGulf"] = AIRBASE.PersianGulf.Al_Dhafra_AB,
+	["Syria"] = AIRBASE.Syria.Incirlik,
+	["Sinai"] = AIRBASE.Sinai.Cairo_International_Airport,
+	["MarianaIslands"] = AIRBASE.MarianaIslands.Andersen_AFB,
+} -- end SUPPORTAC.homeAirbase
+
+-- default mission values to be used if not specified in the flight's mission data block
+SUPPORTAC.missionDefault = {
+	name = "TKR", -- default name for the mission
+	category = SUPPORTAC.category.tanker, -- default aircraft category
+	type = SUPPORTAC.type.tankerBoom, -- default spawn template that will be used
+	callsign = CALLSIGN.Tanker.Texaco, -- default callsign
+	callsignNumber = 1, -- default calsign number
+	tacan = 100, -- default TACAN preset
+	tacanid = "TEX", -- default TACAN ID
+	radio = 251, -- default radio freq the ac will use when not on mission
+	flightLevel = 200, -- default FL at which to fly mission
+	speed = 315, -- default speed at which to fly mission
+	heading = 90, --default heading on which to spawn aircraft
+	tankerLeg = 50, -- default tanker racetrack leg length
+	awacsLeg = 70, -- default awacs racetrack leg length
+	activateDelay = 10, -- delay, in seconds, after the previous ac has despawned before the new ac will be activated 
+	despawnDelay = 30, -- delay, in seconds, before the old ac will be despawned
+	unlimitedFuel = true, -- default unlimited fuel. Set to false in data if fuel RTB is desired
+	fuelLowThreshold = 30, -- default % fuel low level to trigger RTB
+	spawnDistance = 1, -- default distance in NM from the mission zone at which to spawn aircraft
+	countryid = country.id.USA, -- default country to be used for predfined templates
+	coalition = coalition.side.BLUE, -- default coalition to use for predefined templates
+	groupCategory = Group.Category.AIRPLANE, -- default group category to use for predefined templates
+	despawn = true, -- default deSpawn option. if false or nil the aircraft will fly to hom base on RTB
+} -- end SUPPORTAC.missionDefault
+
+
+-- END SUPPORT AIRCRAFT SECTION  
+--------------------------------[core\staticranges.lua]-------------------------------- 
+ 
+env.info( "[JTF-1] staticranges.lua" )
+
+--
+-- Add static bombing and strafing range(s)
+--
+-- Two files are used by this module;
+--     staticranges.lua
+--     staticranges_data.lua
+--
+-- 1. staticranges.lua
+-- Core file. Contains functions, key values and GLOBAL settings.
+--
+-- 2. staticranges_data.lua
+-- Contains settings that are specific to the miz.
+-- Settings in staticranges_data.lua will override the defaults in the core file.
+--
+-- Load order in miz MUST be;
+--     1. staticranges.lua
+--     2. staticranges_data.lua
+--
+
+STATICRANGES = {}
+STATICRANGES.traceTitle = "[JTF-1 STATICRANGES] "
+
+local _msg
+
+STATICRANGES.default = {
+	strafeMaxAlt             = 1530, -- [5000ft] in metres. Height of strafe box.
+	strafeBoxLength          = 3000, -- [10000ft] in metres. Length of strafe box.
+	strafeBoxWidth           = 300, -- [1000ft] in metres. Width of Strafe pit box (from 1st listed lane).
+	strafeFoullineDistance   = 610, -- [2000ft] in metres. Min distance for from target for rounds to be counted.
+	strafeGoodPass           = 20, -- Min hits for a good pass.
+	--rangeSoundFilesPath      = "Range Soundfiles/" -- Range sound files path in miz
+}
+
+function STATICRANGES:Start()
+	_msg = self.traceTitle .. "Start()."
 	BASE:T(_msg)
-	MISSIONTIMER:Start()  
+	-- set defaults
+	self.strafeMaxAlt = self.strafeMaxAlt or self.default.strafeMaxAlt
+	self.strafeBoxLength = self.strafeBoxLength or self.default.strafeBoxLength
+	self.strafeBoxWidth = self.strafeBoxWidth or self.default.strafeBoxWidth
+	self.strafeFoullineDistance = self.strafeFoullineDistance or self.default.strafeFoullineDistance
+	self.strafeGoodPass = self.strafeGoodPass or self.default.strafeGoodPass
+	-- Parse STATICRANGES.Ranges and build each range
+	if self.Ranges then
+		_msg = self.traceTitle .. "Add ranges."
+		BASE:T({_msg,self.Ranges})
+		self:AddStaticRanges(self.Ranges)
+	else
+		_msg = self.traceTitle .. "No Ranges defined!"
+		BASE:E(_msg)
+	end
 end
+
+function STATICRANGES:AddStaticRanges(ranges)
+	_msg = self.traceTitle .. "AddStaticRanges()."
+	BASE:T(_msg)
+	for rangeIndex, rangeData in ipairs(ranges) do
+
+		-- create RANGE object
+		local range = RANGE:New(rangeData.rangeName)
+			:DebugOFF()
+			:SetMaxStrafeAlt(self.strafeMaxAlt)
+			:SetDefaultPlayerSmokeBomb(false)
+
+		-- add range zone if defined
+		local rangeZone = ZONE:FindByName(rangeData.rangeZone) or ZONE_POLYGON:FindByName(rangeData.rangeZone)
+		if not rangeZone then
+			_msg = string.format(self.traceTitle .. "Range Zone for %s not defined!", rangeData.rangeName)
+			BASE:E(_msg)
+		else
+			_msg = string.format(self.traceTitle .. "Add Range Zone %s for %s.", rangeZone:GetName(), rangeData.rangeName)
+			BASE:T(_msg)
+			range:SetRangeZone(rangeZone)
+		end
+
+		-- add groups of targets
+		if rangeData.groups ~= nil then 
+			_msg = string.format(self.traceTitle .. "Add range groups for %s.", rangeData.rangeName) 
+			BASE:T(_msg)
+			for tgtIndex, tgtName in ipairs(rangeData.groups) do
+				range:AddBombingTargetGroup(GROUP:FindByName(tgtName))
+			end
+		end
+		
+		-- add individual targets
+		if rangeData.units ~= nil then 
+			_msg = string.format(self.traceTitle .. "Add range units for %s.", rangeData.rangeName)
+			BASE:T(_msg)
+			for tgtIndex, tgtName in ipairs(rangeData.units) do
+				range:AddBombingTargets( tgtName )
+			end
+		end
+		
+		-- add strafe targets
+		if rangeData.strafepits ~= nil then 
+			_msg = string.format(self.traceTitle .. "Add range strafe pits for %s.", rangeData.rangeName)
+			BASE:T(_msg)
+			for strafepitIndex, strafepit in ipairs(rangeData.strafepits) do
+				range:AddStrafePit(strafepit, self.strafeBoxLength, self.strafeBoxWidth, nil, true, self.strafeGoodPass, self.strafeFoullineDistance)
+			end  
+		end
+
+		-- add range radio
+		if rangeData.rangeControlFrequency ~= nil then
+			_msg = string.format(self.traceTitle .. "Range Control frequency = %.3f for %s.", rangeData.rangeControlFrequency, rangeData.rangeName)
+			BASE:T(_msg)
+		end
+
+		-- Start the Range
+		range:Start()
+	end
+end
+
+--- END STATIC RANGES  
+--------------------------------[core\missionstrike.lua]-------------------------------- 
+ 
+env.info("[JTF-1] mission_strike")
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--- BEGIN MISSIONSTRIKE
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--
+-- Mission Strike Module
+--
+-- Templates can be either provided in the MIZ, or by using the SPAWNTEMPLATES module
+-- 
+-- If custom templates are to be used (ie in-MIZ) the groups musty either be named in
+-- accordance with the names used in MISSIONSTRIKE.defenceTemplates,
+-- MISSIONSTRIKE.campTemplates and MISSIONSTRIKE.convoyTemplates.
+-- OR, they should be overriden in missionstrike_data.lua
+--
+
+MISSIONSTRIKE = {}
+
+MISSIONSTRIKE = BASE:Inherit( MISSIONSTRIKE, BASE:New() )
+
+MISSIONSTRIKE.traceTitle = "[JTF-1 MISSIONSTRIKE] "
+MISSIONSTRIKE.version = "0.1"
+
+MISSIONSTRIKE.menu = {} -- MISSIONSTRIKE menus container
+--MISSIONSTRIKE.spawn = {} -- MISSIONSTRIKE spawn objects container
+
+MISSIONSTRIKE.drawZones = false -- if true, draw mission zones on map
+
+-- start MISSIONSTRIKE module
+function MISSIONSTRIKE:Start()
+	_msg = self.traceTitle .. "Start()"
+	self:T(_msg)
+
+	-- add main menu
+	local textTop = "Strike Missions"
+	self.menu.top = MENU_COALITION:New( coalition.side.BLUE, textTop )
+
+	--- generate strike defence spawn templates if defined in missionstrike_data.lua
+	if self.defenceTemplates then
+		-- replace built-in defence templates with those listed in MISSIONSTRIKE.defenceTemplates
+		self.defenceSpawns = {}
+		for defIndex, defenceTemplate in pairs(self.defenceTemplates) do
+			for templateIndex = 1, #defenceTemplate do
+				local templateName = defenceTemplate[templateIndex]
+				_msg = string.format("%sStart(). Add defence spawn object %s", 
+					self.traceTitle, 
+					templateName
+				)
+				self:T(_msg)
+				local addSpawn = self:AddSpawnTemplate(templateName)
+				if addSpawn then
+					self.defenceSpawns[templateName] = addSpawn
+				else
+					_msg = string.format("%sError! Start(). NIL returned by AddSpawn() for template %s!", 
+						self.traceTitle, 
+						templateName
+					)
+					self:E(_msg)
+				end
+			end
+		end
+	end
+
+	-- generate camp spawn objects
+	if self.campTemplates then
+		self.campSpawns = {}
+		for type, template in pairs(self.campTemplates) do
+			-- type defence contains list of templates for random selection
+			if type == "defence" then
+				for index, defenceName in ipairs(template) do
+					_msg = string.format("%sAdd camp spawn defence object %s", 
+						self.traceTitle, 
+						defenceName
+					)
+					self:T(_msg)
+					local addSpawn = self:AddSpawnTemplate(defenceName)
+					if addSpawn then
+						self.campSpawns[defenceName] = addSpawn
+					else
+						_msg = string.format("%sError! NIL returned by AddSpawn() for template %s!", 
+							self.traceTitle, 
+							defenceName
+						)
+						self:E(_msg)
+					end
+				end
+			else
+				_msg = string.format("%sAdd camp spawn object %s", 
+					self.traceTitle, 
+					template
+				)
+				self:T(_msg)
+				local addSpawn = self:AddSpawnTemplate(template)
+				if addSpawn then
+					self.campSpawns[type] = addSpawn
+				else
+					_msg = string.format("%sError! Start(). NIL returned by AddSpawn() for template %s!", 
+						self.traceTitle, 
+						template
+					)
+					self:E(_msg)
+				end
+			end
+		end
+	end
+
+	-- generate convoy spawn objects
+	if self.convoyTemplates then
+		-- table of convoy spawn objects
+		self.convoyspawn = {}
+		for templateType, templateValue in pairs(self.convoyTemplates) do
+			-- add type for templates
+			self.convoyspawn[templateType] = {}
+			-- step through each type template
+			for index, typeTemplate in ipairs(templateValue) do
+				_msg = string.format("%sAdd convoy spawn type %s at index %d", 
+					self.traceTitle, 
+					templateType, 
+					index
+				)
+				self:T(_msg)
+				local addSpawn = self:AddSpawnTemplate(typeTemplate.template)
+				local description = typeTemplate.description
+				local threats = typeTemplate.threats
+				if addSpawn then
+					self.convoyspawn[templateType][index] = addSpawn
+					self.convoyspawn[templateType][index]["description"] = description
+					self.convoyspawn[templateType][index]["threats"] = threats
+				else
+					_msg = string.format("%sError adding convoy spawn. NIL returned by AddSpawn() for template index %d!", 
+						self.traceTitle, 
+						index
+					)
+					self:E(_msg)
+				end
+			end
+		end
+	end
+
+	--- initialise missions and generate strike attack menus ---
+	for strikeIndex, mission in pairs(self.missions) do -- step through self.mission and grab the mission data for each key ( = "location")
+
+		-- set ID for mission
+		mission.strikeindex = strikeIndex
+
+		local strikeType = mission.striketype
+		local strikeRegion = mission.strikeregion
+		local strikeName = mission.strikename
+		local strikeIvo = mission.strikeivo
+		local strikeZone = mission.strikezone
+		local strikeOptions = mission.options
+		local strikeTargets = mission.striketargets
+
+		-- Mission root contains a strikezone
+		if strikeZone then
+
+			-- add a container for strikezone target spawn templates
+			if not mission.striketargetspawn then
+				mission.striketargetspawn = {}
+			end
+			
+			local zoneStrikeZone = ZONE:FindByName(strikeZone)
+
+			if zoneStrikeZone then
+				_msg = string.format("%sStrike Zone %s found.", 
+					self.traceTitle, 
+					strikeZone
+				)
+				self:T(_msg)
+
+				mission.zonestrikezone = zoneStrikeZone
+				
+				if BASE:IsTrace() and self.drawZones then 
+					self:DrawStrikeZone(zoneStrikeZone) 
+				end
+
+				-- add text for map mark and briefing message to mission
+				local strikeMarkText, strikeAttackBriefSummary, strikeAttackBriefMission = self:AddBriefingText(mission)
+				mission.strikemarktext = strikeMarkText
+				mission.strikeattackbriefsummary = strikeAttackBriefSummary
+				mission.strikeattackbriefmission = strikeAttackBriefMission
+
+				-- generate spawn templates for late activated groups in the mission.strikezone
+				local strikeTargetPrefix = mission.striketargetprefix
+
+				-- build a set of groups with names containing the mission strikeTargetPrefix
+				local setStrikeTargetGroups = SET_GROUP:New()
+					:FilterPrefixes(strikeTargetPrefix)
+					:FilterOnce()
+
+				if setStrikeTargetGroups == nil then
+					_msg = string.format("%sNo target templates found with prefix %s in zone %s", 
+						self.traceTitle, 
+						strikeTargetPrefix, 
+						strikeZone
+					)
+					self:T(_msg)
+				else
+					_msg = string.format("%sStrike Target templates in zone %s", 
+						self.traceTitle, 
+						strikeZone
+					)
+					self:T({_msg, setStrikeTargetGroups})
+					-- add a spawn template for each group
+					setStrikeTargetGroups:ForEachGroup(
+						function(group)
+							local groupName = group:GetName()
+
+							-- add spawn to mission
+							mission.striketargetspawn[groupName] = SPAWN:New(groupName)
+								:InitUnControlled()
+
+							_msg = string.format("%sCreate Strike Target spawn %s", 
+								self.traceTitle, 
+								groupName
+							)
+							self:T(_msg)
+
+						end
+					) -- end ForEachGroup
+				end
+				-- add asset spawn zones on map to mission if not already explicitly defined
+				if mission.zones == nil then
+					_msg = string.format("%sNo mission.zones pre-defined for strike zone %s. Building list of sub-zones using prefix.", 
+						self.traceTitle, 
+						strikeZone
+					)
+					self:T(_msg)
+					-- add table of zones to mission
+					mission.zones = {}
+					local zonePrefix = mission.zoneprefix
+					-- find zones with this mission's prefix and add them to the zone list
+					if zonePrefix then
+						for _, zone in pairs(zonePrefix) do
+							local class = zone.class
+							local prefix = zone.prefix
+							mission.zones[class] = {}
+							local setStrikeZone = SET_ZONE:New()
+								:FilterPrefixes(prefix)
+								:FilterOnce()
+							if setStrikeZone == nil then
+								_msg = string.format("%sNo % class zones found with prefix %s for strike zone %s", 
+									self.traceTitle, 
+									class,  
+									prefix, 
+									strikeZone
+								)
+								self:T(_msg)
+							else
+								setStrikeZone:ForEachZone(
+									function(zone)
+										local addZone = {}
+										addZone.class = class
+										addZone.loc = zone:GetName()
+										addZone.is_open = true
+										-- add zone to mission zone table
+										table.insert(mission.zones[class], addZone)
+									end)
+								_msg = self.traceTitle .. "Zone table"
+								self:T({_msg, mission.zones[class]})
+							end
+						end
+					end
+				end
+				-- add list of static objects to mission if not already explicitly defined
+				if mission.statics == nil then
+					mission.statics = {}
+					_msg = string.format("%sAdd Statics for mission %s.", 
+						self.traceTitle, 
+						strikeName
+					)
+					self:T(_msg)
+					-- build a SET of static object within the mission.strikezone
+					local setStrikeTargetStatics = SET_STATIC:New()
+						:FilterZones({zoneStrikeZone})
+						:FilterStart()
+					-- add each static to the mission
+					setStrikeTargetStatics:ForEachStatic(
+						function(static)
+							local addStatic = static
+							local staticName = addStatic:GetName()
+							addStatic.isAlive = true
+							table.insert(mission.statics, addStatic)
+							_msg = string.format("%sStatic %s added to mission %s", 
+								self.traceTitle, 
+								staticName, 
+								strikeName
+							)
+							self:T({_msg, static})
+						end
+					)
+				end
+				-- clear the mission static objects in the zone from the map. respawn them when mission is activated
+				self:RemoveStatics(mission)
+			-- log error if zone is not found in the miz
+			else
+				_msg = string.format("%sError! Strike Zone %s not found in MIZ!", 
+					self.traceTitle, 
+					mission.strikezone
+				)
+				self:E(_msg)
+			end
+
+		elseif mission.striketargets ~= nil then -- mission has multiple strike targets from which to randomly select one
+			-- step through each of the targets in the strike mission
+			for index, strikeTarget in pairs(mission.striketargets)  do
+				_msg = string.format("%s",self.traceTitle)
+				self:T({_msg, strikeTarget = strikeTarget})
+
+				-- Create a Strike Name
+				-- get coordinates of strikezone
+				local strikeZone = strikeTarget.strikezone
+				local zoneStrikeZone = ZONE:FindByName(strikeZone)
+				if zoneStrikeZone ~= nil then
+
+					strikeTarget.zonestrikezone = zoneStrikeZone
+
+					if BASE:IsTrace() and self.drawZones then 
+						self:DrawStrikeZone(zoneStrikeZone) 
+					end
+	
+					local spawnZoneCoord = zoneStrikeZone:GetCoordinate()
+					-- convert to MGRS
+					local spawnZoneMGRS = spawnZoneCoord:ToStringMGRS(_SETTINGS:SetMGRS_Accuracy(2))
+					-- remove spaces from MGRS and take use the last four characters
+					local strikeName = string.sub(string.gsub(spawnZoneMGRS, "%s+", ""), -6, -1)
+	
+					-- add mission context to the selected target
+					strikeTarget.striketype = mission.striketype
+					strikeTarget.strikeregion = mission.strikeregion
+					strikeTarget.strikename = strikeName
+					strikeTarget.strikeindex = strikeName
+					strikeTarget.strikemission = mission.strikemission
+					strikeTarget.multiTarget = true
+	
+					-- add text for map mark and briefing message to mission
+					_msg = string.format("%sAdd briefing text to selected target %s", 
+						self.traceTitle, 
+						strikeName
+					)
+					self:T(_msg)
+					if mission.options then
+						strikeTarget.strikeattackbriefsummary = {}
+						strikeTarget.strikeattackbriefmission = {}
+						strikeTarget.strikemarktext = {}
+						for _, option in ipairs(mission.options) do
+							local optionText = string.format(" %s ", option)
+							local strikeMarkText, strikeAttackBriefSummary, strikeAttackBriefMission = self:AddBriefingText(strikeTarget, option)
+							strikeTarget.strikemarktext[option] = strikeMarkText
+							strikeTarget.strikeattackbriefsummary[option] = strikeAttackBriefSummary
+							strikeTarget.strikeattackbriefmission[option] = strikeAttackBriefMission
+							--strikeTarget.strikemarktext[option], strikeTarget.strikeattackbrieftext[option] = self:AddBriefingText(strikeTarget, option)
+						end						
+					else
+						local strikeMarkText, strikeAttackBriefSummary, strikeAttackBriefMission = self:AddBriefingText(strikeTarget)
+						strikeTarget.strikemarktext = strikeMarkText
+						strikeTarget.strikeattackbriefsummary = strikeAttackBriefSummary
+						strikeTarget.strikeattackbriefmission = strikeAttackBriefMission
+					end
+
+				else
+					_msg = string.format("%sError. Zone %s for strike %s type %s in region %s not found!", 
+						self.traceTitle, 
+						strikeZone, 
+						strikeName, 
+						strikeType, 
+						strikeRegion
+					)
+					self:E(_msg)
+					return
+				end
+
+			end
+		else -- no targets in mission!
+			_msg = string.format("%sError. No targets defined for region %s, type %s, mission %s!",
+				self.traceTitle, 
+				strikeRegion,
+				strikeType,
+				strikeName
+			)
+			self:E(_msg)
+
+		end
+
+		-- Add menus for strike mission
+		_msg = string.format("%sAdding Menus for Type: %s, Region: %s, Name: %s, IVO: %s", 
+			self.traceTitle, 
+			strikeType, 
+			strikeRegion, 
+			strikeName, 
+			strikeIvo
+		)
+		self:T(_msg)
+
+		-- add strike type menu
+		if not self.menu[strikeType] then
+			-- menu text
+			local textType = string.format("%s Strike", strikeType)		
+			-- add menu
+			self.menu[strikeType] = MENU_COALITION:New( coalition.side.BLUE, 
+				textType, 
+				self.menu.top
+			)
+		end
+
+		-- add region menu
+		if not self.menu[strikeType][strikeRegion] then
+			if (strikeTargets == nil) or (strikeOptions ~= nil) then
+				-- menu text
+				local textRegion = string.format("%s Region", strikeRegion)
+				-- add menu
+				self.menu[strikeType][strikeRegion] = MENU_COALITION:New( coalition.side.BLUE, 
+					textRegion, 
+					self.menu[strikeType]
+				)
+			end
+		end
+
+		-- add mission menus
+		-- add command menu for each option
+		if strikeOptions ~= nil then
+			for _, option in ipairs(strikeOptions) do
+				-- menu text
+				local textAdd = string.format("%s %s %s", 
+					strikeName, 
+					option, 
+					strikeIvo
+				)
+				-- add menu
+				self.menu[strikeType][strikeRegion][strikeIndex] = MENU_COALITION_COMMAND:New( coalition.side.BLUE, 
+					textAdd, 
+					self.menu[strikeType][strikeRegion], 
+					self.SpawnStrikeTarget, 
+					self, 
+					mission, 
+					option 
+				) -- add menu command to launch the mission
+			end
+		
+		-- random target without options. add command at region level
+		elseif strikeTargets ~= nil then
+			-- menu text
+			local textAdd = string.format("%s Region %s %s", 
+				strikeRegion,
+				strikeName, 
+				strikeIvo
+			)
+			-- add menu			
+			self.menu[strikeType][strikeIndex] = MENU_COALITION_COMMAND:New( coalition.side.BLUE, 
+				textAdd, 
+				self.menu[strikeType], 
+				self.SpawnStrikeTarget, 
+				self, 
+				mission
+			) -- add menu command to launch the mission
+		
+		-- otherwise, add command menu to region
+		else 
+			-- menu text
+			textAdd = string.format("%s %s", 
+				strikeName, 
+				strikeIvo
+			)
+			-- add menu
+			self.menu[strikeType][strikeRegion][strikeIndex] = MENU_COALITION_COMMAND:New( coalition.side.BLUE, 
+				textAdd, 
+				self.menu[strikeType][strikeRegion], 
+				self.SpawnStrikeTarget, 
+				self, 
+				mission
+			) -- add menu command to launch the mission
+		end
+	end
+
+	-- add remove menu for active missions
+	local textRemove = "CANCEL MISSIONS"
+	self.menu.remove = MENU_COALITION:New(coalition.side.BLUE, textRemove, self.menu.top)
+end
+
+function MISSIONSTRIKE:SpawnStrikeTarget (mission, option) -- "location name"
+
+	mission.option = option or nil
+
+	--local mission = self.mission[strikeIndex]
+	_msg = string.format("%sSpawnStrikeTarget() Type = %s, Name = %s.", 
+		self.traceTitle, 
+		mission.striketype, 
+		mission.strikeregion
+	)
+	self:T(_msg)
+
+	local strikeType = mission.striketype
+	
+
+	if (strikeType == MISSIONSTRIKE.enums.striketype.camp) or (strikeType == MISSIONSTRIKE.enums.striketype.convoy) then
+		_msg = string.format("%sActivating mission type: %s.", 
+			self.traceTitle, 
+			mission.striketype
+		)
+		self:T(_msg)
+
+		self:SpawnRandomStrikeTarget(mission)
+		--self:SpawnCamp(mission)
+
+	elseif UTILS.IsInTable(MISSIONSTRIKE.enums.striketype, strikeType) then -- other strike types
+
+		_msg = string.format("%sActivating mission type: %s.", 
+			self.traceTitle, 
+			mission.striketype
+		)
+		self:T(_msg)
+
+		self:SpawnOther(mission)
+	
+	else -- unknowm mission type!
+		_msg = string.format("%sError. Unknown mission type: %s!", 
+			self.traceTitle, 
+			mission.striketype
+		)
+		self:E(_msg)
+	end
+
+end --SpawnStrikeTarget
+
+
+--- Remove strike attack mission ---
+function MISSIONSTRIKE:RemoveStrikeAttack (mission)
+	--local mission = self.mission[strikeIndex]
+
+	_msg = string.format("%sRemoveStrikeAttack() %s %s.", 
+		self.traceTitle, 
+		mission.striketype, 
+		mission.strikename
+	)
+	self:T(_msg)
+
+	local strikeIndex = mission.strikeindex
+	local strikeType = mission.striketype
+	local strikeRegion = mission.strikeregion
+	local strikeName = mission.strikename
+	local strikeIvo = mission.strikeivo
+
+	if not mission.is_open then
+
+		-- remove map mark from map
+		COORDINATE:RemoveMark( mission.mapMark )
+		-- reset map
+		mission.mapMark = nil 
+		
+		-- remove spawned objects
+		--local objectcount = #mission.spawnedobjects
+		--for index = 1, objectcount do
+		for index, spawn in ipairs(mission.spawnedobjects) do
+			if spawn:IsAlive() then
+				_msg = string.format("%sRemove Spawned Object %s from mission %s %s.", 
+					self.traceTitle, 
+					spawn:GetName(), 
+					mission.striketype, 
+					mission.strikename
+				)
+				self:T(_msg)
+				spawn:Destroy() --false
+			end
+		end
+		-- clear list of now despawned objects
+		mission.spawnedobjects = {}
+
+		-- remove statics
+		self:RemoveStatics(mission)
+
+		--reset mission zone(s)
+		if not mission.multiTarget then --(mission.striketype ~= MISSIONSTRIKE.enums.striketype.camp) and (mission.striketype ~= MISSIONSTRIKE.enums.striketype.convoy)
+			for _indexZone, zoneType in pairs(mission.zones) do
+				for _indexType, zone in pairs(zoneType) do
+					zone.is_open = true
+				end
+			end
+		end
+		
+		-- remove reset menu option
+		self.menu[strikeType][strikeIndex]:Remove()
+		if not mission.multiTarget then -- (mission.striketype ~= MISSIONSTRIKE.enums.striketype.camp) and (mission.striketype ~= MISSIONSTRIKE.enums.striketype.convoy)
+			_msg = string.format("%sReactivate mission %s in menu", 
+				self.traceTitle,
+				mission.strikename
+			)
+			self:T(_msg)
+
+			-- reset mission menu
+			self.menu[strikeType][strikeRegion][strikeIndex] = MENU_COALITION_COMMAND:New(
+				coalition.side.BLUE, 
+				strikeName .. " " .. strikeIvo, 
+				self.menu[strikeType][strikeRegion], 
+				self.SpawnStrikeTarget, 
+				self, 
+				mission
+			) -- add menu command to launch the mission
+		end
+
+		-- set strike mission as available
+		mission.is_open = true 
+
+		_msg = string.format("The %s %s strike attack mission has been removed.", 
+			mission.striketype, 
+			mission.strikename
+		)
+		MESSAGE:New( _msg, 5, "" ):ToAll()
+		_msg = self.traceTitle .. _msg
+		self:T(_msg)
+
+	else
+		_msg = string.format("%sStrike attack mission %s %s is not active!", 
+			self.traceTitle, 
+			mission.striketype, 
+			mission.strikename
+		)
+		self:T(_msg)		
+	end
+
+end --RemoveStrikeAttack
+
+
+function MISSIONSTRIKE:SpawnRandomStrikeTarget(mission)
+	-- Select a random strike target within the region
+	-- spawn assets in randomly selected zones within the camp
+
+	local strikeType = mission.striketype
+	local strikeRegion = mission.strikeregion
+	local strikeOption = mission.option
+	-- spawned target
+	local strikeSpawn = {}
+	-- table of open targets available for activation wthin the region
+	local openTargets = {}
+
+	-- build list of open targets
+	for index, strikeTarget in ipairs(mission.striketargets) do 
+		if strikeTarget.is_open then
+			table.insert(openTargets, strikeTarget)
+		end
+	end
+
+	_msg = string.format("%sOpen Tagets table", self.traceTitle)
+	self:T({_msg, openTargets})
+
+	-- select random target from list
+	local targetCount = #openTargets
+	local targetIndex = 1 -- default to first entry
+	
+	if targetCount > 1 then -- Randomize spawn location if more than 1 available
+		targetIndex = math.random ( 1, targetCount)
+	elseif targetCount == 0 then -- no open targets remaining
+		_msg = string.format("All %s Strike missions for the Region %s are already active!", 
+			strikeType, 
+			strikeRegion
+		)
+		MESSAGE:New( _msg, 5, "" ):ToAll()
+		_msg = self.traceTitle .. _msg
+		self:T(_msg)
+		return
+	end
+
+	-- select the target from the list
+	local selectedTarget = openTargets[targetIndex]
+	if strikeOption ~= nil then
+		selectedTarget.option = strikeOption
+	end
+
+	local strikeName = selectedTarget.strikename
+
+	_msg = string.format("%s%s %s Selected Target %s.", 
+		self.traceTitle, 
+		strikeType, 
+		strikeRegion, 
+		strikeName
+	)
+	self:T({_msg, selectedTarget = selectedTarget})
+
+	-- find the zone object for the selected
+	local zoneStrike = selectedTarget.zonestrikezone
+
+	if zoneStrike then
+		selectedTarget.zonestrike = zoneStrike
+		-- add container for spawned objects
+		if not selectedTarget.spawnedobjects then
+			selectedTarget.spawnedobjects = {}
+		end
+		-- spawn mission objects
+		if selectedTarget.striketype == MISSIONSTRIKE.enums.striketype.camp then
+			self:SpawnCamp(selectedTarget)
+		elseif selectedTarget.striketype == MISSIONSTRIKE.enums.striketype.convoy then
+			strikeSpawn = self:SpawnConvoy(selectedTarget)
+		else
+			_msg = string.format("%sstriketype %s for selected target %s not recognised!", 
+				self.traceTitle, 
+				selectedTarget.striketype, 
+				selectedTarget.strikename
+			)
+			self:T(_msg)
+		end
+		--  mark the selected target target as closed
+		selectedTarget.is_open = false
+
+		_msg = string.format("%sstriketype %s for selected target %s", 
+			self.traceTitle, 
+			selectedTarget.striketype, 
+			selectedTarget.strikename
+		)
+		self:T({_msg, selectedTarget = selectedTarget})
+
+		-- display mission briefing
+		self:Briefing(selectedTarget)
+		-- add remove menu option for the selected target
+		local textRemove = string.format("Remove %s %s", 
+			strikeType, 
+			strikeName
+		)
+		self.menu[strikeType][strikeName] = MENU_COALITION_COMMAND:New( coalition.side.BLUE, 
+			textRemove,  
+			self.menu.remove, 
+			self.RemoveStrikeAttack, 
+			self, 
+			selectedTarget
+		)
+		-- self.menu[strikeType][strikeName] = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Remove ".. strikeName,  self.menu[strikeType], self.RemoveStrikeAttack, self, selectedTarget )
+	else
+		_msg = string.format("%sError! strikezone %s for selected target not found.", 
+			self.traceTitle, 
+			selectedTarget.strikezone
+		)
+		self:E(_msg)
+		return
+	end
+	
+end --SpawnRandomStrikeTarget
+
+
+function MISSIONSTRIKE:SpawnCamp(selectedTarget)
+
+	local strikeType = selectedTarget.striketype
+	local strikeName = selectedTarget.strikename
+	local strikeRegion = selectedTarget.strikeregion
+	local zone = selectedTarget.zonestrike
+ 
+	_msg = string.format("%sSpawning mission type %s for mission %s in region %s.", 
+		self.traceTitle, 
+		strikeType,
+		strikeName,
+		strikeRegion
+	)
+	self:T(_msg)
+
+	local campTemplateOptions = MISSIONSTRIKE.campTemplates.defence
+	
+	-- check if more than one spawn object is available for the camp main template and randomly select one
+	local templateCount = #campTemplateOptions
+	
+	_msg = string.format("%s camp main template options count = %d", 
+		self.traceTitle, 
+		templateCount
+	)
+	self:T(_msg)
+	
+	local templateIndex = 1
+	
+	if templateCount > 1 then
+		templateIndex = math.random(1,templateCount)
+	end
+
+	local campTemplate = campTemplateOptions[templateIndex]
+	
+	_msg = string.format("%sselected campSpawn template; %s",
+		self.traceTitle,
+		campTemplate
+		)
+	self:T(_msg)
+
+	local campSpawn = MISSIONSTRIKE.campSpawns[campTemplate]
+		:InitRandomizeUnits( true, 35, 5 )
+		:InitHeading( 1,359 )
+		:OnSpawnGroup(
+			function(SpawnGroup)
+				-- add this spawngroup to spawned objects list
+				table.insert(selectedTarget.spawnedobjects, SpawnGroup)
+				-- spawn tents
+				MISSIONSTRIKE.campSpawns.tentGroup:InitRandomizeUnits( true, 77, 35 )
+					:OnSpawnGroup(
+						function(SpawnGroup)
+							-- add this spawngroup to spawned objects list
+							table.insert(selectedTarget.spawnedobjects, SpawnGroup)
+						end
+						,zone, selectedTarget)
+					:SpawnInZone ( zone )
+				-- spawn infantry
+				MISSIONSTRIKE.campSpawns.infantryGroup:InitRandomizeUnits( true, 77, 5 )
+					:OnSpawnGroup(
+						function(SpawnGroup)
+							-- add this spawngroup to spawned objects list
+							table.insert(selectedTarget.spawnedobjects, SpawnGroup)
+						end
+						,zone, selectedTarget)
+					:SpawnInZone(zone)
+			end
+			,zone, selectedTarget 
+		)
+	campSpawn:SpawnInZone( zone )
+
+end --SpawnCamp
+
+
+function MISSIONSTRIKE:SpawnConvoy(selectedTarget) -- ConvoyTemplates, SpawnHost {conv, dest, destzone, strikecoords, is_open}, ConvoyType, ConvoyThreats
+	local strikeType = selectedTarget.striketype
+	local strikeOption = selectedTarget.option
+	local strikeName = selectedTarget.strikename
+	local strikeRegion = selectedTarget.strikeregion
+	local strikeZone = selectedTarget.zonestrike
+	local strikeZoneEnd = ZONE:FindByName(selectedTarget.endzone)
+	-- check that a destination has been defined
+	if strikeZoneEnd ~= nil then
+		_msg = string.format("%sSpawning mission type %s for mission %s in region %s with option %s.", 
+			self.traceTitle, 
+			strikeType,
+			strikeName,
+			strikeRegion,
+			strikeOption
+		)
+		self:T(_msg)
+		-- set default spawn object
+		local convoySpawn = self.convoyspawn[strikeOption]
+		_msg = string.format("%sconvoySpawn template options", self.traceTitle)
+		self:T({_msg, convoySpawn})
+		-- more than one spawn object is available for the convoy type randomly select one
+		local templateCount = #convoySpawn
+		_msg = string.format("%s template count = %d", 
+			self.traceTitle, 
+			templateCount
+		)
+		self:T(_msg)
+		local templateIndex = 1
+		if templateCount > 1 then
+			templateIndex = math.random(1,templateCount)
+			convoySpawn = convoySpawn[templateIndex]
+		end
+		_msg = string.format("%sselected convoySpawn template", self.traceTitle)
+		self:T({_msg, convoySpawn})
+		-- add convoy description to selected target
+		selectedTarget.strikedescription = convoySpawn.description
+		-- add convoy threats to selected target
+		selectedTarget.strikethreats = convoySpawn.threats
+		-- get coordinate of destination zone
+		local toCoordinate = strikeZoneEnd:GetCoordinate()
+		-- draw start and destination zones if trace is on
+		-- if BASE:IsTrace() then 
+		-- 	strikeZone:DrawZone()
+		-- 	strikeZoneEnd:DrawZone()
+		-- end
+		-- set functions to trigger when convoy spawns
+		convoySpawn:OnSpawnGroup(
+			function(SpawnGroup)
+				-- add this spawngroup to spawned objects list
+				table.insert(selectedTarget.spawnedobjects, SpawnGroup)
+				-- route group to destination via roads
+				SpawnGroup:RouteGroundOnRoad(toCoordinate)
+				-- add scheduled check for convoy reaching destination and remove the mission if it has
+				SCHEDULER:New(
+					SpawnGroup, 
+					function(SpawnGroup, selectedTarget, strikeZoneEnd)
+						if SpawnGroup:IsPartlyInZone(strikeZoneEnd) then
+							MISSIONSTRIKE:RemoveStrikeAttack(selectedTarget)
+						end
+					end,
+					{selectedTarget, strikeZoneEnd}, 0, 60
+			  	)
+
+			end,
+			selectedTarget, toCoordinate, strikeZoneEnd
+		)
+		-- spawn the convoy in the start zone
+		convoySpawn:SpawnInZone(strikeZone)
+	else
+		-- error to log if an end zone has not been defined/found
+		_msg = string.format("%sError. End zone not found for mission type %s for mission %s in region %s with option %s!",
+			self.traceTitle, 
+			strikeType,
+			strikeName,
+			strikeRegion,
+			strikeOption
+		)
+		self:E(_msg)
+	end
+end --SpawnConvoy  
+
+
+function MISSIONSTRIKE:SpawnOther(mission)
+
+	if mission.is_open then -- check mission is not already active
+
+		local strikeType = mission.striketype
+		local strikeRegion = mission.strikeregion
+		local strikeIndex = mission.strikeindex
+		local strikeIvo = mission.strikeivo
+		local strikeName = mission.strikename
+
+		-- create container for spawned objects if not already present
+		if not mission.spawnedobjects then
+			mission.spawnedobjects = {}
+		end
+
+		local medZonesCount = #mission.zones["medium"] -- number of medium defzones
+		local smallZonesCount = #mission.zones["small"] -- number of small defzones
+
+		_msg = string.format("%sZone type counts; medium = %d, small = %d", 
+			self.traceTitle, 
+			medZonesCount, 
+			smallZonesCount
+		)
+		self:T(_msg)
+
+		local samQty = math.random( 1, mission.defassets.sam ) or 0-- number of SAM defences min 1
+		local aaaQty = math.random( 1, mission.defassets.aaa ) or 0 -- number of AAA defences min 1
+		local manpadQty = math.random( 0, mission.defassets.manpad ) or 0 -- number of manpad defences min 0. Spawn in AAA zones. aaaQty + manpadQty MUST NOT exceed smallZonesCount
+		local armourQty = math.random( 1, mission.defassets.armour ) or 0-- number of armour groups min 1. spawn in SAM zones. samQty + armourQty MUST NOT exceed medZonesCount
+		--local strikeMarkZone = ZONE:FindByName( mission.strikezone ) -- ZONE object for zone named in strikezone
+
+		-- set threat message with threat counts
+		mission.strikethreats = string.format("%dx RADAR SAM,  %dx AAA, %dx MANPAD, %dx LIGHT ARMOUR", 
+			samQty, 
+			aaaQty, 
+			manpadQty, 
+			armourQty
+		)
+		self:T(self.traceTitle .. mission.strikethreats)
+
+		--- Check sufficient zones exist for the mission air defences ---
+		if samQty + armourQty > medZonesCount then
+			_msg = mission.strikename .. " Error! SAM+Armour count exceedes medium zones count"
+			self:E(_msg)
+			return
+		elseif aaaQty + manpadQty > smallZonesCount then
+			_msg = mission.strikename .. " Error! AAA+MANPAD count exceedes small zones count"
+			self:E(_msg)
+			return
+		end
+		
+		-- spawn static objects
+		_msg = string.format("%sRefresh Statics for mission %s.", 
+			self.traceTitle, 
+			strikeName
+		)
+		self:T(_msg)
+
+		self:AddStatics(mission)
+		
+		-- spawn target groups
+		_msg = string.format("%s{Spawn Target Groups for mission} %s.", 
+			self.traceTitle, 
+			strikeName
+		)
+		self:T(_msg)
+
+		_msg = string.format("%sstriketargetspawn", self.traceTitle)
+		self:T({_msg,mission.striketargetspawn})
+
+		for spawnName, spawnData in pairs(mission.striketargetspawn) do
+			_msg = string.format("%s%s Spawn Target Group %s", self.traceTitle, 
+				mission.strikename, 
+				spawnName
+			)
+			self:T(_msg)
+			local spawnGroup = {}
+			local airbase = mission.striketargetspawn[spawnName].airbase
+			spawnGroup = mission.striketargetspawn[spawnName]:Spawn()
+			table.insert(mission.spawnedobjects, spawnGroup )
+		end
+		
+		-- add SAM assets
+		if samQty > 0 then
+			self:AddStrikeAssets(mission, "sam", samQty, "medium", medZonesCount) -- AssetType ["sam", "aaa", "manpads", "armour"], AssetQty, AssetZoneType ["med", "small"], AssetZonesCount
+		end
+		-- add AAA assets
+		if samQty > 0 then
+			self:AddStrikeAssets(mission, "aaa", aaaQty, "small", smallZonesCount)
+		end
+		-- add Manpad assets
+		if manpadQty > 0 then
+			self:AddStrikeAssets(mission, "manpads", manpadQty, "small", smallZonesCount)
+		end
+		-- add armour assets
+		if armourQty > 0 then
+			self:AddStrikeAssets(mission, "armour", armourQty, "medium", medZonesCount)
+		end
+		
+		mission.is_open = false -- mark strike mission as active
+		
+		--- menu: remove mission start command
+		self.menu[strikeType][strikeRegion][strikeIndex]:Remove()
+		-- add mission remove command
+		local textRemove = string.format("Remove %s %s %s", 
+			strikeType,
+			strikeName,
+			strikeIvo
+		)
+		self.menu[strikeType][strikeIndex] = MENU_COALITION_COMMAND:New(
+			coalition.side.BLUE, 
+			textRemove, 
+			self.menu.remove, 
+			-- self.menu[strikeType], 
+			self.RemoveStrikeAttack, 
+			self, 
+			mission
+		)
+
+		MISSIONSTRIKE:Briefing(mission)
+	else
+		_msg = string.format("The %s %s strike attack mission is already active!", 
+			mission.strikename, 
+			mission.striketype
+		)
+		MESSAGE:New( _msg, 5, "" ):ToAll()
+		_msg = self.traceTitle .. _msg
+		self:T(_msg)
+	end
+
+end --SpawnOther
+
+
+function MISSIONSTRIKE:AddStrikeAssets(mission, AssetType, AssetQty, AssetZoneType, AssetZonesCount ) -- AssetType ["sam", "aaa", "manpads", "armour"], AssetQty, AssetZoneType ["med", "small"], AssetZonesCount
+	_msg = self.traceTitle .. "AddStrikeAssets()"
+	self:T({_msg, AssetType, AssetQty, AssetZoneType, AssetZonesCount})
+
+	if AssetQty > 0 then
+	
+		local TableStrikeAssetZones = {}
+
+		-- select indexes of zones in which to spawn assets 
+		for index = 1, AssetQty do
+			-- generate a random index for the zone type 
+			local zoneindex = math.random( 1, AssetZonesCount )
+			-- ensure selected zone has not been used
+			while ( not mission.zones[AssetZoneType][zoneindex].is_open ) do 
+				_msg = self.traceTitle .. "Regenerate random Zone index."
+				self:T(_msg)
+				zoneindex = math.random ( 1, AssetZonesCount )
+			end
+			-- close zone for selection
+			mission.zones[AssetZoneType][zoneindex].is_open = false 
+			-- add selected zone to list
+			TableStrikeAssetZones[index] = zoneindex 
+			
+		end
+
+		-- spawn assets
+		for index = 1, #TableStrikeAssetZones do
+			-- randomise template (MOOSE removes unit orientation in template)
+			local defenceTemplateIndex = math.random( 1, #self.defenceTemplates[AssetType] ) -- generate random index for template
+			local assetTemplate = self.defenceTemplates[AssetType][defenceTemplateIndex] -- select indexed template
+			-- local assetSpawn = self.spawn["DEFSTUB_" .. assetTemplate] -- [contenation for name of generated DEFSTUB_ spawn]
+			local assetSpawn = self.defenceSpawns[assetTemplate] -- [contenation for name of generated DEFSTUB_ spawn]
+			local assetzoneindex = TableStrikeAssetZones[index]
+			local assetspawnzone = ZONE:FindByName( mission.zones[AssetZoneType][assetzoneindex].loc ) -- [concatenation for name of generated spawnzone]
+			
+			-- assetSpawn:SpawnInZone( assetspawnzone ) -- spawn asset in zone in generated zone list
+			local assetSpawnGroup = assetSpawn:SpawnInZone( assetspawnzone ) -- spawn asset in zone in generated zone list
+			
+			--local assetspawngroup, assetspawngroupindex = assetSpawn:GetLastAliveGroup()
+			table.insert(mission.spawnedobjects, assetSpawnGroup ) -- add spawned asset to spawnobjects list
+		end
+
+	end
+
+end --AddStrikeAssets
+
+
+function MISSIONSTRIKE:AddBriefingText(mission, option)
+
+	local strikeMarkName = mission.strikename
+	local strikeMarkOption = option or ""
+	local strikeMarkType = mission.striketype
+	local strikeMarkRegion = mission.strikeregion
+	local strikeMarkIvo = mission.strikeivo
+	local strikeAttackMission = mission.strikemission
+	
+	-- local strikeMarkCoordsLLDMS = ""
+	-- local strikeMarkCoordsLLDDM = ""
+	-- local strikeMarkCoordsMGRS = ""
+
+	--- Create Mission Mark textp ---
+	local strikeMarkZone = mission.zonestrikezone --ZONE:FindByName( strikeMarkZoneName ) -- ZONE object for zone named in strikezone
+	-- if strikeMarkZone ~= nil then 
+	local strikeMarkZoneCoord = strikeMarkZone:GetCoordinate() -- get coordinates of strikezone
+
+	strikeMarkCoordsLLDMS = strikeMarkZoneCoord:ToStringLLDMS(SETTINGS:SetLL_Accuracy(0))  or "" --mission.strikecoords
+	strikeMarkCoordsLLDDM = strikeMarkZoneCoord:ToStringLLDDM(SETTINGS:SetLL_Accuracy(3))  or "" --mission.strikecoords
+	strikeMarkCoordsMGRS = strikeMarkZoneCoord:ToStringMGRS(SETTINGS:SetMGRS_Accuracy(5))  or ""  --mission.strikecoords
+
+	-- else
+	-- 	_msg = string.format("%sError in AddBriefingText. strikeZone %s, mission %s, type %s, region %s not found!",
+	-- 		self.traceTitle,
+	-- 		strikeMarkZoneName,
+	-- 		strikeMarkName,
+	-- 		strikeMarkType,
+	-- 		strikeMarkRegion
+	-- 	)
+	-- 	self:T(_msg)
+	-- end
+
+
+	-- add briefing summary to mission
+	local strikeAttackSummary = ""
+
+	if strikeMarkType == MISSIONSTRIKE.enums.striketype.airfield then
+		strikeAttackSummary = string.format("Air Interdiction mission against %s %s", 
+			strikeMarkType, 
+			strikeMarkName
+		)
+	elseif strikeMarkType == MISSIONSTRIKE.enums.striketype.camp then
+		strikeAttackSummary = string.format("Air Interdiction mission against %s region %s %s", 
+			strikeMarkRegion, 
+			strikeMarkType, 
+			strikeMarkName
+		)
+	elseif strikeMarkType == MISSIONSTRIKE.enums.striketype.convoy then
+		local destName = mission.destname
+		strikeAttackSummary = string.format("Air Interdiction mission in %s region against %s %s routing to %s",
+			strikeMarkRegion, 
+			strikeMarkOption,
+			strikeMarkType, 
+			destName
+		)
+		strikeMarkRegion = string.format("%s\nLast known position", 
+			strikeMarkRegion
+		)
+	else -- default summary
+		strikeAttackSummary = string.format("Air Interdiction mission against %s %s IVO %s", 
+			strikeMarkType, 
+			strikeMarkName, 
+			strikeMarkIvo
+		)
+	end
+
+	local strikeMarkText = string.format("%s %s %s Strike %s\n%s\n%s\n%s", 
+		strikeMarkName,
+		strikeMarkOption, 
+		strikeMarkType, 
+		strikeMarkRegion, 
+		strikeMarkCoordsLLDMS, 
+		strikeMarkCoordsLLDDM, 
+		strikeMarkCoordsMGRS
+	)
+
+	_msg = string.format("%sAdd strike mark text for mission %s",
+		MISSIONSTRIKE.traceTitle,
+		strikeMarkName	
+	)
+	self:T({_msg, strikeMarkText = strikeMarkText})
+
+	local strikeAttackBriefSummary = string.format("\n\n++++++++++++++++++++++++++++++++++++\n\n%s", 
+		strikeAttackSummary 
+	)
+
+	_msg = string.format("%sAdd summary text for mission %s",
+		MISSIONSTRIKE.traceTitle,
+		strikeMarkName
+	)
+	self:T({_msg, strikeAttackBriefSummary = strikeAttackBriefSummary})
+
+	local strikeAttackBriefMission = string.format("\nMission: %s\n\nCoordinates:\n%s\n%s\n%s",
+		strikeAttackMission, 
+		strikeMarkCoordsLLDMS, 
+		strikeMarkCoordsLLDDM, 
+		strikeMarkCoordsMGRS 
+	)
+
+	_msg = string.format("%sAdd mission text for mission %s",
+		MISSIONSTRIKE.traceTitle,
+		strikeMarkName
+	)
+	self:T({_msg, strikeAttackBriefMission = strikeAttackBriefMission})
+
+	return strikeMarkText, strikeAttackBriefSummary, strikeAttackBriefMission
+
+end --AddBriefingText
+
+
+function MISSIONSTRIKE:Briefing(mission)
+
+	_msg = string.format("%sBriefing()", self.traceTitle)
+	self:T(_msg)
+
+	local strikeType = mission.striketype
+	local strikeName = mission.strikename
+	local strikeRegion = mission.strikeregion
+	local strikeZone = mission.strikezone
+	local strikeOption = mission.option
+
+	-- summary and mission for brief text
+	local strikeAttackBriefSummary = mission.strikeattackbriefsummary
+	local strikeAttackBriefMission = mission.strikeattackbriefmission
+	if strikeOption then
+		strikeAttackBriefSummary = mission.strikeattackbriefsummary[strikeOption]
+		strikeAttackBriefMission = mission.strikeattackbriefmission[strikeOption]
+	end
+
+	-- add description if available
+	local strikeAttackBriefDescription = ""
+	if mission.strikedescription then
+		strikeAttackBriefDescription = string.format("\nConsisting of %s", 
+			mission.strikedescription
+		)
+	end
+
+	if (strikeAttackBriefSummary ~= nil) and (strikeAttackBriefMission ~= nil) then
+
+		-- add threats to brief if provided
+		local strikeThreats = mission.strikethreats
+		if strikeThreats then
+			strikeThreats = string.format("\nThreats: %s\n\n++++++++++++++++++++++++++++++++++++", 
+				strikeThreats
+			)
+		else 
+			strikeThreats = "++++++++++++++++++++++++++++++++++++"
+		end
+	
+		strikeAttackBrief = string.format("%s%s\n%s\n%s",
+			strikeAttackBriefSummary,
+			strikeAttackBriefDescription,
+			strikeAttackBriefMission,
+			strikeThreats
+		) 
+
+		_msg = string.format("%sBriefing for mission %s, type %s, region %s", 
+			self.traceTitle, 
+			strikeName, 
+			strikeType, 
+			strikeRegion
+		)
+		self:T({_msg, strikeAttackBrief})
+
+		MESSAGE:New (strikeAttackBrief, 5, "" ):ToAll()
+			
+	else
+		_msg = string.format("%sError showing briefing. Briefing text for mission %s, type %s, region %s not found!", 
+			self.traceTitle, 
+			strikeName, 
+			strikeType, 
+			strikeRegion
+		)
+		self:E(_msg)
+		return
+	end
+
+	--- Create Mission Mark on F10 map ---
+	local strikeMarkText = mission.strikemarktext
+	if strikeOption then
+		strikeMarkText = mission.strikemarktext[strikeOption]
+	end
+
+	local strikeMarkZone = ZONE:FindByName( strikeZone ) -- ZONE object for zone named in strikezone
+
+	if strikeMarkZone ~= nil then
+		_msg = string.format("%sAdd Map Mark for mission %s, type %s, region %s",
+			self.traceTitle,
+			strikeName, 
+			strikeType, 
+			strikeRegion
+		)
+		self:T({_msg, strikeMarkZone = strikeMarkZone})
+
+		local strikeMarkZoneCoord = strikeMarkZone:GetCoordinate() -- get coordinates of strikezone
+		mission.mapMark = strikeMarkZoneCoord:MarkToAll(strikeMarkText, true) -- add mark to map
+	else
+		_msg = string.format("%sError showing briefing. Zone %s for mission %s type %s in region %s not found!", 
+			self.traceTitle, 
+			strikeMarkZone, 
+			strikeName, 
+			strikeType, 
+			strikeRegion
+		)
+		return
+	end
+
+end --Briefing
+
+
+function MISSIONSTRIKE:AddSpawnTemplate(templateName, spawnCategory, spawnCountry, spawnCoalition)
+
+	local category = spawnCategory or Group.Category.GROUND
+	local country = spawnCountry or self.enums.default.countryidred
+	local coalition = spawnCoalition or self.enums.default.coalitionred
+	local addSpawn = {}
+
+	if GROUP:FindByName(templateName) then
+		-- Template found in MIZ
+		_msg = string.format("%sAddSpawn(). using MIZ template %s.", 
+			self.traceTitle, 
+			templateName
+		)
+		self:T(_msg)
+		addSpawn = SPAWN:New( templateName )
+	-- elseif self.template[templateName] then
+	-- 	-- template found in MISSIONSTRIKE templates
+	-- 	_msg = string.format("%sAddSpawn(). Using MISSIONSTRIKE template %s.", 
+	-- 		self.traceTitle, 
+	-- 		templateName
+	-- 	)
+	-- 	self:T(_msg)
+	-- 	addSpawn = SPAWN:NewFromTemplate(self.template[templateName],templateName)
+	-- 		:InitCountry(country) -- set spawn countryid
+	-- 		:InitCoalition(coalition) -- set spawn coalition
+	-- 		:InitCategory(category) -- set category
+	elseif SPAWNTEMPLATES.templates[templateName] then
+		-- template found in SPAWNTEMPLATES
+		_msg = string.format("%sAddSpawn(). Using SPAWNTEMPLATES template %s.", 
+			self.traceTitle, 
+			templateName
+		)
+		self:T(_msg)
+		addSpawn = SPAWN:NewFromTemplate(SPAWNTEMPLATES.templates[templateName],templateName)
+			:InitCountry(country) -- set spawn countryid
+			:InitCoalition(coalition) -- set spawn coalition
+			:InitCategory(category) -- set category
+	else
+		-- cannot find requested template
+		_msg = string.format("%sError! AddSpawn(). Template %s not found!", 
+			self.traceTitle, 
+			templateName
+		)
+		self:E(_msg)
+	end
+	return addSpawn
+end --AddSpawnTemplate
+
+
+function MISSIONSTRIKE:RemoveStatics(mission)
+
+	if mission.statics then
+		-- respawn each static objects
+		for _, static in pairs(mission.statics) do
+			staticName = static:GetName()
+			static.isAlive = false
+			_msg = string.format("%s%s Destroy Static %s", 
+				self.traceTitle, 
+				mission.strikename, 
+				staticName
+			)
+			self:T({_msg, static})
+			static:Destroy()
+		end
+	else
+		_msg = string.format("%sRemoveStatics(): No statics table for mission %s", 
+			self.traceTitle, 
+			mission.strikename
+		)
+		self:T(_msg)
+	end
+	
+end --RemoveStatics
+
+
+function MISSIONSTRIKE:AddStatics(mission)
+
+	-- respawn each static objects
+	for _, static in pairs(mission.statics) do
+		staticName = static:GetName()
+		static.isAlive = true
+		_msg = string.format("%s%s Respawn Static %s", 
+			self.traceTitle, 
+			mission.strikename, 
+			staticName
+		)
+		self:T({_msg, static})
+		static:ReSpawn(country.id.RUSSIA)
+	end
+
+end --AddStatics
+
+
+function MISSIONSTRIKE:DrawStrikeZone(zone)
+
+	-- draw strikezone
+	_msg = string.format("%sDraw zone %s", 
+		self.traceTitle,
+		zone:GetName()
+	)
+	self:T(_msg)
+	zone:DrawZone()					
+
+end
+-- DEFAULT DATA
+
+-- enumerators
+MISSIONSTRIKE.enums = {
+	default = {
+        coalitionred = coalition.side.RED,
+        countryidred = country.id.RUSSIA,
+	},
+	region = {
+		east = "East",
+		northeast = "North East",
+		central = "Central",
+		northcentral = "North Cnetral",
+		west = "West",
+		northwest = "North West",
+		north = "North",
+		alpha = "Alpha",
+		bravo = "Bravo"
+
+	},
+	striketype = { -- strike mission types
+		airfield = "Airfield",
+		factory = "Factory",
+		port = "Port",
+		bridge = "Bridge",
+		convoy = "Convoy",
+		camp = "Camp",
+	},
+	strikemission = {
+		airfield = "CRATER RUNWAY AND ATTRITE AVIATION ASSETS ON THE GROUND",
+		factory = {
+			weapons = "DESTROY WEAPONS MANUFACTURING FACILITY",
+			chemical = "DESTROY CHEMICAL PRODUCTION FACILITY",
+		},
+		bridge = {
+			road = "DESTROY ROAD BRIDGE",
+			rail = "DESTROY RAIL BRIDGE",
+			roadrail = "DESTROY ROAD AND RAIL BRIDGES",
+		},
+		port = {
+			fuel = "DESTROY FUEL PROCESSING AND STORAGE FACILITIES",
+			docks = "DESTROY CARGO DOCKS AND VESSELS",
+			ships = "DESTROY DOCKED CARGO VESSELS",
+		},
+		camp = "FIND AND DESTROY INSURGENT CAMP",
+		convoy = "LOCATE AND DESTROY ENEMY CONVOY",
+	},
+	convoy = {
+		supply = "supply",
+		armoured = "armoured"
+	},
+		
+}
+
+-- airfield defence asset templates
+MISSIONSTRIKE.defenceTemplates = {
+	sam = {
+		"SA3", --"SAM_Sa3Battery",
+		"SA6", --"SAM_Sa6Battery",
+		"SA6", --"SAM_Sa6Battery",
+		"SA6", --"SAM_Sa6Battery",
+		"SA6", --"SAM_Sa6Battery",
+		"SA11", --"SAM_Sa11Battery",
+	},
+	aaa = {
+		"ZU23_Ural",
+		"ZU23_Emp",
+		"ZU23_Closed",
+		"ZSU23_Shilka",
+		-- "AAA_Zu23Ural",
+		-- "AAA_Zu23Emplacement",
+		-- "AAA_Zu23Closed",
+		-- "AAA_Zsu23Shilka",
+	},
+	manpads = {
+		"SA18Manpads",
+		"SA18SManpads",
+		-- "SAM_Sa18Manpads",
+		-- "SAM_Sa18sManpads",
+	},
+	armour = {
+		"ARMOUR_Heavy_01",
+		"ARMOUR_Heavy_02",
+		"ARMOUR_Heavy_03",
+		"ARMOUR_Heavy_04",
+	},
+}
+
+-- camp asset templates
+MISSIONSTRIKE.campTemplates = {
+	main = 	"CAMP_Heavy",
+	tentGroup = "CAMP_Tent_Group",
+	infantryGroup = "CAMP_Inf_02",
+	defence = {
+		"ARMOUR_Heavy_01",
+		"ARMOUR_Heavy_02",
+		"ARMOUR_Heavy_03",
+		"ARMOUR_Heavy_04",
+	}
+}
+
+-- convoy templates
+MISSIONSTRIKE.convoyTemplates = {
+	-- main = {
+	-- 	{template = "CONVOY_base", convoytext = "Single Unit"}
+	-- },
+	supply = {
+		{
+			template = "CONVOY_light-1", 
+			description = "Soft-skinned transport vehicles, BTR-80",
+			threats = "Radar SAM, AAA"
+		},
+		{
+			template = "CONVOY_light-2", 
+			description = "Fuel Supply vehicles, BTR-80",
+			threats = "Radar SAM, AAA"
+		},
+	},
+	armoured = {
+		{
+			template = "CONVOY_heavy-1", 
+			description = "BMP-2, BTR-RD, BTR-80",
+			threats = "Radar SAM, AAA"
+		},
+		{
+			template = "CONVOY_heavy-2", 
+			description = "T-72, BTR-80",
+			threats = "Radar SAM, AAA"
+		},
+		{
+			template = "CONVOY_heavy-3", 
+			description = "T-90, BTR-80",
+			threats = "Radar SAM, AAA"
+		},
+	},
+	artillery = {
+		{
+			template = "CONVOY_base", 
+			description = "Artillery",
+			threats = nil
+		},
+	},
+	missile = {
+		{
+			template = "CONVOY_base", 
+			description = "Missile",
+			threats = nil
+		},
+	},
+}  
+--------------------------------[core\cvncontrol.lua]-------------------------------- 
+ 
+env.info( "[JTF-1] cvncontrol.lua" )
+
+--- BEGIN CVNCONTROL MENU SECTION
+
+CVNCONTROL = {}
+-- inherit methods,  properties etc from BASE for event handler, trace etc
+CVNCONTROL = BASE:Inherit( CVNCONTROL, BASE:New() )
+CVNCONTROL.ClassName = "CVNCONTROL"
+CVNCONTROL.traceTitle = "[JTF-1] "
+CVNCONTROL.version = "1.0"
+
+CVNCONTROL.markWaypoints = false
+
+CVNCONTROL.menu = {}
+
+CVNCONTROL.enums = {
+	setlightsauto = 1, -- auto
+	setlightslaunch = 2, -- launch
+	setlightsrecovery = 3, -- recovery
+	setlightsnav = 4, -- nav
+}
+
+CVNCONTROL.default = {
+	recoverywindow = {15, 30, 60, 90},
+	cruise = 12,
+	deckoffset = -9,
+	countryid = country.id.USA, -- default country to be used for predfined templates
+	coalition = coalition.side.BLUE, -- default coalition to use for predefined templates
+	groupcategory = Group.Category.AIRPLANE, -- default group category to use for predefined templates
+	recoverydelay = 0, -- time, in seconds, for which to delay the commencement of the launch/recovery window
+	flagsetlights = 6666, -- mission trigger flag for setting carrier lights (0 = NAV, 1 = Launch, 2 = Recovery)
+	setlightsdefault = CVNCONTROL.enums.setlightsauto, -- default light mode for carrier
+}
+
+function CVNCONTROL:Start()
+
+	for index, cvn in ipairs(CVNCONTROL.cvn) do
+
+		-- local cvn = self.cvn[index]
+		-- use data file values or set to default if not defined
+		cvn.deckOffset = cvn.deckoffset or self.default.deckoffset
+		cvn.recoverySpeed = cvn.recoveryspeed or self.default.recoveryspeed
+		cvn.cruise = cvn.cruise or self.default.cruise
+		cvn.recoveryWindow = cvn.recoveryWindow or self.default.recoverywindow
+		cvn.recoveryDelay = cvn.recoveryDelay or self.default.recoverydelay
+		cvn.flagsetlights = cvn.flagsetlights or self.default.flagsetlights
+		--local tacan = cvn.tacan
+		
+		cvn.navygroup = NAVYGROUP:New(GROUP:FindByName(cvn.group)) -- cvn.navygroup
+			--:Activate()
+		
+		cvn.navygroup:SetDefaultSpeed(cvn.cruise)
+		cvn.navygroup:SetVerbosity(3)
+		cvn.navygroup:SwitchTACAN(cvn.tacan, cvn.tacanid) -- add
+		cvn.navygroup:SwitchICLS(cvn.icls, cvn.iclsid) -- add
+		cvn.navygroup:SwitchRadio(cvn.radio,cvn.radiomodulation) -- add
+		cvn.navygroup:SwitchAlarmstate(ENUMS.AlarmState.Red) -- add
+		cvn.navygroup:SwitchROE(ENUMS.ROE.WeaponFree) -- add
+		cvn.navygroup:SetPatrolAdInfinitum(true)
+
+		-- if trace is on, draw the zone on the map
+		if BASE:IsTrace() and CVNCONTROL.markWaypoints then 
+			local _msg = string.format("Add waypoint marks for group %s", cvn.name)
+			CVNCONTROL:T(_msg)
+			-- draw waypoints on map
+			cvn.navygroup:MarkWaypoints()
+		end
+
+		-- add recovery tanker if cvn.recoverytanker is true
+		function cvn.navygroup:OnAfterElementSpawned(From, Event, To, Element)
+			local _msg = string.format("%sOnAfterElementSpawned for Element %s", CVNCONTROL.traceTitle, Element.name)
+			CVNCONTROL:T({_msg,Element})
+
+			local elementName = Element.name
+	
+	
+			if Element.name == cvn.unit then
+				local _msg = string.format("%sLead Element %s", CVNCONTROL.traceTitle, Element.name)
+				CVNCONTROL:T(_msg)
+	
+				-- add recovery tanker
+				if cvn.tanker then
+					_msg = string.format("%sRecovery Tanker for %s is required", CVNCONTROL.traceTitle, cvn.name)
+					CVNCONTROL:T(_msg)
+					CVNCONTROL:recoveryTanker(cvn)
+				end
+				-- insert unit ID into DYNDECK group
+				local unit = UNIT:FindByName(cvn.unit)--GROUP:FindByName(cvn.group):GetUnit(1)
+				local unitid = unit:GetID()
+				_msg = string.format("%sUnit object for %s", CVNCONTROL.traceTitle, cvn.unit)
+				CVNCONTROL:T({_msg, unit})
+	
+			end
+	
+		end
+	
+		function cvn.navygroup:OnAfterTurnIntoWind(From, Event, To, TurnIntoWind)
+
+			local _msg=string.format("%s is turning into wind for Recovery/Launch. BRC will be %d, WOD will be %d knots.", 
+				cvn.name,
+				cvn.brc,
+				cvn.recoveryspeed
+			)
+			CVNCONTROL:T(_msg)
+			MESSAGE:New(_msg, 5):ToBlue()
+
+		end
+
+		function cvn.navygroup:OnAfterCruise(From, Event, To, Speed)
+			
+			local _msg = string.format("%s is returning to Cruise.",
+				cvn.name
+			)
+			CVNCONTROL:T(_msg)
+			MESSAGE:New(_msg, 5):ToBlue()
+
+			--cvn.navygroup:SetSpeed(cvn.cruise, true)
+
+		end
+
+		local _msg = string.format("%sNew Navygroup =", self.traceTitle)
+		self:T({_msg,cvn.navygroup})
+		
+		-- add top menu if not already added
+		if not self.menu.top then
+			--if JTF1.menu.root then
+				self.menu.top = MENU_COALITION:New(coalition.side.BLUE,"Carrier Control", JTF1.menu.root)
+			--else
+			-- 	self.menu.top = MENU_COALITION:New(coalition.side.BLUE,"Carrier Control")
+			-- end
+		end
+	
+		-- add menu for this CVN
+		self.menu[cvn.name] = MENU_COALITION:New(coalition.side.BLUE, cvn.menutext, self.menu.top)
+		
+		for index, minutes in ipairs(cvn.recoveryWindow) do
+			local menuText = string.format("Recovery/%dmin", minutes)
+			local menuId = tostring(minutes)
+	
+			-- add command menus for this cvn
+			self.menu[cvn.name][menuId] = MENU_COALITION_COMMAND:New( coalition.side.BLUE, menuText, self.menu[cvn.name], self.start_recovery, CVNCONTROL, cvn, minutes)
+			_msg = string.format("%sAdd command menu for CVN %s window %s minutes.", self.traceTitle, cvn.name, menuId)
+			self:T(_msg)
+		
+		end
+		
+		self.menu[cvn.name]["lights"] = MENU_COALITION:New(coalition.side.BLUE, "Change Lights", self.menu[cvn.name])
+		-- add commands to set carrier lights mode
+		self.menu[cvn.name]["recovery"] = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Recovery mode", self.menu[cvn.name]["lights"], self.setLights, CVNCONTROL, cvn, self.enums.setlightsrecovery)
+		self.menu[cvn.name]["launch"] = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Launch mode", self.menu[cvn.name]["lights"], self.setLights, CVNCONTROL, cvn, self.enums.setlightslaunch)
+
+
+		-- add command to cancel current recovery window
+		self.menu[cvn.name]["cancel"] = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Cancel current recovery window.", self.menu[cvn.name], self.recoveryCancel, CVNCONTROL, cvn, cruise)
+		_msg = string.format("%sAdd command menu to cancel recovery for CVN %s.", self.traceTitle, cvn.name)
+		self:T(_msg)
+			
+	end
+
+end
+
+function CVNCONTROL:start_recovery(cvn, minutes)
+
+	_msg = string.format("%sstart_recovery().", self.traceTitle)
+	self:T({_msg,cvn})
+
+	self:setLights(cvn, self.enums.setlightsrecovery)
+	
+	if cvn.navygroup:IsSteamingIntoWind() then
+		_msg = string.format("%sCVN %s already steaming into wind.", 
+			self.traceTitle, 
+			cvn.name
+		)
+		self:T(_msg)
+
+		--local brc =  UTILS.Round(cvn.brc, 0)
+
+		_msg = string.format("%s is currently Launching/Recovering.\n\nWindow closes at time %s\n\nBRC is %d",
+			cvn.name, 
+			cvn.timeend, 
+			cvn.brc
+		)
+		MESSAGE:New(_msg, 5):ToBlue()
+
+	else
+
+		local brc = cvn.navygroup:GetHeadingIntoWind(-4, cvn.recoveryspeed)
+		brc = UTILS.Round(brc, 0)
+
+		_msg = string.format("%sAdd turn into wind for CVN %s. BRC=%d", 
+			self.traceTitle, 
+			cvn.name,
+			brc
+		)
+		self:T(_msg)
+
+		local durationSeconds = minutes * 60
+		local timeNow = timer.getAbsTime()
+		local secondsStart = timeNow + cvn.recoveryDelay
+		local timeStart = UTILS.SecondsToClock(secondsStart,true)
+		local secondsEnd = secondsStart + durationSeconds
+		local timeEnd = UTILS.SecondsToClock(secondsEnd,true)
+		local windDir = UTILS.Round(cvn.navygroup:GetWind(),0)
+		local deckOffSet = cvn.deckoffset
+		local uturn = cvn.uturn
+		if uturn == nil then
+			uturn = true
+		end
+		local recoverySpeed = cvn.recoveryspeed
+
+		_msg =string.format("%s will be turning for Recovery/Launch.\nWindow will be open from %s until %s.\nWind is at %d.\nBRC will be %d", 
+			cvn.name, 
+			timeStart, 
+			timeEnd, 
+			windDir,
+			brc
+		)
+		Message_01 = MESSAGE:New(_msg, 10):ToBlue()
+
+		cvn.navygroup:AddTurnIntoWind(nil, durationSeconds , recoverySpeed, uturn, deckOffSet)
+		cvn.timeend = timeEnd
+		cvn.brc = brc
+
+	end 
+
+end
+
+function CVNCONTROL:recoveryCancel(cvn, cruise)
+	_msg = string.format("%sCancel recovery window for CVN %s.", self.traceTitle, cvn.name)
+	self:T(_msg)
+
+	if cvn.navygroup:IsSteamingIntoWind() then
+
+		self:setLights(cvn, self.enums.setlightsnav)
+
+		cvn.navygroup:TurnIntoWindStop()
+		--cvn.navygroup:SetSpeed(cruise)
+	
+		_msg = string.format("The recovery window for %s has been cancelled.", cvn.name)
+		MESSAGE:New(_msg, 5):ToBlue()
+	end
+
+end
+
+function CVNCONTROL:setLights(cvn, mode)
+	_msg = string.format("%sSet lights to mode %d for CVN %s.", 
+		self.traceTitle, 
+		mode, 
+		cvn.name
+	)
+	self:T(_msg)
+
+	-- set mode to default if not defined
+	mode = mode or CVNCONTROL.default.setlightsdefault
+	-- set mission trigger flag to mode
+	trigger.action.setUserFlag(cvn.flagsetlights, mode)
+
+end
+
+function CVNCONTROL:recoveryTanker(cvn)
+	_msg = string.format("%sAdd Recovery Tanker for CVN %s.", 
+		self.traceTitle, 
+		cvn.name
+	)
+	self:T(_msg)
+
+	if cvn.tankertemplate and GROUP:FindByName(cvn.tankertemplate) then
+		_msg = string.format("%sUsing tanker spawn template in MIZ for CVN %s.", self.traceTitle, cvn.name)
+		self:T(_msg)
+		-- spawn from template in miz
+		cvn.spawntemplate = SPAWN:New(cvn.tankertemplate)
+	else
+		_msg = string.format("%sUsing default tanker spawn template for CVN %s.", self.traceTitle, cvn.name)
+		self:T(_msg)
+		-- spawn using CVNCONTROL default template
+		local countryId = cvn.countryid or CVNCONTROL.default.countryid
+		local coalition = cvn.coalition or CVNCONTROL.default.coalition
+		local groupCategory = cvn.groupcategory or CVNCONTROL.default.groupcategory
+		local spawnTemplatePrefix = "S3BTANKER"
+		local spawnAliasPrefix = string.format("%s_HAWK", cvn.name)
+
+		-- add mission spawn object using template in SUPPORTAC.template[missionSpawnType]
+		cvn.spawntemplate = SPAWN:NewFromTemplate(SPAWNTEMPLATES.templates[spawnTemplatePrefix], spawnTemplatePrefix, spawnAliasPrefix)
+			:InitCountry(countryId) -- set spawn countryid
+			:InitCoalition(coalition) -- set spawn coalition
+			:InitCategory(groupCategory) -- set category
+	end
+	
+	cvn.spawntemplate:InitLateActivated() -- set template to late activated
+
+	-- add RECOVERYTANKER object after spawning
+	cvn.spawntemplate:OnSpawnGroup(
+		function(spawngroup)
+			local spawnGroupName = spawngroup:GetName()
+			_msg = string.format(CVNCONTROL.traceTitle .. "Spawned Group %s", spawnGroupName)
+			CVNCONTROL:T(_msg)
+
+			cvn.spawntanker = RECOVERYTANKER:New(UNIT:FindByName(cvn.unit), spawnGroupName)
+				:SetCallsign(cvn.tankercallsign, cvn.tankercallsignnumber)
+				:SetTACAN(cvn.tankertacan, cvn.tankertacanid)
+				:SetRadio(cvn.tankerradio)
+				:SetTakeoffAir()
+				:SetAltitude(6000)
+				:SetRespawnInAir()
+				:SetRecoveryAirboss( false )
+				
+			cvn.spawntanker:Start()
+		end, cvn
+	)
+
+	-- spawn the tanker
+	cvn.spawntemplate:Spawn()
+
+end
+
+-- CVNCONTROL.templates = {
+-- 	["S3BTANKER"] = {
+-- 		["category"] = Group.Category.AIRPLANE,
+-- 		["lateActivation"] = true,
+-- 		["tasks"] = 
+-- 		{
+-- 		}, -- end of ["tasks"]
+-- 		["radioSet"] = false,
+-- 		["task"] = "Refueling",
+-- 		["uncontrolled"] = false,
+-- 		["route"] = 
+-- 		{
+-- 			["routeRelativeTOT"] = true,
+-- 			["points"] = 
+-- 			{
+-- 				[1] = 
+-- 				{
+-- 					["alt"] = 1828.8,
+-- 					["action"] = "Turning Point",
+-- 					["alt_type"] = "BARO",
+-- 					["speed"] = 141.31944444444,
+-- 					["task"] = 
+-- 					{
+-- 						["id"] = "ComboTask",
+-- 						["params"] = 
+-- 						{
+-- 							["tasks"] = 
+-- 							{
+-- 								[1] = 
+-- 								{
+-- 									["number"] = 1,
+-- 									["auto"] = true,
+-- 									["id"] = "Tanker",
+-- 									["enabled"] = true,
+-- 									["params"] = 
+-- 									{
+-- 									}, -- end of ["params"]
+-- 								}, -- end of [1]
+-- 								[2] = 
+-- 								{
+-- 									["number"] = 2,
+-- 									["auto"] = true,
+-- 									["id"] = "WrappedAction",
+-- 									["enabled"] = true,
+-- 									["params"] = 
+-- 									{
+-- 										["action"] = 
+-- 										{
+-- 											["id"] = "ActivateBeacon",
+-- 											["params"] = 
+-- 											{
+-- 												["type"] = 4,
+-- 												["AA"] = false,
+-- 												["callsign"] = "TKR",
+-- 												["system"] = 4,
+-- 												["channel"] = 1,
+-- 												["modeChannel"] = "X",
+-- 												["bearing"] = true,
+-- 												["frequency"] = 962000000,
+-- 											}, -- end of ["params"]
+-- 										}, -- end of ["action"]
+-- 									}, -- end of ["params"]
+-- 								}, -- end of [2]
+-- 								[3] = 
+-- 								{
+-- 									["number"] = 3,
+-- 									["auto"] = false,
+-- 									["id"] = "WrappedAction",
+-- 									["enabled"] = true,
+-- 									["params"] = 
+-- 									{
+-- 										["action"] = 
+-- 										{
+-- 											["id"] = "SetInvisible",
+-- 											["params"] = 
+-- 											{
+-- 												["value"] = true,
+-- 											}, -- end of ["params"]
+-- 										}, -- end of ["action"]
+-- 									}, -- end of ["params"]
+-- 								}, -- end of [3]
+-- 							}, -- end of ["tasks"]
+-- 						}, -- end of ["params"]
+-- 					}, -- end of ["task"]
+-- 					["type"] = "Turning Point",
+-- 					["ETA"] = 0,
+-- 					["ETA_locked"] = true,
+-- 					["y"] = 606748.96393416,
+-- 					["x"] = -358539.84033849,
+-- 					["formation_template"] = "",
+-- 					["speed_locked"] = true,
+-- 				}, -- end of [1]
+-- 			}, -- end of ["points"]
+-- 		}, -- end of ["route"]
+-- 		["groupId"] = 1,
+-- 		["hidden"] = false,
+-- 		["units"] = 
+-- 		{
+-- 			[1] = 
+-- 			{
+-- 				["alt"] = 1828.8,
+-- 				["alt_type"] = "BARO",
+-- 				["livery_id"] = "usaf standard",
+-- 				["skill"] = "High",
+-- 				["speed"] = 141.31944444444,
+-- 				["type"] = "S-3B Tanker",
+-- 				["unitId"] = 1,
+-- 				["psi"] = 0,
+-- 				["y"] = 606748.96393416,
+-- 				["x"] = -358539.84033849,
+-- 				["name"] = "Aerial-1-1",
+-- 				["payload"] = 
+-- 				{
+-- 					["pylons"] = 
+-- 					{
+-- 					}, -- end of ["pylons"]
+-- 					["fuel"] = "7813",
+-- 					["flare"] = 30,
+-- 					["chaff"] = 30,
+-- 					["gun"] = 100,
+-- 				}, -- end of ["payload"]
+-- 				["heading"] = 0,
+-- 				["callsign"] = 
+-- 				{
+-- 					[1] = 1,
+-- 					[2] = 1,
+-- 					["name"] = "Texaco11",
+-- 					[3] = 1,
+-- 				}, -- end of ["callsign"]
+-- 				["onboard_num"] = "010",
+-- 			}, -- end of [1]
+-- 		}, -- end of ["units"]
+-- 		["y"] = 606748.96393416,
+-- 		["x"] = -358539.84033849,
+-- 		["name"] = "S3BTANKER",
+-- 		["communication"] = true,
+-- 		["start_time"] = 0,
+-- 		["modulation"] = 0,
+-- 		["frequency"] = 251,
+-- 	}, -- end of ["S3BTANKER"]
+-- }
+
+--CVNCONTROL:Start() -- called from cvncontrol_data
+
+  
+--------------------------------[core\dynamic_deck.lua]-------------------------------- 
+ 
+env.info( "[JTF-1] dynamic_deck_population" )
+--
+-- F10 menu driven population of carrier deck with templated static objects.
+--
+-- Three files are required for this module;
+--     dynamic_deck.lua
+--     dynamic_deck_templates.lua
+--     dynamic_deck_data.lua
+--
+-- 1. dynamic_dec.lua
+-- Contains functions, key values and GLOBAL settings.
+--
+-- 2. dynamic_deck_templates.lua
+-- Contains templates for the various staic objects/groups that can be placed on the carrier deck.
+--
+-- 3. dynamic_deck_data.lua
+-- Contains settings that are specific to the miz.
+--
+-- Load order in miz MUST be;
+--     1. dynamic_deck.lua
+--     2. dynamic_deck_templates.lua
+--     3. dynamic_deck_data.lua
+--
+
+DYNDECK = DYNDECK or {}
+-- inherit methods,  properties etc from BASE for event handler, trace etc
+DYNDECK = BASE:Inherit( DYNDECK, BASE:New() )
+DYNDECK.ClassName = "DYNDECK"
+DYNDECK.traceTitle = "[JTF-1] "
+DYNDECK.version = "1.0"
+
+DYNDECK.menu = {}
+DYNDECK.templates = {}
+
+-- Function to parse through DYNDECK.ship and add menu items
+function DYNDECK:Start()
+
+    self:T("[JTF-1 DYNDECK] Add template menus to mission.")
+    
+    local menu_root
+
+    if JTF1.menu.root then
+        menu_root = JTF1.menu.root
+    else
+        -- add menu root
+        menu_root = DYNDECK.menuroot or nil
+    end
+    
+    DYNDECK.menu = MENU_MISSION:New("Dynamic Deck", menu_root)
+ 
+    -- add menu root
+    DYNDECK.menu = MENU_MISSION:New("Dynamic Deck", menu_root)
+
+    -- add ship menus
+     for shipIndex, menuship in ipairs(DYNDECK.ship) do
+
+        if menuship.unit then
+            local unit = UNIT:FindByName(menuship.unit)
+            local unitId = unit:GetID()
+            _msg = self.traceTitle .. "Group ID = " .. unitId
+            self:T(_msg)
+            menuship.id = tonumber(unitId)
+        end
+  
+        -- add menu for ship
+        DYNDECK.menu[menuship.id] = MENU_MISSION:New(menuship.name, DYNDECK.menu)
+        -- add submenu for COMPLETE templates
+        DYNDECK.menu[menuship.id].complete = MENU_MISSION:New("Complete Templates", DYNDECK.menu[menuship.id])
+        -- add submenu for PARTIAL templates
+        DYNDECK.menu[menuship.id].partial = MENU_MISSION:New("Partial Templates", DYNDECK.menu[menuship.id])
+  
+        
+        -- add menu commands for full templates first
+        for templateIndex, template in ipairs(menuship.templates) do
+  
+            if template.group == "" then -- this is a full template and should be placed in the ship's root menu
+  
+             end
+  
+        end
+
+        -- add group submenus and add/remove commands for partial templates
+        for templateIndex, template in ipairs(menuship.templates) do
+ 
+            if template.group == "" then -- this is a complete template and should be placed in the Complete Templates submenu
+                self:T("[JTF-1 DYNDECK] Add Full Template: " .. template.name)
+  
+                -- add command to ship root menu for full template 
+                MENU_MISSION_COMMAND:New(template.menutext, DYNDECK.menu[menuship.id].complete, DYNDECK.applyTemplate, self, template.name, menuship.id, menuship.coalitionID, false, shipIndex ,templateIndex)
+
+            else -- this is a partial template and should be placed in the Partial Templates submenu
+                self:T("[JTF-1 DYNDECK] Add partial template.")
+
+                -- add submenu for group if it doesn't already exist
+                if not DYNDECK.menu[menuship.id].partial[template.group] then
+                    self:T("[JTF-1 DYNDECK] Add Group submenu: " .. template.group)
+ 
+                    DYNDECK.menu[menuship.id].partial[template.group] = MENU_MISSION:New(template.group, DYNDECK.menu[menuship.id].partial) -- add group submenu
+                    DYNDECK.menu[menuship.id].partial[template.group].templates = {} -- container for grouped template submenus
+ 
+                end
+ 
+                if not DYNDECK.menu[menuship.id].partial[template.group].templates[template.name] then -- check template entry isn't a duplicate
+                    self:T("[JTF-1 DYNDECK] Add template submenu: " .. template.name)
+
+                    -- add a submenu for the group template
+                    DYNDECK.menu[menuship.id].partial[template.group].templates[template.name] = MENU_MISSION:New(template.menutext, DYNDECK.menu[menuship.id].partial[template.group])
+
+                    -- add a menu to apply the partial template
+                    MENU_MISSION_COMMAND:New("Add",  DYNDECK.menu[menuship.id].partial[template.group].templates[template.name], DYNDECK.applyTemplate, self, template.name, menuship.id, menuship.coalitionID, true, shipIndex ,templateIndex)
+
+                    -- add a menu to remove the partial template
+                    MENU_MISSION_COMMAND:New("Remove", DYNDECK.menu[menuship.id].partial[template.group].templates[template.name], DYNDECK.clearDeck, self, template.name, menuship.id, menuship.coalitionID, shipIndex ,templateIndex)  
+
+                else
+                    self:T("[JTF-1 DYNDECK] ERROR! Menu has already been added for template: " .. template.name)
+                end
+ 
+            end
+ 
+        end
+
+        -- add menu to completely clear the ships deck of all statics
+        MENU_MISSION_COMMAND:New("Clear Deck", DYNDECK.menu[menuship.id], DYNDECK.clearDeck, self, false, menuship.id, menuship.coalitionID, shipIndex)  
+ 
+    end
+
+end
+
+-- Function to remove templates from the deck
+function DYNDECK:clearDeck(templateName, shipID, coalitionID, shipIndex, templateIndex)
+    self:T("[JTF-1 DYNDECK] clearDeck called.")
+
+    local staticFind = templateName or ("dyndeck_" .. shipID) -- search string for identifying objects to remove
+    local statObj = coalition.getStaticObjects(coalitionID) -- table of all static objects for coalition
+ 
+    -- step through table to find statics with the search string in thier name
+    for i, static in pairs(statObj) do
+        local staticName = static:getName()
+        if string.match(staticName, ".*" .. staticFind .. ".*") then
+            static:destroy() -- destroy found static
+        end
+    end
+    
+    if templateName then
+        -- if a template name was passed to clearDeck change its active tag to false
+        DYNDECK.ship[shipIndex].templates[templateIndex].active = false
+    else
+        -- if no template name was provided change the active tag for all the ship's templates to false 
+        for j, template in ipairs(DYNDECK.ship[shipIndex].templates) do
+            DYNDECK.ship[shipIndex].templates[j].active = false
+        end
+        -- set the ship's fullTemplateActive tag to false
+        DYNDECK.ship[shipIndex].fullTemplateActive = false
+    end
+
+end
+
+-- Function to Apply the selected template to the ship
+function DYNDECK:applyTemplate(templateName, shipID, coalitionID, noClear, shipIndex, templateIndex)
+    self:T("[JTF-1 DYNDECK] applyTemplate called.")
+ 
+    if DYNDECK[templateName] then -- check called template exists!
+        -- only apply the template if it is *not* already active
+ 
+        if not DYNDECK.ship[shipIndex].templates[templateIndex].active then
+            self:T("[JTF-1 DYNDECK] Template not active.")
+ 
+            if DYNDECK.ship[shipIndex].fullTemplateActive or (not noClear) then -- a full template is being, or has already been, applied
+                self:T("[JTF-1 DYNDECK] Clear Deck.")
+                -- clear deck before applying template
+                DYNDECK:clearDeck(false, shipID, coalitionID, shipIndex)
+            end
+ 
+            self:T("[JTF-1 DYNDECK] Apply template: " .. templateName)
+            -- call function for the template
+            DYNDECK[templateName](shipID, templateName)
+            -- mark the template as active
+            DYNDECK.ship[shipIndex].templates[templateIndex].active = true
+ 
+            if not noClear then 
+                -- mark ship as having a full template applied
+                DYNDECK.ship[shipIndex].fullTemplateActive = true
+            end
+        else
+            self:T("[JTF-1 DYNDECK] TEMPLATE ALREADY ACTIVE!")
+        end
+ 
+    else -- if template does not exist
+        _msg = "[JTF-1 DYNDECK] ERROR! REQUESTED SHIP TEMPLATE NOT FOUND: " .. templateName
+        self:T(_msg)
+        MESSAGE:New(_msg):ToAll()
+    end
+end
+
+
+--DYNDECK:Start()
+
+-- default templates for SC and Forrestal. Additional templates should be placed in dynamic_deck_templates.lua and loaded in ME after this file.
+
+function DYNDECK.sc_flex4c234(shipID, templateName) 
+
+    local namePrefix = "dyndeck_" .. shipID .. templateName
+
+	-- Created by Redkite: https://www.youtube.com/user/RedKiteRender/
+
+	local staticObj = {
+
+		["groupId"] = 400,		-- ids of the unit we're spawning (will auto increment if id taken)
+		["unitId"] = 401,
+		["rate"] = 30,
+		["name"] = namePrefix .. "4temp EL1 Hornet 1", -- unit name (Name this something identifiable if you wish to remove it later)
+
+		["type"] = "FA-18C_hornet", 			-- unit, category and livery of unit to place.
+		["category"] = "Planes",
+		["livery_id"] = "VFA-37",
+
+		["y"] = -274433.54379664,
+		["heading"] = 37.55948550292,		-- The initial location of the unit (required else unit will offet on origin of map)
+		["x"] = -90767.765053252,
+
+		["offsets"] = {				-- The offsets that choose where on the deck it will spawn
+			["y"] = 31.035356269975,
+			["angle"] = 4.7123889803847,
+			["x"] = 23.392320767991
+		}, -- end of ["offsets"]
+		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+		["linkOffset"] = true,
+		["dead"] = false,
+	}
+	coalition.addStaticObject(country.id.USA, staticObj)
+
+	-- ********************************************************
+
+
+
+	local staticObj = {
+
+		["groupId"] = 401,		-- ids of the unit we're spawning (will auto increment if id taken)
+		["unitId"] = 401,
+		["rate"] = 30,
+		["name"] = namePrefix .. "4temp EL1 Hornet 2", -- unit name (Name this something identifiable if you wish to remove it later)
+
+		["type"] = "FA-18C_hornet", 			-- unit, category and livery of unit to place.
+		["category"] = "Planes",
+		["livery_id"] = "VFA-37",
+
+		["y"] = 274432.9647788,
+		["heading"] =  4.7123889803847,		-- The initial location of the unit (required else unit will offet on origin of map)
+		["x"] =  -90757.458535686,
+
+		["offsets"] = {				-- The offsets that choose where on the deck it will spawn
+			["y"] = 31.61437411001,
+			["angle"] = 4.7123889803847,
+			["x"] = 33.698838333992,
+		}, -- end of ["offsets"]
+		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+		["linkOffset"] = true,
+		["dead"] = false,
+	}
+	coalition.addStaticObject(country.id.USA, staticObj)
+
+	-- ********************************************************
+
+
+
+	local staticObj = {
+
+		["groupId"] = 403,		-- ids of the unit we're spawning (will auto increment if id taken)
+		["unitId"] = 403,
+		["rate"] = 30,
+		["name"] = namePrefix .. "4temp EL2 S3", -- unit name (Name this something identifiable if you wish to remove it later)
+
+		["type"] = "S-3B Tanker", 			-- unit, category and livery of unit to place.
+		["category"] = "Planes",
+		["livery_id"] = "usaf standard",
+		
+		["offsets"] = {				-- The offsets that choose where on the deck it will spawn
+			["y"] = 29.84889531997,
+			["angle"] =  4.4505895925855,
+			["x"] = -14.761768433003,
+		}, -- end of ["offsets"]
+
+		["y"] = -274434.73025759,	-- The initial location of the unit (required else unit will offet on origin of map)
+		["x"] =  -90805.919142453,
+		["heading"] =  4.4505895925855,	
+
+		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+		["linkOffset"] = true,
+		["dead"] = false,
+	}
+	coalition.addStaticObject(country.id.USA, staticObj)
+
+	-- ********************************************************
+
+	local staticObj = {
+		
+	-- Segment you need to change start  
+		["groupId"] = 1,		-- id's of the unit we're spawning (will auto increment if id taken)
+		["unitId"] = 1,
+		["name"] = namePrefix .. "4temp EL2 Hornet", -- unit name (Name this something identifiable if you wish to remove it later)
+		
+		
+	
+		["livery_id"] = "VFA-37",
+		["category"] = "Planes",
+		["offsets"] = {				-- The offsets that choose where on the deck it will spawn
+			["y"] = 31.382766969968,
+			["angle"] = 4.7123889803847,
+			["x"] = -25.013570722003,
+		}, -- end of ["offsets"]
+		["type"] = "FA-18C_hornet", 			-- unit, category and livery of unit to place.
+	-- Segment you need to change end
+
+
+		["x"] = -90816.170944742,			-- The initial location of the unit (required else unit will offet on origin of map)
+		["y"] = -274433.19638594,
+		["heading"] = 4.7123889803847,
+		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+		["linkOffset"] = true,
+		["dead"] = false,
+		["rate"] = 30,
+	}
+	coalition.addStaticObject(country.id.USA, staticObj)
+
+	-- ********************************************************
+
+
+	local staticObj = {
+
+	-- Segment you need to change start  
+
+		["name"] = namePrefix .. "4temp Finger Seahawk", -- unit name (Name this something identifiable if you wish to remove it later)
+
+
+		["livery_id"] = "standard",
+		["category"] = "Helicopters",
+		["offsets"] = {				-- The offsets that choose where on the deck it will spawn
+			["y"] = -25.023610410048,
+			["angle"] = 1.7976891295542,
+			["x"] = -120.511512843,
+		}, -- end of ["offsets"]
+		["type"] = "SH-60B",			-- unit, category and livery of unit to place.
+	-- Segment you need to change end
+
+	-- these can be left as is, but are required.
+		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken)
+		["unitId"] = 33,
+		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
+		["x"] = -00126557,			
+		["heading"] = 37.55948550292,
+		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+		["linkOffset"] = true,
+		["dead"] = false,
+		["rate"] = 30,
+	}
+	coalition.addStaticObject(country.id.USA, staticObj)
+
+	-- ********************************************************
+
+
+	local staticObj = {
+
+	-- Segment you need to change start  
+
+		["name"] = namePrefix .. "4temp Corral Crane", -- unit name (Name this something identifiable if you wish to remove it later)
+
+
+		["category"] = "ADEquipment",
+		["offsets"] = {				-- The offsets that choose where on the deck it will spawn
+			["y"] = 33.351427629997,
+			["angle"] = 4.6600291028249,
+			["x"] = -0.92642854900623,
+		}, -- end of ["offsets"]
+		["type"] = "AS32-36A",			-- unit, category and livery of unit to place.
+	-- Segment you need to change end
+
+	-- these can be left as is, but are required.
+		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken)
+		["unitId"] = 33,
+		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
+		["x"] = -00126557,			
+		["heading"] = 37.55948550292,
+		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+		["linkOffset"] = true,
+		["dead"] = false,
+		["rate"] = 30,
+	}
+	coalition.addStaticObject(country.id.USA, staticObj)
+
+	-- ********************************************************
+
+	local staticObj = {
+
+	-- Segment you need to change start  
+
+		["name"] = namePrefix .. "4temp Point Firetruck", -- unit name (Name this something identifiable if you wish to remove it later)
+
+
+		["category"] = "ADEquipment",
+		["offsets"] = {				-- The offsets that choose where on the deck it will spawn
+												["y"] = 32.424999079958,
+												["angle"] = 5.4279739737024,
+												["x"] = 72.724640796994,
+		}, -- end of ["offsets"]
+		["type"] = "AS32-p25",			-- unit, category and livery of unit to place.
+	-- Segment you need to change end
+
+	-- these can be left as is, but are required.
+		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken)
+		["unitId"] = 33,
+		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
+		["x"] = -00126557,			
+		["heading"] = 37.55948550292,
+		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+		["linkOffset"] = true,
+		["dead"] = false,
+		["rate"] = 30,
+	}
+	coalition.addStaticObject(country.id.USA, staticObj)
+
+	-- ********************************************************
+
+	local staticObj = {
+		
+	-- Segment you need to change start  
+
+		["name"] = namePrefix .. "4temp Junk Yard Tug", -- unit name (Name this something identifiable if you wish to remove it later)
+
+
+		["category"] = "ADEquipment",
+		["offsets"] = {				-- The offsets that choose where on the deck it will spawn
+												["y"] = 30.242116749985,
+												["angle"] = 2.4958208303519,
+												["x"] = -79.610005513998,
+		}, -- end of ["offsets"]
+		["type"] = "AS32-31A",			-- unit, category and livery of unit to place.
+	-- Segment you need to change end
+
+	-- these can be left as is, but are required.
+		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken)
+		["unitId"] = 33,
+		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
+		["x"] = -00126557,			
+		["heading"] = 37.55948550292,
+		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+		["linkOffset"] = true,
+		["dead"] = false,
+		["rate"] = 30,
+	}
+	coalition.addStaticObject(country.id.USA, staticObj)
+
+
+	-- ********************************************************
+
+	local staticObj = {
+	-- Segment you need to change start  
+
+		["name"] = namePrefix .. "4temp EL4 Tomcat 1", -- unit name (Name this something identifiable if you wish to remove it later)
+
+											["livery_id"] = "VF-102 Diamondbacks",
+											["category"] = "Planes",
+											["offsets"] = 
+											{
+												["y"] = -32.180430089997,
+												["angle"] = 1.9373154697137,
+												["x"] = -98.393250321998,
+											}, -- end of ["offsets"]
+											["type"] = "F-14B",
+	-- Segment you need to change end
+
+	-- these can be left as is, but are required.
+	--	["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
+		["unitId"] = 33,
+		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
+		["x"] = -00126557,			
+		["heading"] = 37.55948550292,
+		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+		["linkOffset"] = true,
+		["dead"] = false,
+		["rate"] = 30,
+	}
+	coalition.addStaticObject(country.id.USA, staticObj)
+
+	-- ********************************************************
+
+
+	local staticObj = {
+
+		["name"] = namePrefix .. "4temp EL4 Tomcat 2", -- unit name (Name this something identifiable if you wish to remove it later)
+	-- Copy and paste over this with the units information
+										["livery_id"] = "VF-102 Diamondbacks 102",
+											["category"] = "Planes",
+											["offsets"] = 
+											{
+												["y"] = -32.924847350048,
+												["angle"] = 1.7627825445143,
+												["x"] = -110.574623714,
+											}, -- end of ["offsets"]
+											["type"] = "F-14B",
+	-- Copy and paste over this with the units information end
+
+	-- these can be left as is, but is required.
+		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
+		["unitId"] = 33,
+		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
+		["x"] = -00126557,			
+		["heading"] = 37.55948550292,
+		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+		["linkOffset"] = true,
+		["dead"] = false,
+		["rate"] = 30,
+	}
+	coalition.addStaticObject(country.id.USA, staticObj)
+
+	-- ********************************************************
+
+	local staticObj = {
+
+		["name"] = namePrefix .. "4temp Corral E2", -- unit name (Name this something identifiable if you wish to remove it later)
+	-- Copy and paste over this with the units information
+										["livery_id"] = "E-2D Demo",
+											["category"] = "Planes",
+											["offsets"] = 
+											{
+												["y"] = 30.665721859958,
+												["angle"] = 4.6949356878647,
+												["x"] = 8.8025239199924,
+											}, -- end of ["offsets"]
+											["type"] = "E-2C",
+	-- Copy and paste over this with the units information end
+
+	-- these can be left as is, but is required.
+		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
+		["unitId"] = 33,
+		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
+		["x"] = -00126557,			
+		["heading"] = 37.55948550292,
+		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+		["linkOffset"] = true,
+		["dead"] = false,
+		["rate"] = 30,
+	}
+	coalition.addStaticObject(country.id.USA, staticObj)
+
+	-- ********************************************************
+
+	local staticObj = {
+
+		["name"] = namePrefix .. "4temp Point Hornet", -- unit name (Name this something identifiable if you wish to remove it later)
+	-- Copy and paste over this with the units information
+											["livery_id"] = "VFA-37",
+											["category"] = "Planes",
+											["type"] = "FA-18C_hornet",
+											["offsets"] = 
+											{
+												["y"] = 34.190822379955,
+												["angle"] = 3.3335788713092,
+												["x"] = 61.561528349994,
+											}, -- end of ["offsets"]
+	-- Copy and paste over this with the units information end
+
+	-- these can be left as is, but is required.
+		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
+		["unitId"] = 33,
+		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
+		["x"] = -00126557,			
+		["heading"] = 37.55948550292,
+		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+		["linkOffset"] = true,
+		["dead"] = false,
+		["rate"] = 30,
+	}
+	coalition.addStaticObject(country.id.USA, staticObj)
+
+	-- ********************************************************
+
+
+	local staticObj = {
+
+		["name"] = namePrefix .. "4temp LSO Station 3", -- unit name (Name this something identifiable if you wish to remove it later)
+	-- Copy and paste over this with the units information
+											["category"] = "Personnel",
+											["offsets"] = 
+											{
+												["y"] = -22.370473980031,
+												["angle"] = 2.4434609527921,
+												["x"] = -130.61201797701,
+											}, -- end of ["offsets"]
+											["shape_name"] = "carrier_lso_usa",
+											["type"] = "Carrier LSO Personell",
+	-- Copy and paste over this with the units information end
+
+	-- these can be left as is, but is required.
+		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
+		["unitId"] = 33,
+		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
+		["x"] = -00126557,			
+		["heading"] = 37.55948550292,
+		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+		["linkOffset"] = true,
+		["dead"] = false,
+		["rate"] = 30,
+	}
+	coalition.addStaticObject(country.id.USA, staticObj)
+
+	-- ********************************************************
+
+
+
+	local staticObj = {
+
+		["name"] = namePrefix .. "4temp LSO Station 1", -- unit name (Name this something identifiable if you wish to remove it later)
+	-- Copy and paste over this with the units information
+											["category"] = "Personnel",
+											["offsets"] = 
+											{
+												["y"] = -21.789118479996,
+												["angle"] = 4.2935099599061,
+												["x"] = -129.42353100701,
+											}, -- end of ["offsets"]
+											["shape_name"] = "carrier_lso1_usa",
+											["type"] = "Carrier LSO Personell 1",
+	-- Copy and paste over this with the units information end
+
+	-- these can be left as is, but is required.
+		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
+		["unitId"] = 33,
+		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
+		["x"] = -00126557,			
+		["heading"] = 37.55948550292,
+		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+		["linkOffset"] = true,
+		["dead"] = false,
+		["rate"] = 30,
+	}
+	coalition.addStaticObject(country.id.USA, staticObj)
+
+	-- ********************************************************
+
+
+	local staticObj = {
+
+		["name"] = namePrefix .. "4temp LSO Station 2", -- unit name (Name this something identifiable if you wish to remove it later)
+	-- Copy and paste over this with the units information
+										["livery_id"] = "white",
+											["category"] = "Personnel",
+											["offsets"] = 
+											{
+												["y"] = -22.656188270019,
+												["angle"] = 1.850049007114,
+												["x"] = -129.497732263,
+											}, -- end of ["offsets"]
+											["shape_name"] = "carrier_tech_USA",
+											["type"] = "us carrier tech",
+											["unitId"] = 17,
+	-- Copy and paste over this with the units information end
+
+	-- these can be left as is, but is required.
+		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
+		["unitId"] = 33,
+		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
+		["x"] = -00126557,			
+		["heading"] = 37.55948550292,
+		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+		["linkOffset"] = true,
+		["dead"] = false,
+		["rate"] = 30,
+	}
+	coalition.addStaticObject(country.id.USA, staticObj)
+
+	-- ********************************************************
+
+	local staticObj = {
+
+		["name"] = namePrefix .. "4temp Point Tech 3", -- unit name (Name this something identifiable if you wish to remove it later)
+	-- Copy and paste over this with the units information
+											["livery_id"] = "white",
+											["category"] = "Personnel",
+											["offsets"] = 
+											{
+												["y"] = 31.799837369996,
+												["angle"] = 1.850049007114,
+												["x"] = 58.869844022993,
+											}, -- end of ["offsets"]
+											["shape_name"] = "carrier_tech_USA",
+											["type"] = "us carrier tech",
+	-- Copy and paste over this with the units information end
+
+	-- these can be left as is, but is required.
+		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
+		["unitId"] = 33,
+		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
+		["x"] = -00126557,			
+		["heading"] = 37.55948550292,
+		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+		["linkOffset"] = true,
+		["dead"] = false,
+		["rate"] = 30,
+	}
+	coalition.addStaticObject(country.id.USA, staticObj)
+	-- ********************************************************
+	local staticObj = {
+
+		["name"] = namePrefix .. "4temp Point Tech 2", -- unit name (Name this something identifiable if you wish to remove it later)
+	-- Copy and paste over this with the units information
+											["livery_id"] = "purple",
+											["category"] = "Personnel",
+											["offsets"] = 
+											{
+												["y"] = 36.657607259986,
+												["angle"] = 5.9341194567807,
+												["x"] = 60.15744568099,
+											}, -- end of ["offsets"]
+											["shape_name"] = "carrier_tech_USA",
+											["type"] = "us carrier tech",
+	-- Copy and paste over this with the units information end
+
+	-- these can be left as is, but is required.
+		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
+		["unitId"] = 33,
+		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
+		["x"] = -00126557,			
+		["heading"] = 37.55948550292,
+		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+		["linkOffset"] = true,
+		["dead"] = false,
+		["rate"] = 30,
+	}
+	coalition.addStaticObject(country.id.USA, staticObj)
+	-- ********************************************************
+	local staticObj = {
+
+		["name"] = namePrefix .. "4temp Point Tech 1", -- unit name (Name this something identifiable if you wish to remove it later)
+	-- Copy and paste over this with the units information
+											["livery_id"] = "purple",
+											["category"] = "Personnel",
+											["offsets"] = 
+											{
+												["y"] = 32.502165549959,
+												["angle"] = 2.460914245312,
+												["x"] = 67.356309497001,
+											}, -- end of ["offsets"]
+											["shape_name"] = "carrier_tech_USA",
+											["type"] = "us carrier tech",
+	-- Copy and paste over this with the units information end
+
+	-- these can be left as is, but is required.
+		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
+		["unitId"] = 33,
+		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
+		["x"] = -00126557,			
+		["heading"] = 37.55948550292,
+		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+		["linkOffset"] = true,
+		["dead"] = false,
+		["rate"] = 30,
+	}
+	coalition.addStaticObject(country.id.USA, staticObj)
+	-- ********************************************************
+	local staticObj = {
+
+		["name"] = namePrefix .. "4temp Corral Tech 1", -- unit name (Name this something identifiable if you wish to remove it later)
+	-- Copy and paste over this with the units information
+											["livery_id"] = "yellow",
+											["category"] = "Personnel",
+											["offsets"] = 
+											{
+												["y"] = 25.203805239988,
+												["angle"] = 4.7472955654246,
+												["x"] = 15.325497041995,
+											}, -- end of ["offsets"]
+											["shape_name"] = "carrier_tech_USA",
+											["type"] = "us carrier tech",
+	-- Copy and paste over this with the units information end
+
+	-- these can be left as is, but is required.
+		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
+		["unitId"] = 33,
+		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
+		["x"] = -00126557,			
+		["heading"] = 37.55948550292,
+		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+		["linkOffset"] = true,
+		["dead"] = false,
+		["rate"] = 30,
+	}
+	coalition.addStaticObject(country.id.USA, staticObj)
+	-- ********************************************************
+	local staticObj = {
+
+		["name"] = namePrefix .. "4temp Corral Tech 2", -- unit name (Name this something identifiable if you wish to remove it later)
+	-- Copy and paste over this with the units information
+											["livery_id"] = "yellow",
+											["category"] = "Personnel",
+											["offsets"] = 
+											{
+												["y"] = 24.753144659975,
+												["angle"] = 5.218534463463,
+												["x"] = 13.844755134996,
+											}, -- end of ["offsets"]
+											["shape_name"] = "carrier_tech_USA",
+											["type"] = "us carrier tech",
+	-- Copy and paste over this with the units information end
+
+	-- these can be left as is, but is required.
+		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
+		["unitId"] = 33,
+		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
+		["x"] = -00126557,			
+		["heading"] = 37.55948550292,
+		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+		["linkOffset"] = true,
+		["dead"] = false,
+		["rate"] = 30,
+	}
+	coalition.addStaticObject(country.id.USA, staticObj)
+	-- ********************************************************
+	local staticObj = {
+
+		["name"] = namePrefix .. "4temp Junk Yard Seaman", -- unit name (Name this something identifiable if you wish to remove it later)
+	-- Copy and paste over this with the units information
+											["category"] = "Personnel",
+											["offsets"] = 
+											{
+												["y"] = 31.255831669958,
+												["angle"] = 4.7472955654246,
+												["x"] = -78.473079361007,
+											}, -- end of ["offsets"]
+											["shape_name"] = "carrier_seaman_USA",
+											["type"] = "Carrier Seaman",
+	-- Copy and paste over this with the units information end
+
+	-- these can be left as is, but is required.
+		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
+		["unitId"] = 33,
+		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
+		["x"] = -00126557,			
+		["heading"] = 37.55948550292,
+		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+		["linkOffset"] = true,
+		["dead"] = false,
+		["rate"] = 30,
+	}
+	coalition.addStaticObject(country.id.USA, staticObj)
+	-- ********************************************************
+	local staticObj = {
+
+		["name"] = namePrefix .. "4temp EL2 Tug", -- unit name (Name this something identifiable if you wish to remove it later)
+	-- Copy and paste over this with the units information
+											["category"] = "ADEquipment",
+											["offsets"] = 
+											{
+												["y"] = 25.035044669989,
+												["angle"] = 2.4958208303519,
+												["x"] = -22.810439552006,
+											}, -- end of ["offsets"]
+											["type"] = "AS32-31A",
+	-- Copy and paste over this with the units information end
+
+	-- these can be left as is, but is required.
+		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
+		["unitId"] = 33,
+		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
+		["x"] = -00126557,			
+		["heading"] = 37.55948550292,
+		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+		["linkOffset"] = true,
+		["dead"] = false,
+		["rate"] = 30,
+	}
+	coalition.addStaticObject(country.id.USA, staticObj)
+
+    local staticObj = {
+        ["name"] = namePrefix .. "PatioR F-14 1", -- unit name (Name this something identifiable if you wish to remove it later)
+    
+    -- Copy and paste over this with the units information
+                                            ["livery_id"] = "VF-2 F-14B NK103",
+                                            ["category"] = "Planes",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 25.574397958365,
+                                                ["angle"] = 12.184219274949,
+                                                ["x"] = -140.22202233315,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "F-14B",
+    -- Copy and paste over this with the units information end
+    
+    -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+    
+    -- ********************************************************
+    -- Creats aircraft and techs on Patio on Nimitz Carriers.
+    
+    local staticObj = {
+        ["name"] = namePrefix .. "PatioR F-14 2", -- unit name (Name this something identifiable if you wish to remove it later)
+    
+    -- Copy and paste over this with the units information
+                                            ["livery_id"] = "VF-2 F-14B NK106",
+                                            ["category"] = "Planes",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 26.999894815472,
+                                                ["angle"] = 24.27935099127,
+                                                ["x"] = -126.3733451222,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "F-14B",
+    -- Copy and paste over this with the units information end
+    
+    -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+    
+    -- ********************************************************
+    -- Creats aircraft and techs on Patio on Nimitz Carriers.
+    
+    local staticObj = {
+        ["name"] = namePrefix .. "PatioR F-14 3", -- unit name (Name this something identifiable if you wish to remove it later)
+    
+    -- Copy and paste over this with the units information
+                                            ["livery_id"] = "VF-2 F-14B NK102",
+                                            ["category"] = "Planes",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 28.245066265035,
+                                                ["angle"] = 30.230923740571,
+                                                ["x"] = -115.09659159312,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "F-14B",
+    -- Copy and paste over this with the units information end
+    
+    -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+    
+    -- ********************************************************
+    -- Creats aircraft and techs on Patio on Nimitz Carriers.
+    
+    local staticObj = {
+        ["name"] = namePrefix .. "PatioR Tech-W 1", -- unit name (Name this something identifiable if you wish to remove it later)
+    
+    -- Copy and paste over this with the units information
+                                            ["livery_id"] = "white",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 25.273813754869,
+                                                ["angle"] = 3.701919110256,
+                                                ["x"] = -131.81665467857,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+    -- Copy and paste over this with the units information end
+    
+    -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+    
+    -- ********************************************************
+    -- Creats aircraft and techs on Patio on Nimitz Carriers.
+    
+    local staticObj = {
+        ["name"] = namePrefix .. "PatioR Tech-B 2", -- unit name (Name this something identifiable if you wish to remove it later)
+    
+    -- Copy and paste over this with the units information
+                                            ["livery_id"] = "brown",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 23.24388530906,
+                                                ["angle"] = 3.5448394775765,
+                                                ["x"] = -119.34764000727,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+    -- Copy and paste over this with the units information end
+    
+    -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+    
+    -- ********************************************************
+    -- Creats aircraft and techs on Patio on Nimitz Carriers.
+    
+    local staticObj = {
+        ["name"] = namePrefix .. "PatioR Tech-B 3", -- unit name (Name this something identifiable if you wish to remove it later)
+    
+    -- Copy and paste over this with the units information
+                                            ["livery_id"] = "brown",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 23.726752809735,
+                                                ["angle"] = 3.6146526476563,
+                                                ["x"] = -130.88525791424,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+    -- Copy and paste over this with the units information end
+    
+    -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+    
+    -- ********************************************************
+    -- Creats aircraft and techs on Patio on Nimitz Carriers.
+    
+    local staticObj = {
+        ["name"] = namePrefix .. "PatioR Tech-B 4", -- unit name (Name this something identifiable if you wish to remove it later)
+    
+    -- Copy and paste over this with the units information
+                                            ["livery_id"] = "brown",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 19.911959307137,
+                                                ["angle"] = 6.8435117638458,
+                                                ["x"] = -114.74868459558,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+    -- Copy and paste over this with the units information end
+    
+    -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+    
+    -- ********************************************************
+    -- Creats aircraft and techs on Patio on Nimitz Carriers.
+    
+    local staticObj = {
+        ["name"] = namePrefix .. "PatioR Tech-Y 5", -- unit name (Name this something identifiable if you wish to remove it later)
+    
+    -- Copy and paste over this with the units information
+                                            ["livery_id"] = "yellow",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 20.905678081278,
+                                                ["angle"] = 5.2727154370509,
+                                                ["x"] = -126.96371630654,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+    -- Copy and paste over this with the units information end
+    
+    -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+    
+    -- ********************************************************
+    -- Creats aircraft and techs on Patio on Nimitz Carriers.
+    
+    local staticObj = {
+        ["name"] = namePrefix .. "PatioR Tech-Y 6", -- unit name (Name this something identifiable if you wish to remove it later)
+    
+    -- Copy and paste over this with the units information
+                                            ["livery_id"] = "yellow",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 18.76100756934,
+                                                ["angle"] = 6.8435117638458,
+                                                ["x"] = -110.09545944759,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+    -- Copy and paste over this with the units information end
+    
+    -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+    
+
+	-- ********************************************************
+
+end
+
+function DYNDECK.forrestal_flex4c234(shipID, templateName)
+
+    local namePrefix = "dyndeck_" .. shipID .. templateName
+
+    -- Forrestal Full Deck 3 Cats 4 Spawns
+
+    local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+
+    -- Copy and paste over this with the units information
+                                            ["category"] = "ADEquipment",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 22.33673287998,
+                                                ["angle"] = 4.3982297150257,
+                                                ["x"] = -77.835629449983,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "CV_59_MD3",
+                                            ["unitId"] = 27,
+                                            ["rate"] = 1,
+                                            ["y"] = 469450.90816145,
+                                            ["x"] = -360934.97848659,
+                                            ["name"] = namePrefix .. "CV-59 MD-3 Mule 1",
+                                            ["heading"] = 4.3982297150257,
+    -- Copy and paste over this with the units information end
+
+    -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+
+    local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+
+    -- Copy and paste over this with the units information
+                                        ["livery_id"] = "vf-33 starfighters ab201 (1988)",
+                                            ["category"] = "Planes",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 29.972092159966,
+                                                ["angle"] = 4.6949356878647,
+                                                ["x"] = -70.971807360009,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "F-14A-135-GR",
+                                            ["unitId"] = 34,
+                                            ["rate"] = "50",
+                                            ["y"] = 469458.54352073,
+                                            ["x"] = -360928.1146645,
+                                            ["name"] = namePrefix .. "CV-59 F14A heck 1",
+                                            ["heading"] = 4.6949356878647,
+    -- Copy and paste over this with the units information end
+
+    -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+
+    local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+
+    -- Copy and paste over this with the units information
+                                            ["livery_id"] = "vf-33 starfighters ab201 (1988)",
+                                            ["category"] = "Planes",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 26.235489899991,
+                                                ["angle"] = 1.5882496193148,
+                                                ["x"] = -62.675864739984,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "F-14A-135-GR",
+                                            ["unitId"] = 35,
+                                            ["rate"] = "50",
+                                            ["y"] = 469454.80691847,
+                                            ["x"] = -360919.81872188,
+                                            ["name"] = namePrefix .. "CV-59 F14A heck 2",
+                                            ["heading"] = 1.5882496193148,
+    -- Copy and paste over this with the units information end
+
+    -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+
+    local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+
+                                            ["livery_id"] = "VF-21 Freelancers 200",
+                                            ["category"] = "Planes",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 10.262743929983,
+                                                ["angle"] = 3.7350045992679,
+                                                ["x"] = 171.91009173996,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "F-14A-135-GR",
+                                            ["unitId"] = 2,
+                                            ["rate"] = "50",
+                                            ["y"] = 469438.8341725,
+                                            ["x"] = -360685.2327654,
+                                            ["name"] = namePrefix .. "CV-59 F14A bug 1",
+                                            ["heading"] = 3.7350045992679,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+
+    local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            ["livery_id"] = "VF-21 Freelancers 200",
+                                            ["category"] = "Planes",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 10.134759989975,
+                                                ["angle"] = 3.7350045992679,
+                                                ["x"] = 157.95984155999,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "F-14A-135-GR",
+                                            ["unitId"] = 5,
+                                            ["rate"] = "50",
+                                            ["y"] = 469438.70618856,
+                                            ["x"] = -360699.18301558,
+                                            ["name"] = namePrefix .. "CV-59 F14A bug 2",
+                                            ["heading"] = 3.7350045992679,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "VF-21 Freelancers 200",
+                                            ["category"] = "Planes",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 10.817341029993,
+                                                ["angle"] = 3.7350045992679,
+                                                ["x"] = 143.58297822002,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "F-14A-135-GR",
+                                            ["unitId"] = 8,
+                                            ["rate"] = "50",
+                                            ["y"] = 469439.3887696,
+                                            ["x"] = -360713.55987892,
+                                            ["name"] = namePrefix .. "CV-59 F14A bug 3",
+                                            ["heading"] = 3.7350045992679,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "VF-21 Freelancers 200",
+                                            ["category"] = "Planes",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 11.457260769967,
+                                                ["angle"] = 3.7350045992679,
+                                                ["x"] = 128.35288858,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "F-14A-135-GR",
+                                            ["unitId"] = 9,
+                                            ["rate"] = "50",
+                                            ["y"] = 469440.02868934,
+                                            ["x"] = -360728.78996856,
+                                            ["name"] = namePrefix .. "CV-59 F14A bug 4",
+                                            ["heading"] = 3.7350045992679,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "USMC VMA-311 Tomcats",
+                                            ["category"] = "Planes",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 14.070305300003,
+                                                ["angle"] = 5.1312680008633,
+                                                ["x"] = -2.6952501999913,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "A-4E-C",
+                                            ["unitId"] = 23,
+                                            ["rate"] = 40,
+                                            ["y"] = 469442.64173387,
+                                            ["x"] = -360859.83810734,
+                                            ["name"] = namePrefix .. "CV-59 A4 mid 1",
+                                            ["heading"] = 5.1312680008633,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["category"] = "ADEquipment",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 28.15586408996,
+                                                ["angle"] = 4.7298422729046,
+                                                ["x"] = -41.413245120028,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "CV_59_NS60",
+                                            ["unitId"] = 26,
+                                            ["rate"] = 1,
+                                            ["y"] = 469456.72729266,
+                                            ["x"] = -360898.55610226,
+                                            ["name"] = namePrefix .. "CV-59 NS-60 Tilly 1",
+                                            ["heading"] = 4.7298422729046,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["category"] = "ADEquipment",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 22.33673287998,
+                                                ["angle"] = 4.3982297150257,
+                                                ["x"] = -77.835629449983,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "CV_59_MD3",
+                                            ["unitId"] = 27,
+                                            ["rate"] = 1,
+                                            ["y"] = 469450.90816145,
+                                            ["x"] = -360934.97848659,
+                                            ["name"] = namePrefix .. "CV-59 MD-3 Mule 1",
+                                            ["heading"] = 4.3982297150257,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["category"] = "ADEquipment",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 31.27796856995,
+                                                ["angle"] = 5.2883476335428,
+                                                ["x"] = -50.06724542001,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "CV_59_Large_Forklift",
+                                            ["unitId"] = 28,
+                                            ["rate"] = 1,
+                                            ["y"] = 469459.84939714,
+                                            ["x"] = -360907.21010256,
+                                            ["name"] = namePrefix .. "CV-59 Large Forklift 1",
+                                            ["heading"] = -0.9948376736368,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["category"] = "ADEquipment",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 15.971448700002,
+                                                ["angle"] = 0.2094395102393,
+                                                ["x"] = 84.003947869991,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "CV_59_H60",
+                                            ["unitId"] = 29,
+                                            ["rate"] = 1,
+                                            ["y"] = 469444.54287727,
+                                            ["x"] = -360773.13890927,
+                                            ["name"] = namePrefix .. "CV-59 Hyster 60 1",
+                                            ["heading"] = 0.2094395102393,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "VF-31 AE204 1988",
+                                            ["category"] = "Planes",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 11.447393599956,
+                                                ["angle"] = 3.7350045992679,
+                                                ["x"] = 113.54730550997,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "F-14A-135-GR",
+                                            ["unitId"] = 31,
+                                            ["rate"] = "50",
+                                            ["y"] = 469440.01882217,
+                                            ["x"] = -360743.59555163,
+                                            ["name"] = namePrefix .. "CV-59 F14A bug 5",
+                                            ["heading"] = 3.7350045992679,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "VF-31 AE200 1988",
+                                            ["category"] = "Planes",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 13.325865889958,
+                                                ["angle"] = 3.7350045992679,
+                                                ["x"] = 99.885688829992,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "F-14A-135-GR",
+                                            ["unitId"] = 32,
+                                            ["rate"] = "50",
+                                            ["y"] = 469441.89729446,
+                                            ["x"] = -360757.25716831,
+                                            ["name"] = namePrefix .. "CV-59 F14A bug 6",
+                                            ["heading"] = 3.7350045992679,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "vf-33 starfighters ab201 (1988)",
+                                            ["category"] = "Planes",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 29.972092159966,
+                                                ["angle"] = 4.6949356878647,
+                                                ["x"] = -70.971807360009,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "F-14A-135-GR",
+                                            ["unitId"] = 34,
+                                            ["rate"] = "50",
+                                            ["y"] = 469458.54352073,
+                                            ["x"] = -360928.1146645,
+                                            ["name"] = namePrefix .. "CV-59 F14A heck 1",
+                                            ["heading"] = 4.6949356878647,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "vf-33 starfighters ab201 (1988)",
+                                            ["category"] = "Planes",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 26.235489899991,
+                                                ["angle"] = 1.5882496193148,
+                                                ["x"] = -62.675864739984,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "F-14A-135-GR",
+                                            ["unitId"] = 35,
+                                            ["rate"] = "50",
+                                            ["y"] = 469454.80691847,
+                                            ["x"] = -360919.81872188,
+                                            ["name"] = namePrefix .. "CV-59 F14A heck 2",
+                                            ["heading"] = 1.5882496193148,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "USMC VMA-311 Tomcats",
+                                            ["category"] = "Planes",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 12.865749110002,
+                                                ["angle"] = 5.1312680008633,
+                                                ["x"] = 6.0377822199953,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "A-4E-C",
+                                            ["unitId"] = 36,
+                                            ["rate"] = 40,
+                                            ["y"] = 469441.43717768,
+                                            ["x"] = -360851.10507492,
+                                            ["name"] = namePrefix .. "CV-59 A4 mid 2",
+                                            ["heading"] = 5.1312680008633,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "USN VA-144 Roadrunners",
+                                            ["category"] = "Planes",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 13.123868289986,
+                                                ["angle"] = 5.1312680008633,
+                                                ["x"] = 14.899874229974,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "A-4E-C",
+                                            ["unitId"] = 37,
+                                            ["rate"] = 40,
+                                            ["y"] = 469441.69529686,
+                                            ["x"] = -360842.24298291,
+                                            ["name"] = namePrefix .. "CV-59 A4 mid 3",
+                                            ["heading"] = 5.1312680008633,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "USN VA-144 Roadrunners",
+                                            ["category"] = "Planes",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 12.263471009966,
+                                                ["angle"] = 5.1312680008633,
+                                                ["x"] = 24.837462849973,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "A-4E-C",
+                                            ["unitId"] = 38,
+                                            ["rate"] = 40,
+                                            ["y"] = 469440.83489958,
+                                            ["x"] = -360832.30539429,
+                                            ["name"] = namePrefix .. "CV-59 A4 mid 4",
+                                            ["heading"] = 5.1312680008633,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "VAW-124 BearAces",
+                                            ["category"] = "Planes",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 16.332032859966,
+                                                ["angle"] = 4.2062434973063,
+                                                ["x"] = 76.439462339971,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "E-2C",
+                                            ["unitId"] = 40,
+                                            ["rate"] = "100",
+                                            ["y"] = 469444.90346143,
+                                            ["x"] = -360780.7033948,
+                                            ["name"] = namePrefix .. "CV-59 E2D bug 1",
+                                            ["heading"] = 4.2062434973063,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["category"] = "ADEquipment",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 24.159426649974,
+                                                ["angle"] = 4.7298422729046,
+                                                ["x"] = 66.45111609,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "CV_59_NS60",
+                                            ["unitId"] = 41,
+                                            ["rate"] = 1,
+                                            ["y"] = 469452.73085522,
+                                            ["x"] = -360790.69174105,
+                                            ["name"] = namePrefix .. "CV-59 NS-60 Tilly 2",
+                                            ["heading"] = 4.7298422729046,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["mass"] = 1500,
+                                            ["category"] = "Cargos",
+                                            ["canCargo"] = false,
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 16.458585369983,
+                                                ["angle"] = 4.6425758103049,
+                                                ["x"] = 88.506038529973,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "ammo_box_cargo",
+                                            ["type"] = "ammo_cargo",
+                                            ["unitId"] = 43,
+                                            ["rate"] = 100,
+                                            ["y"] = 469445.03001394,
+                                            ["x"] = -360768.63681861,
+                                            ["name"] = namePrefix .. "CV-59 Ammo 1",
+                                            ["heading"] = -1.6406094968747,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["mass"] = 1500,
+                                            ["category"] = "Cargos",
+                                            ["canCargo"] = false,
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 16.453315379971,
+                                                ["angle"] = 4.6425758103049,
+                                                ["x"] = 89.827295569994,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "ammo_box_cargo",
+                                            ["type"] = "ammo_cargo",
+                                            ["unitId"] = 44,
+                                            ["rate"] = 100,
+                                            ["y"] = 469445.02474395,
+                                            ["x"] = -360767.31556157,
+                                            ["name"] = namePrefix .. "CV-59 Ammo 2",
+                                            ["heading"] = -1.6406094968747,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["mass"] = 1500,
+                                            ["category"] = "Cargos",
+                                            ["canCargo"] = false,
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 29.497724729998,
+                                                ["angle"] = 4.6425758103049,
+                                                ["x"] = 62.634507059993,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "ammo_box_cargo",
+                                            ["type"] = "ammo_cargo",
+                                            ["unitId"] = 45,
+                                            ["rate"] = 100,
+                                            ["y"] = 469458.0691533,
+                                            ["x"] = -360794.50835008,
+                                            ["name"] = namePrefix .. "CV-59 Ammo 3",
+                                            ["heading"] = -1.6406094968747,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["mass"] = 1500,
+                                            ["category"] = "Cargos",
+                                            ["canCargo"] = false,
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 30.737726669991,
+                                                ["angle"] = 4.8345620280243,
+                                                ["x"] = 61.212707380007,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "ammo_box_cargo",
+                                            ["type"] = "ammo_cargo",
+                                            ["unitId"] = 46,
+                                            ["rate"] = 100,
+                                            ["y"] = 469459.30915524,
+                                            ["x"] = -360795.93014976,
+                                            ["name"] = namePrefix .. "CV-59 Ammo 4",
+                                            ["heading"] = -1.4486232791553,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["mass"] = 1500,
+                                            ["category"] = "Cargos",
+                                            ["canCargo"] = false,
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 24.599187659973,
+                                                ["angle"] = 0.0174532925199,
+                                                ["x"] = -45.894397350028,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "ammo_box_cargo",
+                                            ["type"] = "ammo_cargo",
+                                            ["unitId"] = 47,
+                                            ["rate"] = 100,
+                                            ["y"] = 469453.17061623,
+                                            ["x"] = -360903.03725449,
+                                            ["name"] = namePrefix .. "CV-59 Ammo 5",
+                                            ["heading"] = 0.0174532925199,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["mass"] = 1500,
+                                            ["category"] = "Cargos",
+                                            ["canCargo"] = false,
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 23.251629469974,
+                                                ["angle"] = 0.0174532925199,
+                                                ["x"] = -45.874063010036,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "ammo_box_cargo",
+                                            ["type"] = "ammo_cargo",
+                                            ["unitId"] = 48,
+                                            ["rate"] = 100,
+                                            ["y"] = 469451.82305804,
+                                            ["x"] = -360903.01692015,
+                                            ["name"] = namePrefix .. "CV-59 Ammo 6",
+                                            ["heading"] = 0.0174532925199,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["mass"] = 840,
+                                            ["category"] = "Cargos",
+                                            ["canCargo"] = false,
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 24.196566589992,
+                                                ["angle"] = 1.4835298641951,
+                                                ["x"] = -48.328411909984,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "m117_cargo",
+                                            ["type"] = "m117_cargo",
+                                            ["unitId"] = 49,
+                                            ["rate"] = 100,
+                                            ["y"] = 469452.76799516,
+                                            ["x"] = -360905.47126905,
+                                            ["name"] = namePrefix .. "CV-59 Bombs 1",
+                                            ["heading"] = 1.4835298641951,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["mass"] = 840,
+                                            ["category"] = "Cargos",
+                                            ["canCargo"] = false,
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 16.106317459955,
+                                                ["angle"] = 4.6425758103049,
+                                                ["x"] = 91.922479700006,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "m117_cargo",
+                                            ["type"] = "m117_cargo",
+                                            ["unitId"] = 50,
+                                            ["rate"] = 100,
+                                            ["y"] = 469444.67774603,
+                                            ["x"] = -360765.22037744,
+                                            ["name"] = namePrefix .. "CV-59 Bombs 2",
+                                            ["heading"] = -1.6406094968747,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["mass"] = 840,
+                                            ["category"] = "Cargos",
+                                            ["canCargo"] = false,
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 16.031181099999,
+                                                ["angle"] = 4.6425758103049,
+                                                ["x"] = 93.406567899976,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "m117_cargo",
+                                            ["type"] = "m117_cargo",
+                                            ["unitId"] = 51,
+                                            ["rate"] = 100,
+                                            ["y"] = 469444.60260967,
+                                            ["x"] = -360763.73628924,
+                                            ["name"] = namePrefix .. "CV-59 Bombs 3",
+                                            ["heading"] = -1.6406094968747,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["mass"] = 840,
+                                            ["category"] = "Cargos",
+                                            ["canCargo"] = false,
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 15.933522039966,
+                                                ["angle"] = 4.6425758103049,
+                                                ["x"] = 94.803157570015,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "m117_cargo",
+                                            ["type"] = "m117_cargo",
+                                            ["unitId"] = 52,
+                                            ["rate"] = 100,
+                                            ["y"] = 469444.50495061,
+                                            ["x"] = -360762.33969957,
+                                            ["name"] = namePrefix .. "CV-59 Bombs 4",
+                                            ["heading"] = -1.6406094968747,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["mass"] = 840,
+                                            ["category"] = "Cargos",
+                                            ["canCargo"] = false,
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 21.045754369989,
+                                                ["angle"] = 4.7298422729046,
+                                                ["x"] = 62.761577569996,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "m117_cargo",
+                                            ["type"] = "m117_cargo",
+                                            ["unitId"] = 53,
+                                            ["rate"] = 100,
+                                            ["y"] = 469449.61718294,
+                                            ["x"] = -360794.38127957,
+                                            ["name"] = namePrefix .. "CV-59 Bombs 5",
+                                            ["heading"] = -1.553343034275,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["mass"] = 840,
+                                            ["category"] = "Cargos",
+                                            ["canCargo"] = false,
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 21.37175436999,
+                                                ["angle"] = 0,
+                                                ["x"] = 26.183162770001,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "m117_cargo",
+                                            ["type"] = "m117_cargo",
+                                            ["unitId"] = 54,
+                                            ["rate"] = 100,
+                                            ["y"] = 469449.94318294,
+                                            ["x"] = -360830.95969437,
+                                            ["name"] = namePrefix .. "CV-59 Bombs 6",
+                                            ["heading"] = 0,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["mass"] = 840,
+                                            ["category"] = "Cargos",
+                                            ["canCargo"] = false,
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 20.893985959992,
+                                                ["angle"] = 0,
+                                                ["x"] = 23.123464139993,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "m117_cargo",
+                                            ["type"] = "m117_cargo",
+                                            ["unitId"] = 56,
+                                            ["rate"] = 100,
+                                            ["y"] = 469449.46541453,
+                                            ["x"] = -360834.019393,
+                                            ["name"] = namePrefix .. "CV-59 Bombs 8",
+                                            ["heading"] = 0,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["mass"] = 840,
+                                            ["category"] = "Cargos",
+                                            ["canCargo"] = false,
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 19.439851770003,
+                                                ["angle"] = 0,
+                                                ["x"] = 23.309999260004,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "m117_cargo",
+                                            ["type"] = "m117_cargo",
+                                            ["unitId"] = 57,
+                                            ["rate"] = 100,
+                                            ["y"] = 469448.01128034,
+                                            ["x"] = -360833.83285788,
+                                            ["name"] = namePrefix .. "CV-59 Bombs 9",
+                                            ["heading"] = 0,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["mass"] = 1500,
+                                            ["category"] = "Cargos",
+                                            ["canCargo"] = false,
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 21.212431159976,
+                                                ["angle"] = 4.7298422729046,
+                                                ["x"] = 28.729959079996,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "ammo_box_cargo",
+                                            ["type"] = "ammo_cargo",
+                                            ["unitId"] = 58,
+                                            ["rate"] = 100,
+                                            ["y"] = 469449.78385973,
+                                            ["x"] = -360828.41289806,
+                                            ["name"] = namePrefix .. "CV-59 Ammo 7",
+                                            ["heading"] = -1.553343034275,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["category"] = "ADEquipment",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 26.728229369968,
+                                                ["angle"] = 1.2740903539558,
+                                                ["x"] = -54.847454730014,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "CV_59_MD3",
+                                            ["unitId"] = 59,
+                                            ["rate"] = 1,
+                                            ["y"] = 469455.29965794,
+                                            ["x"] = -360911.99031187,
+                                            ["name"] = namePrefix .. "CV-59 MD-3 Mule 2",
+                                            ["heading"] = 1.274090353955,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["category"] = "ADEquipment",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 11.97817606997,
+                                                ["angle"] = 2.8797932657906,
+                                                ["x"] = 90.446121620014,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "CV_59_MD3",
+                                            ["unitId"] = 60,
+                                            ["rate"] = 1,
+                                            ["y"] = 469440.54960464,
+                                            ["x"] = -360766.69673552,
+                                            ["name"] = namePrefix .. "CV-59 MD-3 Mule 3",
+                                            ["heading"] = 2.8797932657906,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "red",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 19.195021889987,
+                                                ["angle"] = 5.7246799465414,
+                                                ["x"] = 28.489813330001,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+                                            ["unitId"] = 65,
+                                            ["rate"] = 20,
+                                            ["y"] = 469447.76645046,
+                                            ["x"] = -360828.65304381,
+                                            ["name"] = namePrefix .. "CV-59 Technician 1",
+                                            ["heading"] = -0.5585053606382,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "red",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 17.918418669957,
+                                                ["angle"] = 6.1959188445799,
+                                                ["x"] = 28.31462095998,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+                                            ["unitId"] = 66,
+                                            ["rate"] = 20,
+                                            ["y"] = 469446.48984724,
+                                            ["x"] = -360828.82823618,
+                                            ["name"] = namePrefix .. "CV-59 Technician 2",
+                                            ["heading"] = -0.0872664625997,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                ["livery_id"] = "red",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 21.632032659953,
+                                                ["angle"] = 4.3633231299858,
+                                                ["x"] = 30.092285580002,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+                                            ["unitId"] = 67,
+                                            ["rate"] = 20,
+                                            ["y"] = 469450.20346123,
+                                            ["x"] = -360827.05057156,
+                                            ["name"] = namePrefix .. "CV-59 Technician 3",
+                                            ["heading"] = -1.9198621771938,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "red",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 31.081593789975,
+                                                ["angle"] = 4.3458698374659,
+                                                ["x"] = 62.348933589994,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+                                            ["unitId"] = 68,
+                                            ["rate"] = 20,
+                                            ["y"] = 469459.65302236,
+                                            ["x"] = -360794.79392355,
+                                            ["name"] = namePrefix .. "CV-59 Technician 4",
+                                            ["heading"] = -1.9373154697137,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "red",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 24.131282319955,
+                                                ["angle"] = 3.2463124087094,
+                                                ["x"] = -44.513802300033,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+                                            ["unitId"] = 69,
+                                            ["rate"] = 20,
+                                            ["y"] = 469452.70271089,
+                                            ["x"] = -360901.65665944,
+                                            ["name"] = namePrefix .. "CV-59 Technician 5",
+                                            ["heading"] = -3.0368728984702,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "red",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 25.487857559987,
+                                                ["angle"] = 4.1713369122664,
+                                                ["x"] = -47.165706939995,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+                                            ["unitId"] = 70,
+                                            ["rate"] = 20,
+                                            ["y"] = 469454.05928613,
+                                            ["x"] = -360904.30856408,
+                                            ["name"] = namePrefix .. "CV-59 Technician 6",
+                                            ["heading"] = -2.1118483949132,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "red",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 29.100804699992,
+                                                ["angle"] = 0.9424777960769,
+                                                ["x"] = 61.324876810017,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+                                            ["unitId"] = 71,
+                                            ["rate"] = 20,
+                                            ["y"] = 469457.67223327,
+                                            ["x"] = -360795.81798033,
+                                            ["name"] = namePrefix .. "CV-59 Technician 7",
+                                            ["heading"] = 0.9424777960769,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "red",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 27.730528499989,
+                                                ["angle"] = 1.3439035240356,
+                                                ["x"] = 62.48927043,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+                                            ["unitId"] = 72,
+                                            ["rate"] = 20,
+                                            ["y"] = 469456.30195707,
+                                            ["x"] = -360794.65358671,
+                                            ["name"] = namePrefix .. "CV-59 Technician 8",
+                                            ["heading"] = 1.3439035240356,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "red",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 11.66171458998,
+                                                ["angle"] = 2.9496064358704,
+                                                ["x"] = -5.2636686500045,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+                                            ["unitId"] = 73,
+                                            ["rate"] = 20,
+                                            ["y"] = 469440.23314316,
+                                            ["x"] = -360862.40652579,
+                                            ["name"] = namePrefix .. "CV-59 Technician 9",
+                                            ["heading"] = 2.9496064358704,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "red",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 14.806669440004,
+                                                ["angle"] = 4.7123889803847,
+                                                ["x"] = 88.081767519994,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+                                            ["unitId"] = 74,
+                                            ["rate"] = 20,
+                                            ["y"] = 469443.37809801,
+                                            ["x"] = -360769.06108962,
+                                            ["name"] = namePrefix .. "CV-59 Technician 10",
+                                            ["heading"] = -1.5707963267949,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "blue",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 6.6044085899484,
+                                                ["angle"] = 3.9444441095072,
+                                                ["x"] = 22.162760849984,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+                                            ["unitId"] = 75,
+                                            ["rate"] = 20,
+                                            ["y"] = 469435.17583716,
+                                            ["x"] = -360834.98009629,
+                                            ["name"] = namePrefix .. "CV-59 Technician 11",
+                                            ["heading"] = -2.3387411976724,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "white",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 5.6825801399536,
+                                                ["angle"] = 0.907571211037,
+                                                ["x"] = 21.009934830014,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+                                            ["unitId"] = 76,
+                                            ["rate"] = 20,
+                                            ["y"] = 469434.25400871,
+                                            ["x"] = -360836.13292231,
+                                            ["name"] = namePrefix .. "CV-59 Technician 12",
+                                            ["heading"] = 0.907571211037,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "blue",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 12.482483859989,
+                                                ["angle"] = 4.6425758103049,
+                                                ["x"] = -6.3519227600191,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+                                            ["unitId"] = 77,
+                                            ["rate"] = 20,
+                                            ["y"] = 469441.05391243,
+                                            ["x"] = -360863.4947799,
+                                            ["name"] = namePrefix .. "CV-59 Technician 13",
+                                            ["heading"] = -1.6406094968747,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "blue",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 9.8248471499537,
+                                                ["angle"] = 3.700098014228,
+                                                ["x"] = 76.027643800015,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+                                            ["unitId"] = 78,
+                                            ["rate"] = 20,
+                                            ["y"] = 469438.39627572,
+                                            ["x"] = -360781.11521334,
+                                            ["name"] = namePrefix .. "CV-59 Technician 14",
+                                            ["heading"] = -2.5830872929516,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "blue",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 8.5271150099579,
+                                                ["angle"] = 1.6057029118347,
+                                                ["x"] = 75.335432389984,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+                                            ["unitId"] = 79,
+                                            ["rate"] = 20,
+                                            ["y"] = 469437.09854358,
+                                            ["x"] = -360781.80742475,
+                                            ["name"] = namePrefix .. "CV-59 Technician 15",
+                                            ["heading"] = 1.6057029118347,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "brown",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 9.5831095199683,
+                                                ["angle"] = 5.7944931166212,
+                                                ["x"] = 74.820895490004,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+                                            ["unitId"] = 80,
+                                            ["rate"] = 20,
+                                            ["y"] = 469438.15453809,
+                                            ["x"] = -360782.32196165,
+                                            ["name"] = namePrefix .. "CV-59 Technician 16",
+                                            ["heading"] = -0.4886921905584,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "brown",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 9.395204159955,
+                                                ["angle"] = 5.235987755983,
+                                                ["x"] = 89.386125179997,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+                                            ["unitId"] = 81,
+                                            ["rate"] = 20,
+                                            ["y"] = 469437.96663273,
+                                            ["x"] = -360767.75673196,
+                                            ["name"] = namePrefix .. "CV-59 Technician 17",
+                                            ["heading"] = -1.0471975511966,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "brown",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 7.5748663699487,
+                                                ["angle"] = 4.6425758103049,
+                                                ["x"] = 20.888940159988,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+                                            ["unitId"] = 82,
+                                            ["rate"] = 20,
+                                            ["y"] = 469436.14629494,
+                                            ["x"] = -360836.25391698,
+                                            ["name"] = namePrefix .. "CV-59 Technician 18",
+                                            ["heading"] = -1.6406094968747,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "brown",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 13.475844899949,
+                                                ["angle"] = 1.3962634015954,
+                                                ["x"] = 28.803845649993,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+                                            ["unitId"] = 83,
+                                            ["rate"] = 20,
+                                            ["y"] = 469442.04727347,
+                                            ["x"] = -360828.33901149,
+                                            ["name"] = namePrefix .. "CV-59 Technician 19",
+                                            ["heading"] = 1.3962634015954,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "brown",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 9.4500615699799,
+                                                ["angle"] = 3.4382986264288,
+                                                ["x"] = 90.874154079997,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+                                            ["unitId"] = 84,
+                                            ["rate"] = 20,
+                                            ["y"] = 469438.02149014,
+                                            ["x"] = -360766.26870306,
+                                            ["name"] = namePrefix .. "CV-59 Technician 20",
+                                            ["heading"] = -2.8448866807508,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "purple",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 28.252880869957,
+                                                ["angle"] = 5.3930673886625,
+                                                ["x"] = 32.270201759995,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+                                            ["unitId"] = 85,
+                                            ["rate"] = 20,
+                                            ["y"] = 469456.82430944,
+                                            ["x"] = -360824.87265538,
+                                            ["name"] = namePrefix .. "CV-59 Technician 21",
+                                            ["heading"] = -0.8901179185171,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "purple",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 23.989666519978,
+                                                ["angle"] = 3.7699111843077,
+                                                ["x"] = -53.761342699989,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+                                            ["unitId"] = 86,
+                                            ["rate"] = 20,
+                                            ["y"] = 469452.56109509,
+                                            ["x"] = -360910.90419984,
+                                            ["name"] = namePrefix .. "CV-59 Technician 22",
+                                            ["heading"] = -2.5132741228719,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "purple",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 7.5537387600052,
+                                                ["angle"] = 5.7770398241012,
+                                                ["x"] = 19.452221489977,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+                                            ["unitId"] = 87,
+                                            ["rate"] = 20,
+                                            ["y"] = 469436.12516733,
+                                            ["x"] = -360837.69063565,
+                                            ["name"] = namePrefix .. "CV-59 Technician 24",
+                                            ["heading"] = -0.5061454830784,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "purple",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 11.661630999995,
+                                                ["angle"] = 4.7123889803847,
+                                                ["x"] = 87.133109899994,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_tech_USA",
+                                            ["type"] = "us carrier tech",
+                                            ["unitId"] = 88,
+                                            ["rate"] = 20,
+                                            ["y"] = 469440.23305957,
+                                            ["x"] = -360770.00974724,
+                                            ["name"] = namePrefix .. "CV-59 Technician 23",
+                                            ["heading"] = -1.5707963267949,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = -2.7689845300047,
+                                                ["angle"] = 3.8397243543875,
+                                                ["x"] = 98.852623810002,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_shooter",
+                                            ["type"] = "us carrier shooter",
+                                            ["unitId"] = 89,
+                                            ["rate"] = 20,
+                                            ["y"] = 469425.80244404,
+                                            ["x"] = -360758.29023333,
+                                            ["name"] = namePrefix .. "CV-59 Shooter 1",
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = -2.6633533000131,
+                                                ["angle"] = 4.904375198104,
+                                                ["x"] = 97.342026819999,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_shooter",
+                                            ["type"] = "us carrier shooter",
+                                            ["unitId"] = 90,
+                                            ["rate"] = 20,
+                                            ["y"] = 469425.90807527,
+                                            ["x"] = -360759.80083032,
+                                            ["name"] = namePrefix .. "CV-59 Shooter 2",
+                                            ["heading"] = -1.378810109075,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "green",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = -2.104307260015,
+                                                ["angle"] = 3.682644721708,
+                                                ["x"] = 88.38926252001,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_shooter",
+                                            ["type"] = "us carrier shooter",
+                                            ["unitId"] = 91,
+                                            ["rate"] = 20,
+                                            ["y"] = 469426.46712131,
+                                            ["x"] = -360768.75359462,
+                                            ["name"] = namePrefix .. "CV-59 Shooter 3",
+                                            ["heading"] = -2.6005405854716,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "white",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = -1.142018720042,
+                                                ["angle"] = 5.0440015382636,
+                                                ["x"] = 89.373070589965,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_shooter",
+                                            ["type"] = "us carrier shooter",
+                                            ["unitId"] = 92,
+                                            ["rate"] = 20,
+                                            ["y"] = 469427.42940985,
+                                            ["x"] = -360767.76978655,
+                                            ["name"] = namePrefix .. "CV-59 Shooter 5",
+                                            ["heading"] = -1.239183768916,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["mass"] = 840,
+                                            ["category"] = "Cargos",
+                                            ["canCargo"] = false,
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 24.73112368997,
+                                                ["angle"] = 4.7298422729046,
+                                                ["x"] = 62.647827629989,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "m117_cargo",
+                                            ["type"] = "m117_cargo",
+                                            ["unitId"] = 95,
+                                            ["rate"] = 100,
+                                            ["y"] = 469453.30255226,
+                                            ["x"] = -360794.49502951,
+                                            ["name"] = namePrefix .. "CV-59 Bombs 10",
+                                            ["heading"] = -1.553343034275,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["livery_id"] = "green",
+                                            ["category"] = "Personnel",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = -2.0484931700048,
+                                                ["angle"] = 3.8048177693476,
+                                                ["x"] = 90.597058320011,
+                                            }, -- end of ["offsets"]
+                                            ["shape_name"] = "carrier_shooter",
+                                            ["type"] = "us carrier shooter",
+                                            ["unitId"] = 93,
+                                            ["rate"] = 20,
+                                            ["y"] = 469426.5229354,
+                                            ["x"] = -360766.54579882,
+                                            ["name"] = namePrefix .. "CV-59 Shooter 4",
+                                            ["heading"] = -2.478367537832,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+                                            
+                                            local staticObj = {
+        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
+                                            
+                                                                                    ["category"] = "ADEquipment",
+                                            ["offsets"] = 
+                                            {
+                                                ["y"] = 21.043987939949,
+                                                ["angle"] = 4.6949356878647,
+                                                ["x"] = -7.95861625002,
+                                            }, -- end of ["offsets"]
+                                            ["type"] = "CV_59_H60",
+                                            ["unitId"] = 94,
+                                            ["rate"] = 1,
+                                            ["y"] = 469449.61541651,
+                                            ["x"] = -360865.10147339,
+                                            ["name"] = namePrefix .. "CV-59 Hyster 60 3",
+                                            ["heading"] = -1.5882496193149,
+                                            
+                                            -- these can be left as is, but is required.
+        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
+        ["unitId"] = 1,
+        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
+        ["x"] = 0,			
+        ["heading"] = 0,
+        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
+        ["linkOffset"] = true,
+        ["dead"] = false,
+    }
+    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
+
+end
+
+--- END Dynamic Deck Population
+  
+--------------------------------[core\markspawn.lua]-------------------------------- 
+ 
+env.info( "[JTF-1] markspawn" )
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--- BEGIN MARK SPAWN
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--
+-- Sourced from Virtual 57th and refactored for JTF-1
+--
+--
+-- **NOTE**: MARKSPAWN_TEMPLATES.LUA MUST BE LOADED AFTER THIS FILE IS LOADED!
+--
+-- This file contains functions and key values and should be loaded first.
+-- The file markspawn_templates.lua contains the built-in templates used for spawning assets.
+--
+-- If MARKSPAWN_DATA.LUA is used it should be loaded after MARKSPAWN.LUA and 
+-- MARKSPAWN_TEMPLATES.LUA and the call to MARKSPAWN:Start() at the end of the templates
+-- file should be commented out.
+--
+-- Load order in miz MUST be;
+--     1. markspawn.lua
+--     2. markspawn_templates.lua
+--     3. [OPTIONAL] markspawn_data.lua
+--
+-- Use F10 map marks to spawn BVR opponents or ground threats anywhere on the map. 
+-- Add mark to map then type the CMD syntax below in the map mark text field. 
+-- The command will execute on mouse-clicking out of the text box.
+--
+-- COMMANDS
+-- ========
+-- 
+-- - ASPAWN: = Spawn Air Group
+-- - GSPAWN: = Spawn Ground Group
+-- - NSPAWN: = Spawn Navy Group
+-- - WXREPORT: = display message with weather conditions
+-- - DELETE: = Delete one, or more, Group(s)
+-- 
+-- Airspawn syntax
+-- ---------------
+-- 
+-- CMD ASPAWN: [type][, [option]: [value]][...]
+-- 
+-- 
+-- Airspawn Types
+-- --------------
+-- 
+-- - F4
+-- - SU25
+-- - SU27
+-- - MIG29
+-- - SU25
+-- - MIG23
+-- - F16
+-- - F18
+-- - F16SEAD
+-- - F18SEAD
+-- - OPTIONS	(will list the types available for this command)
+-- 
+-- 
+-- Airspawn Options
+-- ----------------
+-- 
+-- - HDG: [degrees] - default 000
+-- - ALT: [flight level] - default 280 (28,000ft)
+-- - DIST:[nm] - default 0 (spawn on mark point)
+-- - NUM: [1-4] - default 1
+-- - SPD: [knots] - default 425
+-- - SKILL: [AVERAGE, GOOD, HIGH, EXCELLENT, RANDOM] - default AVERAGE
+-- - TASK: [CAP] - default NOTHING
+-- - SIDE: [RED, BLUE, NEUTRAL] - default RED (Russia)
+-- 
+-- 
+-- Example
+-- -------
+-- 
+-- CMD ASPAWN: MIG29, NUM: 2, HDG: 180, SKILL: GOOD
+-- 
+-- Will spawn 2x MiG29 at the default speed of 425 knots, with heading 180 and skill level GOOD.
+-- 
+-- 
+-- Groundspawn Syntax
+-- ------------------
+-- 
+-- CMD GSPAWN: [groundspawn type][, [option]: [value]][...]
+-- 
+-- 
+-- Groundspawn Types
+-- -----------------
+-- 
+-- - SA2		(battery)
+-- - SA3		{battery)
+-- - SA6		(battery)
+-- - SA8		(single)
+-- - SA10		(battery)
+-- - SA11		(battery)
+-- - SA15		(single)
+-- - SA19		(single)
+-- - ZSU23		(ZSU23 Shilka)
+-- - ZU23EMP	(ZU23 fixed emplacement)
+-- - ZU23URAL	(ZU23 mounted on Ural)
+-- - CONLIGHT      (Supply convoy)
+-- - CONHEAVY	(Armoured convoy) 
+-- - OPTIONS	(will list the types available for this command)
+-- 
+-- 
+-- Groundspawn Options
+-- ----------------
+-- 
+-- - ALERT: [GREEN, AUTO, RED] - default RED 
+-- - SKILL: [AVERAGE, GOOD, HIGH, EXCELLENT, RANDOM] - default AVERAGE
+-- 
+-- 
+-- Example
+-- -------
+-- 
+-- CMD GSPAWN: SA6, ALERT: GREEN, SKILL: HIGH
+-- 
+-- Will spawn an SA6 Battery on the location of the map mark, in alert state GREEN and with skill level HIGH.
+-- 
+-- 
+-- Weather Report Syntax
+-- ---------------------
+-- 
+-- CMD WXREPORT: [QFE, METRIC]
+-- 
+-- 
+-- Weather Report Options
+-- ----------------------
+-- 
+-- - QFE   (Pressure displayed as QFE) - default QNH
+-- - METRIC  (Produces the report in Metric format (mp/s, hPa) - default Imperial
+-- 
+-- 
+-- Example
+-- -------
+-- 
+-- CMD WXREPORT:
+-- 
+-- Will report Wind in knots, QNH in inHg, temperature in centigrade at the mark's position
+-- 
+-- CMD WXREPORT: QFE
+-- 
+-- Will report wind in knots, QFE in inHg, temperature in centigrade at the mark's position
+-- 
+-- 
+-- Delete Spawn Syntax
+-- -------------------
+-- 
+-- CMD DELETE: [object] [object option[s]]
+-- 
+-- 
+-- Delete Spawn Objects
+-- --------------------
+-- 
+-- - GROUP [requires name of Command Spawned Group in F10 map]
+-- - KIND [requires option CAT and/or TYPE and/or ROLE] [SIDE]
+-- - AREA  [Zone radius defined by RAD option] [CAT, TYPE, ROLE, SIDE]
+-- - NEAREST [CAT, TYPE, ROLE, SIDE]
+-- - ALL
+-- 
+-- 
+-- Delete Spawn Options
+-- --------------------
+-- 
+-- - CAT: [AIR, GROUND] - default ALL
+-- - TYPE: [the spawned object Type] - default ALL
+-- - ROLE: [CAS, SEAD, SAM, AAA, CVY] - default ALL
+-- - SIDE: [RED, BLUE, NEUTRAL, ALL] - default RED
+-- - RAD: [radius from mark in NM] - default 5NM
+-- 
+-- 
+-- Example
+-- -------
+-- 
+-- CMD DELETE: GROUP MIG29#001 
+-- 
+-- - Will remove the spawned group named MIG29#001
+-- 
+-- CMD DELETE: KIND TYPE: SA15
+-- 
+-- - will remove all SA15 groups
+-- 
+-- CMD DELETE: KIND ROLE: SAM
+-- 
+-- - will remove all groups with the SAM role
+-- 
+-- CMD DELETE: AREA TYPE: SA8
+-- 
+-- - will remove all SA8 groups within 5NM of mark
+-- 
+-- CMD DELETE: AREA RAD: 1 ROLE: SAM SIDE: ALL
+-- 
+-- - will remove all groups within 5NM of the mark, with the SAM role, on Red, Blue and Neutral sides 
+-- 
+-- 
+-- Cut-n-Paste Command Examples
+-- ----------------------------
+-- 
+-- CMD GSPAWN: SA8, ALERT: RED, SKILL: HIGH
+-- 
+-- CMD GSPAWN: SA15, ALERT: RED, SKILL: HIGH
+-- 
+-- CMD ASPAWN: MIG29, NUM: 2, HDG: 90, SKILL: GOOD, ALT: 280, TASK: CAP, SIDE: RED
+--
+-- CMD DELETE: GROUP MIG29A#001
+--
+-- TASK TYPES
+-- ----------
+-- CAP, REFUELING, CAS, SEAD, TASMO, AWACS, AFAC
+--
+
+
+MARKSPAWN = {}
+-- inherit methods,  properties etc from BASE for event handler, trace etc
+MARKSPAWN = BASE:Inherit( MARKSPAWN, BASE:New() )
+
+MARKSPAWN.traceTitle = "[JTF-1] "
+MARKSPAWN.version = "1.0"
+MARKSPAWN.ClassName = "MARKSPAWN"
+
+--MARKSPAWN.MLTgtArray = {}
+MARKSPAWN.radioPresets = {}
+MARKSPAWN.MLSpawnedGroups = {}
+--MARKSPAWN.templates = {}
+
+MARKSPAWN.default = {
+	-- DEFAULT VALUES
+	DEFAULT_BLUE_COUNTRY = 2, -- USA
+	DEFAULT_RED_COUNTRY = 0, -- RUSSIA
+	DEFAULT_NEUTRAL_COUNTRY = 7, -- USAF AGRRESSORS
+	MLDefaultAirAlt = 200, -- altitude Flight Level
+	MLDefaultHdg = 000,
+	MLDefaultSkill = "AVERAGE",
+	MLDefaultDistance = 0,
+	MLDefaultGroundDistance = 0,
+	MLDefaultROE = "FREE",
+	MLDefaultROT = "EVADE",
+	MLDefaultFreq = 251,
+	MLDefaultNum = 1,
+	MLDefaultAirSpeed = 425,
+	MLDefaultGroundSpeed = 21,
+	MLDefaultAlert = "RED",
+	MLDefaultGroundTask = "NOTHING",
+}
+
+-- SPAWNABLE GROUP TYPES
+MARKSPAWN.spawnTypes = { -- types available for spawning
+	------------------------ BVR ------------------------
+    { template = "BVR_MIG23",  	msType = "MIG23",   	category = "air",     role = "CAP"},
+    { template = "BVR_SU25",   	msType = "SU25",    	category = "air",     role = "CAP"},
+    { template = "BVR_MIG29A", 	msType = "MIG29",   	category = "air",     role = "CAP"},
+    { template = "BVR_SU27",   	msType = "SU27",    	category = "air",     role = "CAP"},
+    { template = "BVR_F4",     	msType = "F4",      	category = "air",     role = "CAP"},
+    { template = "BVR_F16",    	msType = "F16",     	category = "air",     role = "CAP"},
+    { template = "BVR_F18",    	msType = "F18",     	category = "air",     role = "CAP"},
+    ------------------------ CAS ------------------------
+    { template = "CAS_MQ9",    	msType = "MQ9",     	category = "air",     role = "CAS"},
+    { template = "CAS_WINGLOON",msType = "WINGLOON",    category = "air",     role = "CAS"},
+    ------------------------ SEAD ------------------------
+	{ template = "SEAD_F16",    msType = "F16SEAD",	category = "air",     role = "SEAD"},
+	{ template = "SEAD_F18",    msType = "F18SEAD",	category = "air",     role = "SEAD"},
+	------------------------ SAM ------------------------
+    { template = "SA2",    		msType = "SA2",	  		category = "ground",  role = "SAM"},
+    { template = "SA3",    		msType = "SA3",	  		category = "ground",  role = "SAM"},
+    { template = "SA6",    		msType = "SA6",	  		category = "ground",  role = "SAM"},
+    { template = "SA8",    		msType = "SA8", 		category = "ground",  role = "SAM"},
+    { template = "SA10",   		msType = "SA10", 		category = "ground",  role = "SAM"},
+    { template = "SA11",   		msType = "SA11", 		category = "ground",  role = "SAM"},
+    { template = "SA15",   		msType = "SA15", 		category = "ground",  role = "SAM"},
+    { template = "SA19",   		msType = "SA19", 		category = "ground",  role = "SAM"},
+	------------------------ AAA ------------------------
+    { template = "ZSU23_Shilka",msType = "ZSU23",		category = "ground",  role = "AAA"},
+    { template = "ZU23_Emp",	msType = "ZU23EMP",		category = "ground",  role = "AAA"},
+    { template = "ZU23_Ural",	msType = "ZU23URAL",	category = "ground",  role = "AAA"},
+    { template = "ZU23_Closed",	msType = "ZU23CLOSED",	category = "ground",  role = "AAA"},
+	------------------------ CONVOY ------------------------
+    { template = "CON_light",	msType = "CONLIGHT",	category = "ground",  role = "CON"},
+    { template = "CON_heavy",	msType = "CONHEAVY",	category = "ground",  role = "CON"},
+	------------------------ ARTILLERY ------------------------
+	------------------------ INFANTRY ------------------------
+	------------------------ SHIP ------------------------
+}
+
+-----------------
+-- START MARKSPAWN
+-----------------
+
+function MARKSPAWN:Start()
+	_msg = string.format("%sVERSION %s", self.traceTitle, self.version)
+	self:T(_msg)
+
+	-----------------
+	-- ADD SPAWNS
+	-----------------
+
+	-- Add SPAWN objects to each template
+	-- Spawn Late Activated groups using built-in templates if the template group is not
+	-- being sourrced from in the mission itself
+
+	for index, spawnType in ipairs(self.spawnTypes) do
+		local templateName = spawnType.template
+		local spawnAlias = "MS_" .. templateName
+
+		-- if a late activated group is present in the mission, use that as a spawn template
+		if GROUP:FindByName(templateName) then
+			_msg = string.format("%sSpawn Template %s found in mission.",
+				self.traceTitle,
+				templateName
+			)
+			self:T(_msg)
+
+			spawnType.spawn = SPAWN:NewWithAlias(templateName, spawnAlias)
+
+		-- if a late activated group is NOT found in the mission, look for a built-in template
+		else 
+
+			local spawnTemplate
+	
+			-- look in MARKSPAWN templates
+			if SPAWNTEMPLATES.templates[templateName] then
+				_msg = string.format("%sUse spawn template from SPAWNTEMPLATES.templates for %s.",
+					self.traceTitle,
+					templateName
+				)
+				self:T(_msg)
+
+				spawnTemplate = SPAWNTEMPLATES.templates[templateName]
+			end
+
+			-- If we have a template, generate the SPAWN object
+			if spawnTemplate ~= nil then
+				_msg = string.format("%sSpawn Group and use as SPAWN for type %s.",
+					self.traceTitle,
+					templateName
+				)
+				self:T(_msg)
+
+				local spawnCategory =  spawnTemplate.category
+				local spawnCoordinate = COORDINATE:New(0,0,0)
+				local spawnCountryid = self.default.DEFAULT_RED_COUNTRY
+				local spawnCoalition = coalition.side.RED
+
+				-- add a late activated group to be used as the spawn template
+				local spawn = SPAWN:NewFromTemplate(spawnTemplate, templateName, spawnAlias, true)
+					:InitCountry(spawnCountryid)
+					:InitCoalition(spawnCoalition)
+					:InitCategory(spawnCategory)
+					--:InitPositionCoordinate(spawnCoordinate)
+					:InitLateActivated()
+				
+				spawn:OnSpawnGroup(
+					function(spawngroup)
+						local groupName = spawngroup:GetName()
+						spawnType.spawn = SPAWN:New(groupName)
+					end
+					,spawnType
+				)
+				spawn:Spawn()
+			
+			-- Template cannot be found in miz or SPAWNTEMPLATES.templates
+			else
+				_msg = string.format("%sError! Could not find template %s.",
+					self.traceTitle,
+					templateName
+				)
+				self:E(_msg)
+			end
+		end
+	end
+
+	-----------------
+	-- MARK POINT EVENT HANDLER
+	-----------------
+	self:HandleEvent(EVENTS.MarkChange)
+	
+	-- IF MARK IS A "CMD", SEND MARK DATA TO PARSER
+	function self:OnEventMarkChange( EventData )
+		_msg = string.format("%sMARK CHANGE EVENT", self.traceTitle)
+		self:T(_msg)
+		local text = EventData.text
+		local x, _ = string.find(text, "CMD")
+		if(x ~= nil) then
+			self:parseMark(EventData)
+			self:MLRemoveMark(EventData.idx)
+		else
+			return
+		end
+	end
+	
+end
+
+-----------------
+-- CMD PARSER
+-----------------
+
+function MARKSPAWN:parseMark(mark)
+
+	_msg = self.traceTitle
+	self:T({_msg, text = mark.text, pos = mark.pos})
+
+	local cmdOption = false
+	local text = mark.text
+	local pos = mark.pos
+
+	-- Command Search patterns
+	local cmdASPAWN = "ASPAWN:%s*(%w+)"
+	local cmdGSPAWN = "GSPAWN:%s*(%w+)"
+	local cmdNSPAWN = "NSPAWN:%s*(%w+)"
+	local cmdRADIO = "RADIO:%s*(%w+)"
+	local cmdWX = "WXREPORT:%s*(.*)"
+	local cmdDELETE = "DELETE:%s*(%w+)"
+	-- Option search patterns
+	local optionOpt = "OPTIONS"
+	local optionHdg = "HDG:%s*(%d+)"
+	local optionAlt = "ALT:%s*(%d+)"
+	local optionTask = "TASK:%s*(%w+)"
+	local optionSkill = "SKILL:%s*(%w+)"
+	local optionDist = "DIST:%s*(%d+)"
+	local optionROE = "ROE:%s*(%w+)"
+	local optionWPS = "WPS:%s*{(.*)}"
+	local optionFreq = "FREQ:%s*(%d[%d.]+)"
+	local optionBand = "BAND:%s*(%w+)"
+	local optionPwr = "PWR:%s*(%d+)"
+	local optionNum = "NUM:%s*(%d+)"
+	local optionSpd = "SPD:%s*(%d+)"
+	local optionSide = "SIDE:%s*(%w+)"
+	local optionForm = "FORM:%s*(%w+)"
+	local optionBase = "BASE:%s*(%w+)"
+	local optionName = "NAME:%s*(%w+)"
+	local optionROT = "ROT:%s*(%w+)"
+	local optionAlert = "ALERT:%s*(%w+)"
+	local optionTGT = "TGT:%s*(%w+)"
+	-- Delete Class patterns
+	local optionDelGrp = "GROUP%s*(.+)"
+	-- Delete Option patterns
+	local optionDelCat = "CAT:%s*(%w+)"
+	local optionDelSide = "SIDE:%s*(%w+)"
+	local optionDelRad = "RAD:%s*(%d+)"
+	local optionDelType = "TYPE:%s*(%w+)"
+	local optionDelRole = "ROLE:%s*(%w+)"
+
+	-----------------
+	-- CMD AIR GROUP
+	-----------------
+
+	local i, _, spawnValue = string.find(text, cmdASPAWN)
+	if(i ~= nil) then
+		cmdOption = true
+		if(spawnValue:upper() == optionOpt) then
+			self:MLListSpawnOptions("air", mark)
+		else
+			local _, _, heading = string.find(text, optionHdg)
+			local _, _, altitude = string.find(text, optionAlt)
+			local _, _, task = string.find(text,optionTask)
+			local _, _, skill = string.find(text,optionSkill)
+			local _, _, distance = string.find(text,optionDist)
+			local _, _, ROE = string.find(text, optionROE)
+			local _, _, WPS = string.find(text, optionWPS)
+			local _, _, freq = string.find(text, optionFreq)
+			local _, _, num = string.find(text, optionNum)
+			local _, _, speed = string.find(text, optionSpd)
+			local _, _, side = string.find(text, optionSide)
+			local _, _, formation = string.find(text, optionForm)
+			local _, _, base = string.find(text, optionBase)
+			local _, _, groupName = string.find(text, optionName)
+			local _, _, ROT = string.find(text, optionROT)
+
+			local spawnTable = {
+				msType = spawnValue,
+				heading = heading,
+				altitude = altitude,
+				task = task, 
+				skill = skill, 
+				distance = distance, 
+				roe = ROE, 
+				WP = WPS, 
+				pos = pos, 
+				freq = freq, 
+				num = num, 
+				speed = speed,
+				side = side, 
+				formation = formation,
+				base = base,
+				groupName = groupName,
+				rot = ROT,
+			}
+
+			self:MLAirSpawn(spawnTable)
+		end
+	end
+	
+	-----------------
+	-- CMD GROUND GROUP
+	-----------------
+
+	local j, _, spawnValue = string.find(text, cmdGSPAWN)
+	if(j ~= nil) then
+		cmdOption = true
+		if(spawnValue:upper() == optionOpt) then
+			self:MLListSpawnOptions("ground", mark)
+		else
+			local _, _, heading = string.find(text, optionHdg)
+			local _, _, skill = string.find(text,optionSkill)
+			local _, _, distance = string.find(text,optionDist)
+			local _, _, ROE = string.find(text, optionROE)
+			local _, _, WP = string.find(text, optionWPS)
+			local _, _, alert = string.find(text, optionAlert)
+			local _, _, speed = string.find(text, optionSpd)
+			local _, _, side = string.find(text, optionSide)
+			local _, _, formation = string.find(text, optionForm)  
+			local _, _, groupName = string.find(text, optionName)
+			local _, _, tgtName = string.find(text, optionTGT)
+
+			local spawnTable = {
+				msType = spawnValue,
+				heading = heading,
+				skill = skill, 
+				distance = distance, 
+				roe = ROE, 
+				WP = WP, 
+				pos = pos,
+				speed = speed,
+				coalition = side,
+				formation = formation,
+				alert = alert,
+				side = side,
+				groupName = groupName,
+				tgt = tgtName
+			}
+
+			self:MLGroundSpawn(spawnTable)
+		end
+	end
+		
+	-----------------
+	-- CMD RADIO
+	-----------------
+
+	local k, _, spawnValue = string.find(text, cmdRADIO)
+	if(k ~= nil) then
+		cmdOption = true
+		self:T("[JTF-1] SpawnValue: " .. spawnValue)
+		self:T("[JTF-1] Other Text: " .. k)
+		local _, _, freq = string.find(text, optionFreq)
+		local _, _, band = string.find(text,optionBand)
+		local _, _, power = string.find(text,optionPwr)
+		
+		local spawnTable = {
+			song = spawnValue,
+			freq = freq,
+			band = band, 
+			power = power, 
+		}
+
+		_msg = string.format("%sRADIO: ", self.traceTitle)
+		self:T({"[JTF-1] RADIO: ", spawnTable})
+		--self:MLRadioSpawn(spawnTable)
+	end
+	
+	-----------------
+	-- CMD NAVY GROUP
+	-----------------
+
+	--spawn a naval group
+	local l, _, spawnValue = string.find(text, cmdNSPAWN)
+	if(l ~= nil) then
+		cmdOption = true
+		if(spawnValue:upper() == optionOpt) then
+		self:MLListSpawnOptions("naval", mark)
+		else
+		local _, _, heading = string.find(text, optionHdg)
+		local _, _, skill = string.find(text,optionSkill)
+		local _, _, distance = string.find(text,optionDist)
+		local _, _, ROE = string.find(text, optionROE)
+		local _, _, WP = string.find(text, optionWPS)
+		local _, _, alert = string.find(text, optionAlert)
+		local _, _, speed = string.find(text, optionSpd)
+		local _, _, side = string.find(text, optionSide)
+		local _, _, formation = string.find(text, optionForm)  
+		local _, _, groupName = string.find(text, optionName)
+		local _, _, tgtName = string.find(text, optionTGT)
+		
+		local spawnTable = {
+			msType = spawnValue,
+			heading = heading,
+			skill = skill, 
+			distance = distance, 
+			roe = ROE, 
+			WP = WP, 
+			pos = pos,
+			speed = speed,
+			coalition = side,
+			formation = formation,
+			alert = alert,
+			side = side,
+			groupName = groupName,
+			tgt = tgtName
+		}
+
+		self:T({"[JTF-1] NSPAWN: ", spawnTable})
+		self:MLNavalSpawn(spawnTable)
+		end
+	end
+	
+	-----------------
+	-- CMD DELETE GROUP
+	-----------------
+
+	--Delete one or more groups
+	local l, _, deleteCMD = string.find(text, cmdDELETE)
+	if(l ~= nil) then
+		cmdOption = true
+		local _, _, category = string.find(text, optionDelCat) -- "CAT (%w+)"
+		local _, _, side = string.find(text,optionDelSide) -- "SIDE (%w+)"
+		local _, _, radius = string.find(text,optionDelRad) -- "RAD (%d+)"
+		local _, _, msType = string.find(text,optionDelType) -- "TYPE (%w+)"
+		-- local _, _, template = string.find(text,optionDelType) -- "TYPE (%w+)"
+		local _, _, groupName = string.find(text, optionDelGrp) -- "GROUP%s*(.+)"
+		local _, _, role = string.find(text, optionDelRole) -- "ROLE (.+)"
+		
+		local spawnTable = {
+			cmd = deleteCMD,
+			category = category,
+			side = side,
+			radius = radius,
+			msType = msType,
+			groupName = groupName,
+			role = role
+		}
+
+		self:MLDeleteGroup(spawnTable, mark)
+	end
+
+	-----------------
+	-- CMD WX REPORT
+	-----------------
+
+	local m, _, repoString = string.find(text, cmdWX)
+	if(m ~= nil) then
+		cmdOption = true
+		self:MLWxReport(repoString, mark)
+	end
+
+	if not cmdOption then
+		self:E("[JTF-1] ERROR! CMD not found.")
+	end
+
+end
+  
+-----------------
+-- SPAWN AIR GROUP(S)
+-----------------
+
+function MARKSPAWN:MLAirSpawn(SpawnTable)
+
+	local msType = SpawnTable.msType
+	local heading = tonumber(SpawnTable.heading) or self.default.MLDefaultHdg
+	local altitude = tonumber(SpawnTable.altitude) or self.default.MLDefaultAirAlt
+	altitude = UTILS.FeetToMeters(altitude * 100)
+	local task = SpawnTable.task or "C"
+	local skill = self:MLSkillCheck(SpawnTable.skill) or self.default.MLDefaultSkill
+	local distance = tonumber(SpawnTable.distance) or self.default.MLDefaultDistance
+	local ROE = SpawnTable.roe or self.default.MLDefaultROE
+	local ROT = SpawnTable.rot or self.default.MLDefaultROT
+	local freq = tonumber(SpawnTable.freq) or self.default.MLDefaultFreq
+	local num = tonumber(SpawnTable.num) or self.default.MLDefaultNum
+	local speed = tonumber(SpawnTable.speed) or self.default.MLDefaultAirSpeed
+	local form = SpawnTable.formation or nil
+	local base = SpawnTable.base or nil
+	local spawnCoord = COORDINATE:NewFromVec3(SpawnTable.pos):SetAltitude(altitude,true)
+	local spawner = self:comparator(msType)
+	local category = self:GetProperty(msType, "category")
+	local role = self:GetProperty(msType, "role")
+
+	if(spawner == nil) then
+		return
+	end
+
+	local template = GROUP:FindByName( spawner.SpawnTemplatePrefix )
+	local waypointNameString = SpawnTable.WP or nil
+	
+	-- switch country/coalition if desired
+	local coal, country
+	if(SpawnTable.side) then
+		coal, country = self:MLSideComparator(SpawnTable.side, template)
+	else
+		coal = template:GetCoalition()
+		country = template:GetCountry()
+	end
+	local group
+	
+	-- spawn the group
+	if(base) then
+		local airbase
+		if(base == "NEAREST") then 
+			self:T("[JTF-1] learn 2 spell, scrub")
+			local theater = env.mission.theatre
+			local distance = 0
+		else
+			airbase = AIRBASE:FindByName(base)
+			if(airbase == nil) then 
+				airbase = AIRBASE:GetAllAirbases()[1]
+			end
+		end
+		group = spawner:InitGrouping(num):InitSkill(skill):InitCoalition(coal):InitCountry(country):InitHeading(heading):SpawnAtAirbase(airbase,SPAWN.Takeoff.Cold,nil)
+	else
+		self:T("[JTF-1] ASPAWN: " .. coal .. " " .. country)
+		group = spawner:InitGrouping(num):InitSkill(skill):InitCoalition(coal):InitCountry(country):InitHeading(heading):SpawnFromVec3(spawnCoord:GetVec3())
+		_groupName = group.GroupName
+		self:T("[JTF-1] ASPAWN: " .. _groupName)
+	end
+	
+	self.MLSpawnedGroups[#self.MLSpawnedGroups + 1] = {group = group, side = coal, msType = msType, category = category, role = role}
+	-- set ROE
+	self:MLSetROE(ROE,group)
+	-- set ROT
+	self:MLSetROT(ROT,group)
+	--if no distance, then we orbit
+	if(waypointNameString) then
+		local waypointCoords = self:MLFindWaypoints(waypointNameString)
+		if(#waypointCoords > 0) then
+			self:T('[JTF-1] MORE WAYPOINTS')
+			local route = {}
+			route[#route + 1] = spawnCoord:WaypointAir(POINT_VEC3.RoutePointAltType.BARO,POINT_VEC3.RoutePointType.TurningPoint,POINT_VEC3.RoutePointAction.TurningPoint,UTILS.KnotsToKmph(speed),true)
+			for idx, waypoint in pairs(waypointCoords) do
+				route[#route + 1] = waypoint:SetAltitude(altitude,true):WaypointAir(POINT_VEC3.RoutePointAltType.BARO,POINT_VEC3.RoutePointType.TurningPoint,POINT_VEC3.RoutePointAction.TurningPoint,UTILS.KnotsToKmph(speed),true)
+			end
+			group:Route(route)
+		else
+			local orbitEndPoint = spawnCoord:Translate(UTILS.NMToMeters(15),heading)
+			local orbit = { 
+				id = 'Orbit', 
+				params = { 
+					pattern = AI.Task.OrbitPattern.RACE_TRACK,
+					point = spawnCoord:GetVec2(),
+					point2 = orbitEndPoint:GetVec2(),
+					speed = UTILS.KnotsToMps(speed),
+					altitude = altitude
+				} 
+			}
+
+			group:SetTask( orbit, 2 )
+		end
+	elseif(distance == 0) then
+		local orbitEndPoint = spawnCoord:Translate(UTILS.NMToMeters(15),heading)
+		local orbit = { 
+			id = 'Orbit', 
+			params = { 
+				pattern = AI.Task.OrbitPattern.RACE_TRACK,
+				point = spawnCoord:GetVec2(),
+				point2 = orbitEndPoint:GetVec2(),
+				speed = UTILS.KnotsToMps(speed),
+				altitude = altitude
+			} 
+		}
+
+		group:SetTask( orbit, 2 )
+	--if distance, we create a waypoint way the fuck out in the boonies
+	elseif(distance > 0) then
+		local WP1 = spawnCoord:Translate(UTILS.NMToMeters(distance),heading)
+		:WaypointAir(POINT_VEC3.RoutePointAltType.BARO,POINT_VEC3.RoutePointType.TurningPoint,POINT_VEC3.RoutePointAction.TurningPoint,UTILS.KnotsToKmph(speed),true)
+		local WP2 = spawnCoord:Translate(UTILS.NMToMeters(distance),heading * 2)
+		:WaypointAir(POINT_VEC3.RoutePointAltType.BARO,POINT_VEC3.RoutePointType.TurningPoint,POINT_VEC3.RoutePointAction.TurningPoint,UTILS.KnotsToKmph(speed),true)
+		
+		local route = {WP1, WP2}
+		group:Route(route)
+	else
+		self:T("[JTF-1] We Fucked Up")
+	end
+	local taskTable = {}
+	if(task ~= "NOTHING") then
+		taskTable = self:MLSetTask(task,group)
+		group:PushTask ( group:TaskCombo( self:MLSetTask(task,group) ) , 3 )
+	end
+	--set group frequency
+	if(freq) then
+		if(freq <= 20) then
+			freq = self:MLRadioPreset(freq)
+		end
+			self:T("[JTF-1] freq:".. freq)
+			freq = freq * 1000000
+			local SetFrequency = { 
+			id = 'SetFrequency', 
+			params = { 
+				frequency = freq, 
+				modulation = 0, 
+			}
+		}
+		group:SetCommand(SetFrequency)
+	end
+
+ end
+
+-----------------
+-- SPAWN GROUND GROUP(S)
+-----------------
+
+function MARKSPAWN:MLGroundSpawn(SpawnTable)
+	local msType = SpawnTable.msType
+	local heading = tonumber(SpawnTable.heading) or self.default.MLDefaultHdg
+	local task = SpawnTable.task or self.default.MLDefaultGroundTask
+	local skill = self:MLSkillCheck(SpawnTable.skill) or self.default.MLDefaultSkill
+	local distance = tonumber(SpawnTable.distance) or self.default.MLDefaultGroundDistance
+	local ROE = SpawnTable.roe or self.default.MLDefaultROE
+	local freq = tonumber(SpawnTable.freq) or self.default.MLDefaultFreq
+	local speed = tonumber(SpawnTable.speed) or self.default.MLDefaultGroundSpeed 
+	local form = SpawnTable.formation or nil
+	local alert = SpawnTable.alert or self.default.MLDefaultAlert
+	local spawnCoord = COORDINATE:NewFromVec3(SpawnTable.pos)
+	local spawner = self:comparator(msType)
+	local category = self:GetProperty(msType, "category")
+	local role = self:GetProperty(msType, "role")
+
+	if(spawner == nil) then
+		self:E("[JTF-1] ERROR! spawner not found in spawnOptions.")
+		return
+	end
+
+	local template = GROUP:FindByName( spawner.SpawnTemplatePrefix )
+	local waypointNameString = SpawnTable.WP or nil
+	
+	--local spawnCoord = COORDINATE:NewFromVec3(SpawnTable.pos)
+	local coal, country
+
+	if(SpawnTable.side) then
+		coal, country = self:MLSideComparator(SpawnTable.side, template)
+	else
+		coal = template:GetCoalition()
+		country = template:GetCountry()
+	end
+
+	
+	local group = spawner:InitSkill(skill):InitCoalition(coal):InitCountry(country):SpawnFromVec3(spawnCoord:GetVec3())
+
+	local _group = group.GroupName
+	self:T("[JTF-1] GSPAWN: " .. _group)
+	
+	self.MLSpawnedGroups[#self.MLSpawnedGroups + 1] = {group = group, side = coal, msType = msType, category = category, role = role}
+	
+	self:MLSetROE(ROE,group)
+	self:MLSetAlarm(alert,group)
+	-- add waypoints
+	--if no distance, then we orbit
+	if(waypointNameString) then
+		local waypointCoords = self:MLFindWaypoints(waypointNameString)
+		self:T('MORE WAYPOINTS')
+		local route = {}
+		for idx, waypoint in pairs(waypointCoords) do
+		route[#route + 1] = waypoint:WaypointGround(UTILS.KnotsToKmph(speed),form)
+		end
+		group:Route(route)
+	elseif(distance > 0) then
+		local WP = spawnCoord:Translate(UTILS.NMToMeters(distance),heading)
+		group:RouteGroundTo(WP, speed, form, 1)
+	end
+end
+  
+-----------------
+-- SPAWN NAVY GROUP(S)
+-----------------
+
+function MARKSPAWN:MLNavalSpawn(SpawnTable)
+	local msType = SpawnTable.msType
+	local heading = tonumber(SpawnTable.heading) or 000
+	local task = SpawnTable.task or "NOTHING"
+	local skill = self:MLSkillCheck(SpawnTable.skill) or "AVERAGE"
+	local distance = tonumber(SpawnTable.distance) or 0
+	local ROE = SpawnTable.roe or "FREE"
+	local freq = tonumber(SpawnTable.freq) or 251
+	local speed = tonumber(SpawnTable.speed) or 30
+	local form = SpawnTable.formation or nil
+	local alert = SpawnTable.alert or "AUTO"
+	local spawnCoord = COORDINATE:NewFromVec3(SpawnTable.pos)
+	local spawner = self:comparator(msType)
+	local category = self:GetProperty(msType, "category")
+	local role = self:GetProperty(msType, "role")
+	local tgt = nil
+	if(spawner == nil) then
+		return
+	end
+	local template = GROUP:FindByName( spawner.SpawnTemplatePrefix )
+	local waypointNameString = SpawnTable.WP or nil
+	
+	local spawnCoord = COORDINATE:NewFromVec3(SpawnTable.pos)
+	local coal, country
+	if(SpawnTable.side) then
+		coal, country = self:MLSideComparator(SpawnTable.side, template)
+	else
+		coal = template:GetCoalition()
+		country = template:GetCountry()
+	end
+
+	local group = spawner:InitSkill(skill):InitCoalition(coal):InitCountry(country):InitHeading(heading):SpawnFromVec3(spawnCoord:GetVec3())
+	self.MLSpawnedGroups[#self.MLSpawnedGroups + 1] = {group = group, side = coal, msType = msType, category = category, role = role}
+
+	self:MLSetROE(ROE,group)
+	--MLSetAlarm(alert,group)
+	-- LETS DO WAYPOINTS YE JAMMY FOOKERS!
+	--if no distance, then we orbit
+	if(waypointNameString) then
+		local waypointCoords = self:MLFindWaypoints(waypointNameString)
+		self:T('MORE WAYPOINTS')
+		local route = {}
+		for idx, waypoint in pairs(waypointCoords) do
+		route[#route + 1] = waypoint:WaypointGround(UTILS.KnotsToKmph(speed),nil)
+		end
+		group:Route(route)
+	elseif(distance >= 0) then
+		local WP = spawnCoord:Translate(UTILS.NMToMeters(distance),heading)
+		group:RouteGroundTo(WP, speed, nil, 1)
+	end
+end
+  
+-----------------
+-- DELETE SPAWN GROUP
+-----------------
+
+function MARKSPAWN:MLDeleteGroup(spawnTable,mark)
+
+	local deleteCMD = spawnTable.cmd:upper()
+	
+	self:T(self.traceTitle .. " DELETE: " .. deleteCMD)
+
+	local tblProperties = {}
+
+	local coal = spawnTable.side or "RED"
+	coal = coal:upper()
+	local category = spawnTable.category or "ALL"
+	category = category:upper()
+	local msType = spawnTable.msType or "ALL"
+	msType = msType:upper()
+	local role = spawnTable.role or "ALL"
+	role = role:upper()
+
+
+	local radius =  spawnTable.radius or 5
+	radius = UTILS.NMToMeters(radius)
+
+	local template = spawnTable.template or nil
+
+	if template then
+		template = template:upper()
+	end
+	
+	if (coal == "BLUE") then 
+		coal = 2 
+	elseif (coal == "NEUTRAL") then
+		coal = 0 
+	elseif (coal == "ALL") or (coal:upper() == "ANY") then
+		coal = 99
+	else -- default to RED
+		coal = 1
+	end
+	
+	_msg = string.format("%sDELETE - OPTIONS CMD: %s, SIDE: %s, TYPE: %s, CATEGORY: %s,  ROLE: %s, RADIUS: %d", 
+		self.traceTitle,
+		deleteCMD,
+		tostring(coal or 99),
+		(msType or "nil"),
+		(category or "nil"),
+		(role or "nil"),
+		(radius or 0)
+	)
+	self:T(_msg)
+
+	-- Delete by GROUP
+	if(deleteCMD == "GROUP") then
+		_msg = string.format("%sDELETE: Option GROUP.", self.traceTitle)
+		self:T(_msg)
+
+		local groupName = spawnTable.groupName 
+		_msg = string.format("%sDELETE - groupName = %s", 
+			self.traceTitle,
+			(groupName or "nil")
+		)
+		self:T(_msg)
+
+		local victim = GROUP:FindByName(groupName) or nil
+		if victim then
+			victim:Destroy(false)
+		else
+			self:T(self.traceTitle .. " DELETE -  GROUP not found!")
+		end
+
+	-- Delete by AREA
+	elseif(deleteCMD == "AREA") then
+		_msg = string.format("%sDELETE: Option RAD.", self.traceTitle)
+		self:T(_msg)
+
+		local deleteZone = ZONE_RADIUS:New("DeleteZone",COORDINATE:NewFromVec3(mark.pos):GetVec2(),radius)
+		self:T({self.traceTitle .. " Marker Pos: ", mark.pos, " Zone Pos: ", deleteZone:GetVec2(), "Radius: ", deleteZone:GetRadius()})
+		for idx, entry in pairs (self.MLSpawnedGroups) do
+			if entry.group:IsAlive() then 
+
+				local isCategory = (entry.category == category) or (category == "ALL")
+				local isType = (entry.msType:upper() == msType) or (msType == "ALL")
+				local isRole = (entry.role:upper() == role) or (role == "ALL")
+				local isSide = (entry.side == coal) or (coal == 99)
+				
+				_msg = string.format("%sisCategory: %s, isType: %s, isRole: %s", 
+					self.traceTitle,
+					((isCategory and "True") or "False"),
+					((isType and "True") or "False"),
+					((isRole and "True") or "False"),
+					((isSide and "True") or "False")
+				)
+				self:T(_msg)
+
+				local groupPos = entry.group:GetVec2()
+				local zoneVec2 = deleteZone:GetVec2()
+				local isThere = ((groupPos.x - zoneVec2.x )^2 + ( groupPos.y - zoneVec2.y ) ^2 ) ^ 0.5 <= tonumber(deleteZone:GetRadius())
+
+				self:T(self.traceTitle .. " ZONE: " .. ((groupPos.x - zoneVec2.x )^2 + ( groupPos.y - zoneVec2.y ) ^2 ) ^ 0.5)
+
+				if(isThere) then
+					self:T("self.traceTitle ..  Group in zone")
+					if isType and (isCategory and isRole) then
+						self:T(self.traceTitle .. " Type, Category and Role correct")
+						self:T(self.traceTitle .. " Function Side: " .. coal .. "Group Side: " .. entry.side)
+						if coal and ((entry.side == coal) or (coal == 99)) then
+							self:T(self.traceTitle .. " Side correct")
+							local victim = entry.group
+							victim:Destroy(false)
+							self.MLSpawnedGroups[idx] = nil
+						end
+					end
+				else
+					self:T(self.traceTitle .. " Group out of Zone")
+				end
+			else
+				self:T(self.traceTitle .. " Group is not ALIVE")
+				self.MLSpawnedGroups[idx] = nil
+			end
+		end
+	
+	-- Delete by NEAREST
+	elseif(deleteCMD == "NEAREST") then
+		_msg = string.format("%sDELETE: Option NEAREST.", self.traceTitle)
+		self:T(_msg)
+
+		local minDistance = -1
+		local closest = 1
+		local markPos = COORDINATE:NewFromVec3(mark.pos):GetVec2()
+
+		if(self.MLSpawnedGroups[1].group:IsAlive()) then
+			local groupPos = self.MLSpawnedGroups[1].group:GetVec2()
+			minDistance = ((groupPos.x - markPos.x )^2 + ( groupPos.y - markPos.y ) ^2 ) ^ 0.5
+
+			_msg = string.format("%sGroup idx 1 is alive. Min dist = ", 
+				self.traceTitle
+			)
+			self:T({_msg, minDistance})
+			
+			-- find nearest group that meets the required criteria
+			for idx, entry in pairs (self.MLSpawnedGroups) do
+				if entry.group:IsAlive() then
+
+					local isCategory = (entry.category == category) or (category == "ALL")
+					local isType = (entry.msType:upper() == msType) or (msType == "ALL")
+					local isRole = (entry.role:upper() == role) or (role == "ALL")
+					local isSide = (entry.side == coal) or (coal == 99)
+
+					_msg = string.format("%sisCategory: %s, isType: %s, isRole: %s", 
+						self.traceTitle,
+						((isCategory and "True") or "False"),
+						((isType and "True") or "False"),
+						((isRole and "True") or "False"),
+						((isSide and "True") or "False")
+					)
+					self:T(_msg)
+					
+					if isType and (isCategory and isRole) then
+						if(coal and ((entry.side == coal) or coal == 99)) then
+							local groupPos = entry.group:GetVec2()
+							local currentDistance = ((groupPos.x - markPos.x )^2 + ( groupPos.y - markPos.y ) ^2 ) ^ 0.5
+							if(currentDistance < minDistance) then
+								minDistance = currentDistance
+								closest = idx
+							end
+						end
+					end
+				else
+					self:T(self.traceTitle .. " Group is not ALIVE")
+					self.MLSpawnedGroups[idx] = nil
+				end
+			end
+			local closestEntry = self.MLSpawnedGroups[closest]
+
+			local victim = closestEntry.group
+			victim:Destroy(false)
+			self.MLSpawnedGroups[closest] = nil
+
+		end
+	
+	-- Delete by KIND
+	elseif(deleteCMD == "KIND") then
+		_msg = string.format("%sDELETE: Option TYPE.", self.traceTitle)
+		self:T(_msg)
+
+		if (category and msType) and role then
+			_msg = string.format("%sDELETE: Filter Category, Type, Role.", self.traceTitle)
+			self:T(_msg)
+	
+			for idx, entry in pairs (self.MLSpawnedGroups) do
+				if entry.group:IsAlive() then
+					_msg = string.format("%sentry.category: %s, cmd: %s, entry.msType: %s, cmd: %s, entry.role: %s, cmd: %s, entry.side: %s, cmd: %s", 
+						self.traceTitle,
+						(entry.category or "nil"),
+						category,
+						(entry.msType or "nil"),
+						msType,
+						(entry.role or "nil"),
+						role,
+						(entry.side or "nil"),
+						tostring(coal)
+					)
+					self:T(_msg)
+
+					local isCategory = (entry.category:upper() == category) or (category == "ALL")
+					local isType = (entry.msType:upper() == msType) or (msType == "ALL")
+					local isRole = (entry.role:upper() == role) or (role == "ALL")
+					local isSide = (entry.side == coal) or (coal == 99)
+					
+					--_msg = string.format("%sCheck match", self.traceTitle)
+					_msg = string.format("%sisCategory: %s, isType: %s, isRole: %s, isSide: %s", 
+						self.traceTitle,
+						((isCategory and "True") or "False"),
+						((isType and "True") or "False"),
+						((isRole and "True") or "False"),
+						((isSide and "True") or "False")
+					)
+					self:T(_msg)
+					-- self:T({_msg, isCategory = isCategory, isType = isType, isRole = isRole, isSide = isSide})
+	
+					if isType and (isCategory and isRole) then
+						if(coal and ((entry.side == coal) or (coal == 99))) then
+							self:T(self.traceTitle .. " Side correct")
+							local victim = entry.group
+							victim:Destroy(false)
+							self.MLSpawnedGroups[idx] = nil
+						end
+					else
+						self:T(self.traceTitle .. "category or type or side do not match entry")
+					end
+				else
+					self:T("[JTF-1] Group is not alive.")
+					self.MLSpawnedGroups[idx] = nil
+				end
+			end
+		else
+			self:E("[JTF-1] CATEGORY, TYPE or ROLE option not defined")
+		end
+
+	-- Delete ALL
+	elseif(deleteCMD == "ALL") then
+		_msg = string.format("%sDELETE: Option ALL.", self.traceTitle)
+		self:T(_msg)
+
+		for idx, entry in pairs (self.MLSpawnedGroups) do
+			if entry.group:IsAlive() then
+
+				_msg = string.format("%sentry.class: %s, entry.msType: %s, entry.role: %s, entry.side: %s", 
+				self.traceTitle,
+					(entry.category or "nil"),
+					(entry.msType or "nil"),
+					(entry.role or "nil"),
+					(entry.side or "nil")
+				)
+				self:T(_msg)
+
+				local isCategory = (entry.category == category) or (category == "ALL")
+				local isType = (entry.msType:upper() == msType) or (msType == "ALL")
+				local isRole = (entry.role:upper() == role) or (role == "ALL")
+				local isSide = (entry.side == coal) or (coal == 99)
+				
+				_msg = string.format("%sisCategory: %s, isType: %s, isRole: %s, isSide: %s", 
+					self.traceTitle,
+					((isCategory and "True") or "False"),
+					((isType and "True") or "False"),
+					((isRole and "True") or "False"),
+					((isSide and "True") or "False")
+				)
+				self:T(_msg)
+
+				if isType and (isCategory and isRole) then
+					if(coal and ((entry.side == coal) or coal == 99)) then
+						self:T(self.traceTitle .. " Side correct")
+						local victim = entry.group
+						victim:Destroy(false)
+						self.MLSpawnedGroups[idx] = nil
+					end
+				end
+			else
+				self.MLSpawnedGroups[idx] = nil
+			end
+		end
+	else
+		_msg = string.format("%sDELETE: Nothing done!", self.traceTitle)
+		self:E(_msg)
+	end
+end
+
+-----------------
+-- WX REPORT
+-----------------
+
+function MARKSPAWN:MLWxReport(repoString, mark)
+	_msg = string.format("%s WXREPORT. repostring = %s", 
+		self.traceTitle,
+		repoString
+	)
+	self:T(_msg)
+
+	local qfe = false
+	local metric = false
+	local options = self:split(repoString, ",")
+	--local pos = mark:GetCoordinate()
+	self:T({options = options, markpos = {mark.pos}})
+
+	for idx, option in pairs (options) do
+		option = option:gsub("%s+", "")
+		self:T({option_sub = option})
+		if(option:upper() == "METRIC") then
+		metric = true
+		elseif(option:upper() == "QFE") then
+		qfe = true
+		end
+	end
+	
+	local wxPos = COORDINATE:NewFromVec3(mark.pos) -- COORDINATE:NewFromVec3(self:MLConvertMarkPos(mark.pos))
+	local wxLandHeight = wxPos:GetLandHeight()
+	local heading, windSpeedMPS = wxPos:GetWind()
+	
+	_msg = string.format("%s Land Height: %d, Heading: %d, Speed m/s: %4.2f", 
+		self.traceTitle,
+		wxLandHeight,
+		heading,
+		windSpeedMPS
+	)
+	self:T(_msg)
+	
+	--heading = self:_Heading(heading + 180)
+	local windSpeedKnots = UTILS.MpsToKnots(windSpeedMPS)
+	local temperature = wxPos:GetTemperature()
+	
+	local pressure_hPa,pressure_inHg
+	if(qfe) then
+		pressure_hPa = wxPos:GetPressure(wxLandHeight)
+	else
+		pressure_hPa = wxPos:GetPressure(0)
+	end
+	pressure_inHg = pressure_hPa * 0.0295299830714
+	
+	local coal
+	if(mark.initiator) then
+		coal = UNIT:Find(mark.initiator):GetGroup():GetCoalition()
+	else
+		coal = mark.coalition
+	end
+
+	local msgWx = ""
+	local msgWind, msgPressure, msgTemperature
+
+	-- requested in Metric
+	if(metric) then
+		msgWind = string.format("Wind is from %03d Degrees at %.2f Mps",heading, windSpeedMPS)
+		if(qfe) then
+			msgPressure = string.format("QFE is %4.2f hPa", pressure_hPa)
+		else
+			msgPressure = string.format("QNH is %4.2f hPa", pressure_hPa)
+		end
+	-- requested in Imperial
+	else
+		msgWind = string.format("Wind is from %03d Degrees at %d Knots",heading, windSpeedKnots)
+		if(qfe) then
+			msgPressure = string.format("QFE is %4.2f inHg", pressure_inHg)
+		else
+			msgPressure = string.format("QNH is %4.2f inHg", pressure_inHg)
+		end
+	end
+	
+	msgTemperature = string.format("Temperature is %d Degrees C", temperature)
+
+	msgWx = string.format("%s\n%s\n%s", 
+		msgWind,
+		msgPressure,
+		msgTemperature
+	)
+	wxPos:MarkToCoalition(msgWx,coal,false,nil)
+
+	_msg = string.format("%s%s", 
+		self.traceTitle,
+		(string.gsub(msgWx, "%c", " | "))
+	)
+	self:T(_msg)
+	-- _msg = string.format("%s %s | %s | %s", 
+	-- 	self.traceTitle,
+	-- 	msgWind,
+	-- 	msgPressure,
+	-- 	msgTemperature
+	-- )
+	-- self:T(_msg)
+end
+
+-----------------
+-- REMOVE CMD MARK POINT
+-----------------
+
+function MARKSPAWN:MLRemoveMark(markId)
+	local allMarks = world.getMarkPanels()
+	for idx, mark in pairs(allMarks) do
+		if markId == mark.idx then
+		trigger.action.removeMark(markId)
+		allMarks[idx] = nil
+		return
+		end
+	end
+end
+
+-----------------
+-- SPAWN RADIO
+-----------------
+
+function MARKSPAWN:MLRadioSpawn(SpawnTable)
+	local song = SpawnTable.song
+	local freq = tonumber(SpawnTable.freq) or 251
+
+	local band = SpawnTable.band or "AM"
+	if(band == "FM") then
+		band = 1
+	else
+		band = 0
+	end
+	local power = tonumber(SpawnTable.power) or 1200
+	local loop = SpawnTable.loop
+
+	self:T(freq)
+	self:T(band)
+	self:T(power)
+
+	local radioPositionable = SpawnTable.group
+	if(radioPositionable) then
+
+		local pirateRadio = RADIO:New(radioPositionable)
+		pirateRadio:NewGenericTransmission(song,freq,band,power,false)
+		pirateRadio:Broadcast()
+		self:T("[JTF-1] boobs")
+	else
+		MLRadio:NewGenericTransmission(song,freq,band,power,false)
+		MLRadio:Broadcast()
+		self:T("[JTF-1] tatas")
+	end
+
+end
+
+-----------------
+-- Get Property for SpawnType
+-----------------
+
+function MARKSPAWN:GetProperty(msType, property)
+	_msg = string.format("%sGetProperty called for type: %s, property: %s", 
+		self.traceTitle,
+		tostring(msType),
+		tostring(property)
+	)
+	self:T(_msg)
+
+	for idx, spawnType in pairs(self.spawnTypes) do
+		-- find the requested type
+		if string.upper(msType) == string.upper(spawnType.msType) then
+			-- get the requested property value
+			local propertyVal = spawnType[property]
+			-- if found return the value
+			if propertyVal ~= nil then
+				return propertyVal
+			else
+				_msg = string.format("%sError! Property %s not found for type %s",
+					self.traceTitle,
+					property,
+					msType
+				)
+				self:E(_msg)
+			end
+		end
+	end
+	return nil
+end
+
+-----------------
+-- Spawn Template Name String Comparison
+-----------------
+
+function MARKSPAWN:comparator(msType)
+	for idx, val in pairs(self.spawnTypes) do
+		if string.upper(msType) == string.upper(val.msType) then
+			self:T("[JTF-1] Type: " .. val.msType)
+			self:T("[JTF-1] Value: " .. val.category)
+			self:T("[JTF-1] Role: " .. val.role)
+			if val.spawn then
+				return val.spawn, val.category, val.role
+			else
+				_msg = string.format("%sError! Skipping type for missing spawn template %s",
+					self.traceTitle,
+					val.template
+				)
+			end
+		end
+	end
+	return nil
+end
+
+-----------------
+-- Set ROE
+-----------------
+
+function MARKSPAWN:MLSetROE(ROEString, group)
+	local text = string.upper(ROEString)
+	if(text == "FREE") then 
+		group:OptionROEWeaponFree()
+	elseif (text == "RETURN") then
+		group:OptionROEReturnFire()
+	elseif (text == "HOLD") then
+		group:OptionROEHoldFire()
+	end
+end
+
+-----------------
+-- Set ROT
+-----------------
+
+function MARKSPAWN:MLSetROT(ROTString, group)
+	local text = string.upper(ROTString)
+	if(text == "EVADE") then
+		group:OptionROTEvadeFire()
+	elseif (text == "PASSIVE") then
+		group:OptionROTPassiveDefense()
+	elseif (text == "NONE") then
+		group:OptionROTNoReaction()
+	end
+end
+
+-----------------
+-- Set Alarm State
+-----------------
+
+function MARKSPAWN:MLSetAlarm(alarmString, group)
+	local text = string.upper(alarmString)
+	if(text == "GREEN") then 
+		group:OptionAlarmStateGreen()
+	elseif (text == "RED") then
+		group:OptionAlarmStateRed()
+	elseif (text == "AUTO") then
+		group:OptionAlarmStateAuto()
+	end
+end
+
+-----------------
+-- Set Task
+-----------------
+
+function MARKSPAWN:MLSetTask(TaskString, group)
+		local text = string.upper(TaskString)
+		local taskTable = {}
+	
+		if(text == "CAP") then 
+		local EngageTargets = { 
+		id = 'EngageTargets', 
+		params = { 
+			maxDist = UTILS.NMToMeters(40), 
+			targetTypes = {"Air"},
+			priority = 0 
+		} 
+		}
+		taskTable[1] = EngageTargets
+	
+	elseif (text == "REFUELING" or text == "TANKER") then
+		local task = group:EnRouteTaskTanker()
+		taskTable[1] = task
+	
+	elseif (text == "CAS") then
+		local EngageTargets = { 
+		id = 'EngageTargets', 
+		params = { 
+			maxDist = UTILS.NMToMeters(25), 
+			targetTypes = {"Ground Units","Light armed ships","Helicopters"},
+			priority = 0 
+		} 
+		}
+	
+	elseif (text == "SEAD") then
+		local EngageTargets = { 
+		id = 'EngageTargets', 
+		params = {
+			maxDist = UTILS.NMToMeters(25), 
+			targetTypes = {"Air Defence"},
+			priority = 0 
+		} 
+		}
+		taskTable[1] = EngageTargets
+	
+	elseif (text == "TASMO") then
+		local EngageTargets = { 
+		id = 'EngageTargets', 
+		params = { 
+			maxDist = UTILS.NMToMeters(100), 
+			targetTypes = {"Ships"},
+			priority = 0 
+		} 
+		}
+		taskTable[1] = EngageTargets
+	
+	elseif (text == "AWACS") then
+		local task = group:EnRouteTaskAWACS()
+		local EPLRS = { 
+		id = 'EPLRS', 
+		params = { 
+			value = true,
+		} 
+		}
+		group:SetCommand(EPLRS)
+		taskTable[1] = task
+	
+	elseif (text == "AFAC") then
+		local task = group:EnRouteTaskFAC(UTILS.NMToMeters(10), 0)
+		taskTable[1] = task
+	
+	end
+	
+	return taskTable
+end
+  
+-----------------
+-- COALITION ENUMERATOR
+-----------------
+  
+function MARKSPAWN:MLSideComparator(side, template)
+	local coal
+	local country = template:GetCountry()
+	if(side == "BLUE") then
+		coal = coalition.side.BLUE
+		if(coal ~= template:GetCoalition()) then
+			country = self.default.DEFAULT_BLUE_COUNTRY
+		end
+	elseif(side == "RED") then
+		coal =  coalition.side.RED
+		if(coal ~= template:GetCoalition()) then
+			country = self.default.DEFAULT_RED_COUNTRY
+		end
+	elseif(side == "NEUTRAL") then
+		coal =  coalition.side.NEUTRAL
+		if(coal ~= template:GetCoalition()) then
+			country = self.default.DEFAULT_NEUTRAL_COUNTRY
+		end
+	else
+		coal = template:GetCoalition()
+		country = template:GetCountry()
+	end
+
+	self:T(coal .. " " .. country)
+	return coal, country
+end
+
+-----------------
+-- Get Radio Preset
+-----------------
+
+function MARKSPAWN:MLRadioPreset(channel)
+	return self.radioPresets[channel]
+end
+
+-----------------
+-- CONVERT POS TO VEC2?
+-----------------
+
+function MARKSPAWN:MLConvertMarkPos(pos)
+	local newPos = UTILS.DeepCopy(pos)
+	local zVal = pos.x
+	local xVal = pos.z
+	newPos.z = zVal
+	newPos.x = xVal
+	_msg = self.traceTitle .. " newPos.z = " .. newPos.z .. " newPos.x = " .. newPos.x
+	self:T(_msg)
+
+	return newPos
+end
+
+-----------------
+-- GET LIST OF WAYPOINT COORDINATES
+-----------------
+
+function MARKSPAWN:MLFindWaypoints(waypointNameList)
+	self:T("[JTF-1] WAYPOINTS MODE TURN ON")
+	local waypointNames={}
+	local waypointCoords = {}
+	--waypoints:gsub("%w*",function(name) table.insert(waypointNames,name) end)
+	--for k, v in waypointNameList:gmatch("(%w*)") do
+	--  table.insert(waypointNames,k)
+	--end
+	
+	waypointNames = self:split(waypointNameList,",")
+	local allMarks = world.getMarkPanels()
+	for idx, name in pairs(waypointNames) do
+		for idy, mark in pairs(allMarks) do
+		self:T("[JTF-1] name: " .. name)
+		self:T("[JTF-1] mark: " .. mark.text)
+		if string.upper(name) == string.upper(mark.text) then
+			waypointCoords[#waypointCoords + 1] = COORDINATE:NewFromVec3(mark.pos)
+			break
+		end
+		end
+	end
+	return waypointCoords
+end
+
+-----------------
+-- SPLIT STRING AT DELIMITER
+-----------------
+
+function MARKSPAWN:split(s, delimiter)
+	local result = {};
+	for match in (s..delimiter):gmatch("(.-)"..delimiter) do
+		table.insert(result, match);
+	end
+	return result;
+end
+
+-----------------
+-- Display message with the mark's command and options
+-----------------
+
+function MARKSPAWN:MLListSpawnOptions(category, mark)
+	local messageString = ""
+	for idx, value in pairs(self.spawnTypes) do
+		--list name, role, maybe default coalition
+		if value.spawn then
+			if(category:upper() == value.category:upper()) then
+				local name = value.msType
+				local role = value.role
+				local defaultCoalition = GROUP:FindByName( value.spawn.SpawnTemplatePrefix ):GetCoalition()
+				local coal
+				if(defaultCoalition == 1) then 
+					coal = "Red" 
+				elseif defaultCoalition == 2 then 
+					coal = "Blue" 
+				else 
+					coal = "Neutral"
+				end
+				local line = string.format("Type: %s, Role: %s, Coalition: %s\n", 
+					name, 
+					role, 
+					coal
+				)
+				messageString = messageString .. line 
+			end
+		else
+			_msg = string.format("%sError! Skipping OPTIONS for missing spawn template %s.",
+				self.traceTitle,
+				value.template
+			)
+			self:T(_msg)
+		end
+
+	end
+	self:T("[JTF-1] OPTIONS: " .. messageString)
+	local DCSUnit = mark.initiator
+	if(DCSUnit) then
+		--local group = unit:GetGroup()
+		local unit = UNIT:Find(DCSUnit)
+		local group = unit:GetGroup()
+		MESSAGE:New(messageString,30):ToUnit(unit) -- ToGroup(group)
+	else
+		local coal = mark.coalition
+		self:T(coal)
+		MESSAGE:New(messageString,30):ToCoalition(coal)
+	end
+end
+
+-----------------
+-- GET REVERSE OF HEADING 
+-----------------
+
+--stolen from moose, cred to them
+function MARKSPAWN:_Heading(course)
+	local h
+	if course<=180 then
+		h=math.rad(course)
+	else
+		h=-math.rad(360-course)
+	end
+	return h 
+end
+
+-----------------
+-- VALIDATE SKILL OPTION 
+-----------------
+
+function MARKSPAWN:MLSkillCheck(skill)
+	if(skill == nil) then
+		return nil
+	end
+
+	skill = skill:upper()
+	if(skill == "AVERAGE") then
+		return skill
+	elseif(skill == "NORMAL") then
+		return skill
+	elseif(skill == "GOOD") then
+		return skill
+	elseif(skill == "HIGH") then
+		return skill
+	elseif(skill == "EXCELLENT") then
+		return skill
+	elseif(skill == "RANDOM") then
+		return skill
+	else
+		return nil
+	end
+
+end
+
+-----------------
+-- TEMPLATES 
+-----------------
+
+function MARKSPAWN:AddTemplate(spawnType)
+
+end
+
+--- END MARKSPAWN  
+--------------------------------[core\Hercules_Cargo.lua]-------------------------------- 
+ 
+env.info( "[JTF-1] Hercules_Cargo.lua" )
+-- Hercules Cargo Drop Events by Anubis Yinepu
+
+-- This script will only work for the Herculus mod by Anubis
+-- Payloads carried by pylons 11, 12 and 13 need to be declared in the Herculus_Loadout.lua file
+-- Except for Ammo pallets, this script will spawn whatever payload gets launched from pylons 11, 12 and 13
+-- Pylons 11, 12 and 13 are moveable within the Herculus cargobay area
+-- Ammo pallets can only be jettisoned from these pylons with no benefit to DCS world
+-- To benefit DCS world, Ammo pallets need to be off/on loaded using DCS arming and refueling window
+-- Cargo_Container_Enclosed = true: Cargo enclosed in container with parachute, need to be dropped from 100m (300ft) or more, except when parked on ground
+-- Cargo_Container_Enclosed = false: Open cargo with no parachute, need to be dropped from 10m (30ft) or less
+
+Hercules_Cargo = {}
+Hercules_Cargo.Hercules_Cargo_Drop_Events = {}
+local GT_DisplayName = ""
+local GT_Name = ""
+local Cargo_Drop_initiator = ""
+local Cargo_Container_Enclosed = false
+local SoldierGroup = false
+local ParatrooperCount = 1
+local ParatrooperGroupSpawnInit = false
+local ParatrooperGroupSpawn = false
+
+local Herc_j = 0
+local Herc_Cargo = {}
+Herc_Cargo.Cargo_Drop_Direction = 0
+Herc_Cargo.Cargo_Contents = ""
+Herc_Cargo.Cargo_Type_name = ""
+Herc_Cargo.Cargo_over_water = false
+Herc_Cargo.Container_Enclosed = false
+Herc_Cargo.offload_cargo = false
+Herc_Cargo.all_cargo_survive_to_the_ground = false
+Herc_Cargo.all_cargo_gets_destroyed = false
+Herc_Cargo.destroy_cargo_dropped_without_parachute = false
+Herc_Cargo.scheduleFunctionID = 0
+
+local CargoHeading = 0
+local Cargo_Drop_Position = {}
+
+local SoldierUnitID = 12000
+local SoldierGroupID = 12000
+local GroupSpacing = 0
+--added by wrench
+Hercules_Cargo.types = {
+	["ATGM M1045 HMMWV TOW Air [7183lb]"] = {['name'] = "M1045 HMMWV TOW", ['container'] = true},
+	["ATGM M1045 HMMWV TOW Skid [7073lb]"] = {['name'] = "M1045 HMMWV TOW", ['container'] = false},
+	["APC M1043 HMMWV Armament Air [7023lb]"] = {['name'] = "M1043 HMMWV Armament", ['container'] = true},
+	["APC M1043 HMMWV Armament Skid [6912lb]"] = {['name'] = "M1043 HMMWV Armament", ['container'] = false},
+	["SAM Avenger M1097 Air [7200lb]"] = {['name'] = "M1097 Avenger", ['container'] = true},
+	["SAM Avenger M1097 Skid [7090lb]"] = {['name'] = "M1097 Avenger", ['container'] = false},
+	["APC Cobra Air [10912lb]"] = {['name'] = "Cobra", ['container'] = true},
+	["APC Cobra Skid [10802lb]"] = {['name'] = "Cobra", ['container'] = false},
+	["APC M113 Air [21624lb]"] = {['name'] = "M-113", ['container'] = true},
+	["APC M113 Skid [21494lb]"] = {['name'] = "M-113", ['container'] = false},
+	["Tanker M978 HEMTT [34000lb]"] = {['name'] = "M978 HEMTT Tanker", ['container'] = false},
+	["HEMTT TFFT [34400lb]"] = {['name'] = "HEMTT TFFT", ['container'] = false},
+	["SPG M1128 Stryker MGS [33036lb]"] = {['name'] = "M1128 Stryker MGS", ['container'] = false},
+	["AAA Vulcan M163 Air [21666lb]"] = {['name'] = "Vulcan", ['container'] = true},
+	["AAA Vulcan M163 Skid [21577lb]"] = {['name'] = "Vulcan", ['container'] = false},
+	["APC M1126 Stryker ICV [29542lb]"] = {['name'] = "M1126 Stryker ICV", ['container'] = false},
+	["ATGM M1134 Stryker [30337lb]"] = {['name'] = "M1134 Stryker ATGM", ['container'] = false},
+	["APC LAV-25 Air [22520lb]"] = {['name'] = "LAV-25", ['container'] = true},
+	["APC LAV-25 Skid [22514lb]"] = {['name'] = "LAV-25", ['container'] = false},
+	["M1025 HMMWV Air [6160lb]"] = {['name'] = "Hummer", ['container'] = true},
+	["M1025 HMMWV Skid [6050lb]"] = {['name'] = "Hummer", ['container'] = false},
+	["IFV M2A2 Bradley [34720lb]"] = {['name'] = "M-2 Bradley", ['container'] = false},
+	["IFV MCV-80 [34720lb]"] = {['name'] = "MCV-80", ['container'] = false},
+	["IFV BMP-1 [23232lb]"] = {['name'] = "BMP-1", ['container'] = false},
+	["IFV BMP-2 [25168lb]"] = {['name'] = "BMP-2", ['container'] = false},
+	["IFV BMP-3 [32912lb]"] = {['name'] = "BMP-3", ['container'] = false},
+	["ARV BRDM-2 Air [12320lb]"] = {['name'] = "BRDM-2", ['container'] = true},
+	["ARV BRDM-2 Skid [12210lb]"] = {['name'] = "BRDM-2", ['container'] = false},
+	["APC BTR-80 Air [23936lb]"] = {['name'] = "BTR-80", ['container'] = true},
+	["APC BTR-80 Skid [23826lb]"] = {['name'] = "BTR-80", ['container'] = false},
+	["APC BTR-82A Air [24998lb]"] = {['name'] = "BTR-82A", ['container'] = true},
+	["APC BTR-82A Skid [24888lb]"] = {['name'] = "BTR-82A", ['container'] = false},
+	["SAM ROLAND ADS [34720lb]"] = {['name'] = "Roland Radar", ['container'] = false},
+	["SAM ROLAND LN [34720b]"] = {['name'] = "Roland ADS", ['container'] = false},
+	["SAM SA-13 STRELA [21624lb]"] = {['name'] = "Strela-10M3", ['container'] = false},
+	["AAA ZSU-23-4 Shilka [32912lb]"] = {['name'] = "ZSU-23-4 Shilka", ['container'] = false},
+	["SAM SA-19 Tunguska 2S6 [34720lb]"] = {['name'] = "2S6 Tunguska", ['container'] = false},
+	["Transport UAZ-469 Air [3747lb]"] = {['name'] = "UAZ-469", ['container'] = true},
+	["Transport UAZ-469 Skid [3630lb]"] = {['name'] = "UAZ-469", ['container'] = false},
+	["AAA GEPARD [34720lb]"] = {['name'] = "Gepard", ['container'] = false},
+	["SAM CHAPARRAL Air [21624lb]"] = {['name'] = "M48 Chaparral", ['container'] = true},
+	["SAM CHAPARRAL Skid [21516lb]"] = {['name'] = "M48 Chaparral", ['container'] = false},
+	["SAM LINEBACKER [34720lb]"] = {['name'] = "M6 Linebacker", ['container'] = false},
+	["Transport URAL-375 [14815lb]"] = {['name'] = "Ural-375", ['container'] = false},
+	["Transport M818 [16000lb]"] = {['name'] = "M 818", ['container'] = false},
+	["IFV MARDER [34720lb]"] = {['name'] = "Marder", ['container'] = false},
+	["Transport Tigr Air [15900lb]"] = {['name'] = "Tigr_233036", ['container'] = true},
+	["Transport Tigr Skid [15730lb]"] = {['name'] = "Tigr_233036", ['container'] = false},
+	["IFV TPZ FUCH [33440lb]"] = {['name'] = "TPZ", ['container'] = false},
+	["IFV BMD-1 Air [18040lb]"] = {['name'] = "BMD-1", ['container'] = true},
+	["IFV BMD-1 Skid [17930lb]"] = {['name'] = "BMD-1", ['container'] = false},
+	["IFV BTR-D Air [18040lb]"] = {['name'] = "BTR_D", ['container'] = true},
+	["IFV BTR-D Skid [17930lb]"] = {['name'] = "BTR_D", ['container'] = false},
+	["EWR SBORKA Air [21624lb]"] = {['name'] = "Dog Ear radar", ['container'] = true},
+	["EWR SBORKA Skid [21624lb]"] = {['name'] = "Dog Ear radar", ['container'] = false},
+	["ART 2S9 NONA Air [19140lb]"] = {['name'] = "SAU 2-C9", ['container'] = true},
+	["ART 2S9 NONA Skid [19030lb]"] = {['name'] = "SAU 2-C9", ['container'] = false},
+	["ART GVOZDIKA [34720lb]"] = {['name'] = "SAU Gvozdika", ['container'] = false},
+	["APC MTLB Air [26400lb]"] = {['name'] = "MTLB", ['container'] = true},
+	["APC MTLB Skid [26290lb]"] = {['name'] = "MTLB", ['container'] = false},
+	--["Generic Crate [20000lb]"] = {['name'] =  "Hercules_Container_Parachute", ['container'] = true}
+}
+function Hercules_Cargo.Soldier_SpawnGroup(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, Cargo_Country, GroupSpacing)
+	SoldierUnitID = SoldierUnitID + 30
+	SoldierGroupID = SoldierGroupID + 1
+	local Herc_Soldier_Spawn = 
+	{
+		["visible"] = false,
+		["tasks"] = 
+		{
+		}, -- end of ["tasks"]
+		["uncontrollable"] = false,
+		["task"] = "Ground Nothing",
+		["taskSelected"] = true,
+		["groupId"] = SoldierGroupID,
+		["hidden"] = false,
+		["units"] = 
+		{
+			[1] = 
+			{
+				["type"] = Cargo_Type_name,
+				["transportable"] = 
+				{
+					["randomTransportable"] = true,
+				}, -- end of ["transportable"]
+				["unitId"] = SoldierUnitID + 1,
+				["skill"] = "Excellent",
+				["y"] = Cargo_Drop_Position.z + 0.5 + GroupSpacing,
+				["x"] = Cargo_Drop_Position.x + 0.5 + GroupSpacing,
+				["name"] = "Soldier Unit "..SoldierUnitID,
+				["heading"] = CargoHeading,
+				["playerCanDrive"] = false,
+			}, -- end of [1]
+			[2] = 
+			{
+				["type"] = Cargo_Type_name,
+				["transportable"] = 
+				{
+					["randomTransportable"] = true,
+				}, -- end of ["transportable"]
+				["unitId"] = SoldierUnitID + 1,
+				["skill"] = "Excellent",
+				["y"] = Cargo_Drop_Position.z + 1.0 + GroupSpacing,
+				["x"] = Cargo_Drop_Position.x + 1.0 + GroupSpacing,
+				["name"] = "Soldier Unit "..SoldierUnitID,
+				["heading"] = CargoHeading,
+				["playerCanDrive"] = false,
+			}, -- end of [2]
+			[3] = 
+			{
+				["type"] = Cargo_Type_name,
+				["transportable"] = 
+				{
+					["randomTransportable"] = true,
+				}, -- end of ["transportable"]
+				["unitId"] = SoldierUnitID + 1,
+				["skill"] = "Excellent",
+				["y"] = Cargo_Drop_Position.z + 1.5 + GroupSpacing,
+				["x"] = Cargo_Drop_Position.x + 1.0 + GroupSpacing,
+				["name"] = "Soldier Unit "..SoldierUnitID,
+				["heading"] = CargoHeading,
+				["playerCanDrive"] = false,
+			}, -- end of [3]
+			[4] = 
+			{
+				["type"] = Cargo_Type_name,
+				["transportable"] = 
+				{
+					["randomTransportable"] = true,
+				}, -- end of ["transportable"]
+				["unitId"] = SoldierUnitID + 1,
+				["skill"] = "Excellent",
+				["y"] = Cargo_Drop_Position.z + 2.0 + GroupSpacing,
+				["x"] = Cargo_Drop_Position.x + 2.0 + GroupSpacing,
+				["name"] = "Soldier Unit "..SoldierUnitID,
+				["heading"] = CargoHeading,
+				["playerCanDrive"] = false,
+			}, -- end of [4]
+			[5] = 
+			{
+				["type"] = Cargo_Type_name,
+				["transportable"] = 
+				{
+					["randomTransportable"] = true,
+				}, -- end of ["transportable"]
+				["unitId"] = SoldierUnitID + 1,
+				["skill"] = "Excellent",
+				["y"] = Cargo_Drop_Position.z + 2.5 + GroupSpacing,
+				["x"] = Cargo_Drop_Position.x + 2.5 + GroupSpacing,
+				["name"] = "Soldier Unit "..SoldierUnitID,
+				["heading"] = CargoHeading,
+				["playerCanDrive"] = false,
+			}, -- end of [5]
+			[6] = 
+			{
+				["type"] = Cargo_Type_name,
+				["transportable"] = 
+				{
+					["randomTransportable"] = true,
+				}, -- end of ["transportable"]
+				["unitId"] = SoldierUnitID + 1,
+				["skill"] = "Excellent",
+				["y"] = Cargo_Drop_Position.z + 3.0 + GroupSpacing,
+				["x"] = Cargo_Drop_Position.x + 3.0 + GroupSpacing,
+				["name"] = "Soldier Unit "..SoldierUnitID,
+				["heading"] = CargoHeading,
+				["playerCanDrive"] = false,
+			}, -- end of [6]
+			[7] = 
+			{
+				["type"] = "Soldier M249",
+				["transportable"] = 
+				{
+					["randomTransportable"] = true,
+				}, -- end of ["transportable"]
+				["unitId"] = SoldierUnitID + 1,
+				["skill"] = "Excellent",
+				["y"] = Cargo_Drop_Position.z + 3.5 + GroupSpacing,
+				["x"] = Cargo_Drop_Position.x + 3.5 + GroupSpacing,
+				["name"] = "Soldier Unit "..SoldierUnitID,
+				["heading"] = CargoHeading,
+				["playerCanDrive"] = false,
+			}, -- end of [7]
+			[8] = 
+			{
+				["type"] = "Soldier M249",
+				["transportable"] = 
+				{
+					["randomTransportable"] = true,
+				}, -- end of ["transportable"]
+				["unitId"] = SoldierUnitID + 1,
+				["skill"] = "Excellent",
+				["y"] = Cargo_Drop_Position.z + 4.0 + GroupSpacing,
+				["x"] = Cargo_Drop_Position.x + 4.0 + GroupSpacing,
+				["name"] = "Soldier Unit "..SoldierUnitID,
+				["heading"] = CargoHeading,
+				["playerCanDrive"] = false,
+			}, -- end of [8]
+			[9] = 
+			{
+				["type"] = Cargo_Type_name,
+				["transportable"] = 
+				{
+					["randomTransportable"] = true,
+				}, -- end of ["transportable"]
+				["unitId"] = SoldierUnitID + 1,
+				["skill"] = "Excellent",
+				["y"] = Cargo_Drop_Position.z + 4.5 + GroupSpacing,
+				["x"] = Cargo_Drop_Position.x + 4.5 + GroupSpacing,
+				["name"] = "Soldier Unit "..SoldierUnitID,
+				["heading"] = CargoHeading,
+				["playerCanDrive"] = false,
+			}, -- end of [9]
+			[10] = 
+			{
+				["type"] = "Paratrooper RPG-16",
+				["transportable"] = 
+				{
+					["randomTransportable"] = true,
+				}, -- end of ["transportable"]
+				["unitId"] = SoldierUnitID + 1,
+				["skill"] = "Excellent",
+				["y"] = Cargo_Drop_Position.z + 5.0 + GroupSpacing,
+				["x"] = Cargo_Drop_Position.x + 5.0 + GroupSpacing,
+				["name"] = "Soldier Unit "..SoldierUnitID,
+				["heading"] = CargoHeading,
+				["playerCanDrive"] = false,
+			}, -- end of [10]
+		}, -- end of ["units"]
+		["y"] = Cargo_Drop_Position.z,
+		["x"] = Cargo_Drop_Position.x,
+		["name"] = "Soldier_Group_"..SoldierGroupID,
+		["start_time"] = 0,
+	}
+	coalition.addGroup(Cargo_Country, Group.Category.GROUND, Herc_Soldier_Spawn)
+end
+
+local CargoUnitID = 10000
+local CargoGroupID = 10000
+local CargoStaticGroupID = 11000
+
+function Hercules_Cargo.Cargo_SpawnGroup(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, Cargo_Country)
+	CargoUnitID = CargoUnitID + 1
+	CargoGroupID = CargoGroupID + 1
+	local Herc_Cargo_Spawn = 
+	{
+		["visible"] = false,
+		["tasks"] = 
+		{
+		}, -- end of ["tasks"]
+		["uncontrollable"] = false,
+		["task"] = "Ground Nothing",
+		["groupId"] = CargoGroupID,
+		["hidden"] = false,
+		["units"] = 
+		{
+			[1] = 
+			{
+				["type"] = Cargo_Type_name,
+				["transportable"] = 
+				{
+					["randomTransportable"] = false,
+				}, -- end of ["transportable"]
+				["unitId"] = CargoUnitID,
+				["skill"] = "Excellent",
+				["y"] = Cargo_Drop_Position.z,
+				["x"] = Cargo_Drop_Position.x,
+				["name"] = "Cargo Unit "..CargoUnitID,
+				["heading"] = CargoHeading,
+				["playerCanDrive"] = true,
+			}, -- end of [1]
+		}, -- end of ["units"]
+		["y"] = Cargo_Drop_Position.z,
+		["x"] = Cargo_Drop_Position.x,
+		["name"] = "Cargo Group "..CargoUnitID,
+		["start_time"] = 0,
+	}
+	coalition.addGroup(Cargo_Country, Group.Category.GROUND, Herc_Cargo_Spawn)
+end
+
+function Hercules_Cargo.Cargo_SpawnStatic(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, dead, Cargo_Country)
+	CargoStaticGroupID = CargoStaticGroupID + 1
+	local Herc_CargoObject_Spawn = 
+	{
+		["type"] = Cargo_Type_name,
+		["y"] = Cargo_Drop_Position.z,
+		["x"] = Cargo_Drop_Position.x,
+		["name"] = "Cargo Static Group "..CargoStaticGroupID,
+		["heading"] = CargoHeading,
+		["dead"] = dead,
+	}
+	coalition.addStaticObject(Cargo_Country, Herc_CargoObject_Spawn)
+end
+
+function Hercules_Cargo.Cargo_SpawnObjects(Cargo_Drop_Direction, Cargo_Content_position, Cargo_Type_name, Cargo_over_water, Container_Enclosed, ParatrooperGroupSpawn, offload_cargo, all_cargo_survive_to_the_ground, all_cargo_gets_destroyed, destroy_cargo_dropped_without_parachute, Cargo_Country)
+	if offload_cargo == true then
+		------------------------------------------------------------------------------
+		if CargoHeading >= 3.14 then
+			CargoHeading = 0
+			Cargo_Drop_Position = {["x"] = Cargo_Content_position.x - (30.0 * math.cos(Cargo_Drop_Direction - 1.0)),
+								   ["z"] = Cargo_Content_position.z - (30.0 * math.sin(Cargo_Drop_Direction - 1.0))}
+		else
+			if CargoHeading >= 1.57 then
+				CargoHeading = 3.14
+				Cargo_Drop_Position = {["x"] = Cargo_Content_position.x - (20.0 * math.cos(Cargo_Drop_Direction + 0.5)),
+									   ["z"] = Cargo_Content_position.z - (20.0 * math.sin(Cargo_Drop_Direction + 0.5))}
+			else
+				if CargoHeading >= 0 then
+					CargoHeading = 1.57
+					Cargo_Drop_Position = {["x"] = Cargo_Content_position.x - (10.0 * math.cos(Cargo_Drop_Direction + 1.5)),
+										   ["z"] = Cargo_Content_position.z - (10.0 * math.sin(Cargo_Drop_Direction + 1.5))}
+				end
+			end
+		end
+		------------------------------------------------------------------------------
+		if ParatrooperGroupSpawn == true then
+			Hercules_Cargo.Soldier_SpawnGroup(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, Cargo_Country, 0)
+			Hercules_Cargo.Soldier_SpawnGroup(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, Cargo_Country, 5)
+			Hercules_Cargo.Soldier_SpawnGroup(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, Cargo_Country, 10)
+		else
+			Hercules_Cargo.Cargo_SpawnGroup(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, Cargo_Country, 0)
+		end
+	else
+		------------------------------------------------------------------------------
+		CargoHeading = 0
+		Cargo_Drop_Position = {["x"] = Cargo_Content_position.x - (20.0 * math.cos(Cargo_Drop_Direction)),
+							   ["z"] = Cargo_Content_position.z - (20.0 * math.cos(Cargo_Drop_Direction))}
+		------------------------------------------------------------------------------
+		if all_cargo_gets_destroyed == true or Cargo_over_water == true then
+			if Container_Enclosed == true then
+				Hercules_Cargo.Cargo_SpawnStatic(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, true, Cargo_Country)
+				if ParatrooperGroupSpawn == false then
+					Hercules_Cargo.Cargo_SpawnStatic(Cargo_Drop_Position, "Hercules_Container_Parachute_Static", CargoHeading, true, Cargo_Country)
+				end
+			else
+				Hercules_Cargo.Cargo_SpawnStatic(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, true, Cargo_Country)
+			end
+		else
+			------------------------------------------------------------------------------
+			if all_cargo_survive_to_the_ground == true then
+				if ParatrooperGroupSpawn == true then
+					Hercules_Cargo.Cargo_SpawnStatic(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, true, Cargo_Country)
+				else
+					Hercules_Cargo.Cargo_SpawnGroup(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, Cargo_Country)
+				end
+				if Container_Enclosed == true then
+					if ParatrooperGroupSpawn == false then
+						Hercules_Cargo.Cargo_SpawnStatic({["z"] = Cargo_Drop_Position.z + 10.0,["x"] = Cargo_Drop_Position.x + 10.0}, "Hercules_Container_Parachute_Static", CargoHeading, false, Cargo_Country)
+					end
+				end
+			end
+			------------------------------------------------------------------------------
+			if destroy_cargo_dropped_without_parachute == true then
+				if Container_Enclosed == true then
+					if ParatrooperGroupSpawn == true then
+						Hercules_Cargo.Soldier_SpawnGroup(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, Cargo_Country, 0)
+					else
+						Hercules_Cargo.Cargo_SpawnGroup(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, Cargo_Country)
+						Hercules_Cargo.Cargo_SpawnStatic({["z"] = Cargo_Drop_Position.z + 10.0,["x"] = Cargo_Drop_Position.x + 10.0}, "Hercules_Container_Parachute_Static", CargoHeading, false, Cargo_Country)
+					end
+				else
+					Hercules_Cargo.Cargo_SpawnStatic(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, true, Cargo_Country)
+				end
+			end
+			------------------------------------------------------------------------------
+		end
+	end
+end
+
+function Hercules_Cargo.Calculate_Object_Height_AGL(object)
+	return object:getPosition().p.y - land.getHeight({x = object:getPosition().p.x, y = object:getPosition().p.z})
+end
+
+function Hercules_Cargo.Check_SurfaceType(object)
+   -- LAND,--1 SHALLOW_WATER,--2 WATER,--3 ROAD,--4 RUNWAY--5
+	return land.getSurfaceType({x = object:getPosition().p.x, y = object:getPosition().p.z})
+end
+
+function Hercules_Cargo.Cargo_Track(Arg, time)
+	local status, result = pcall(
+		function()
+		local next = next
+		if next(Arg[1].Cargo_Contents) ~= nil then
+			if Hercules_Cargo.Calculate_Object_Height_AGL(Arg[1].Cargo_Contents) < 5.0 then--pallet less than 5m above ground before spawning
+				if Hercules_Cargo.Check_SurfaceType(Arg[1].Cargo_Contents) == 2 or Hercules_Cargo.Check_SurfaceType(Arg[1].Cargo_Contents) == 3 then
+					Arg[1].Cargo_over_water = true--pallets gets destroyed in water
+				end
+				Arg[1].Cargo_Contents:destroy()--remove pallet+parachute before hitting ground and replace with Cargo_SpawnContents
+				Hercules_Cargo.Cargo_SpawnObjects(Arg[1].Cargo_Drop_Direction, Object.getPoint(Arg[1].Cargo_Contents), Arg[1].Cargo_Type_name, Arg[1].Cargo_over_water, Arg[1].Container_Enclosed, Arg[1].ParatrooperGroupSpawn, Arg[1].offload_cargo, Arg[1].all_cargo_survive_to_the_ground, Arg[1].all_cargo_gets_destroyed, Arg[1].destroy_cargo_dropped_without_parachute, Arg[1].Cargo_Country)
+				timer.removeFunction(Arg[1].scheduleFunctionID)
+				Arg[1] = {}
+			end
+			return time + 0.1
+		end
+	end) -- pcall
+	if not status then
+		-- env.error(string.format("Cargo_Spawn: %s", result))
+	else
+		return result
+	end
+end
+
+function Hercules_Cargo.Calculate_Cargo_Drop_initiator_NorthCorrection(point)	--correction needed for true north
+	if not point.z then --Vec2; convert to Vec3
+		point.z = point.y
+		point.y = 0
+	end
+	local lat, lon = coord.LOtoLL(point)
+	local north_posit = coord.LLtoLO(lat + 1, lon)
+	return math.atan2(north_posit.z - point.z, north_posit.x - point.x)
+end
+
+function Hercules_Cargo.Calculate_Cargo_Drop_initiator_Heading(Cargo_Drop_initiator)
+	local Heading = math.atan2(Cargo_Drop_initiator:getPosition().x.z, Cargo_Drop_initiator:getPosition().x.x)
+	Heading = Heading + Hercules_Cargo.Calculate_Cargo_Drop_initiator_NorthCorrection(Cargo_Drop_initiator:getPosition().p)
+	if Heading < 0 then
+		Heading = Heading + (2 * math.pi)-- put heading in range of 0 to 2*pi
+	end
+	return Heading + 0.06 -- rad
+end
+
+function Hercules_Cargo.Cargo_Initialize(initiator, Cargo_Contents, Cargo_Type_name, Container_Enclosed)
+	local status, result = pcall(
+		function()
+		Cargo_Drop_initiator = Unit.getByName(initiator:getName())
+		local next = next
+		if next(Cargo_Drop_initiator) ~= nil then
+			if ParatrooperGroupSpawnInit == true then
+				if (ParatrooperCount == 1 or ParatrooperCount == 2 or ParatrooperCount == 3) then
+					Herc_j = Herc_j + 1
+					Herc_Cargo[Herc_j] = {}
+					Herc_Cargo[Herc_j].Cargo_Drop_Direction = Hercules_Cargo.Calculate_Cargo_Drop_initiator_Heading(Cargo_Drop_initiator)
+					Herc_Cargo[Herc_j].Cargo_Contents = Cargo_Contents
+					Herc_Cargo[Herc_j].Cargo_Type_name = Cargo_Type_name
+					Herc_Cargo[Herc_j].Container_Enclosed = Container_Enclosed
+					Herc_Cargo[Herc_j].ParatrooperGroupSpawn = ParatrooperGroupSpawnInit
+					Herc_Cargo[Herc_j].Cargo_Country = initiator:getCountry()
+				------------------------------------------------------------------------------
+					if Hercules_Cargo.Calculate_Object_Height_AGL(Cargo_Drop_initiator) < 5.0 then--aircraft on ground
+						Herc_Cargo[Herc_j].offload_cargo = true
+						ParatrooperCount = 0
+						ParatrooperGroupSpawnInit = false
+					else
+				------------------------------------------------------------------------------
+						if Hercules_Cargo.Calculate_Object_Height_AGL(Cargo_Drop_initiator) < 10.0 then--aircraft less than 10m above ground
+							Herc_Cargo[Herc_j].all_cargo_survive_to_the_ground = true
+						else
+				------------------------------------------------------------------------------
+							if Hercules_Cargo.Calculate_Object_Height_AGL(Cargo_Drop_initiator) < 152.4 then--aircraft more than 30ft but less than 500ft above ground
+								Herc_Cargo[Herc_j].all_cargo_gets_destroyed = true
+							else
+				------------------------------------------------------------------------------
+								Herc_Cargo[Herc_j].destroy_cargo_dropped_without_parachute = true--aircraft more than 152.4m (500ft)above ground
+							end
+						end
+					end
+				------------------------------------------------------------------------------
+					Herc_Cargo[Herc_j].scheduleFunctionID = timer.scheduleFunction(Hercules_Cargo.Cargo_Track, {Herc_Cargo[Herc_j]}, timer.getTime() + 0.1)
+					ParatrooperCount = ParatrooperCount + 1.0
+				else
+					if (ParatrooperCount == 30) then
+						ParatrooperGroupSpawnInit = false
+						ParatrooperCount = 1
+					else
+						ParatrooperCount = ParatrooperCount + 1.0
+					end
+				end
+			else
+				Herc_j = Herc_j + 1
+				Herc_Cargo[Herc_j] = {}
+				Herc_Cargo[Herc_j].Cargo_Drop_Direction = Hercules_Cargo.Calculate_Cargo_Drop_initiator_Heading(Cargo_Drop_initiator)
+				Herc_Cargo[Herc_j].Cargo_Contents = Cargo_Contents
+				Herc_Cargo[Herc_j].Cargo_Type_name = Cargo_Type_name
+				Herc_Cargo[Herc_j].Container_Enclosed = Container_Enclosed
+				Herc_Cargo[Herc_j].ParatrooperGroupSpawn = ParatrooperGroupSpawnInit
+				Herc_Cargo[Herc_j].Cargo_Country = initiator:getCountry()
+			------------------------------------------------------------------------------
+				if Hercules_Cargo.Calculate_Object_Height_AGL(Cargo_Drop_initiator) < 5.0 then--aircraft on ground
+					Herc_Cargo[Herc_j].offload_cargo = true
+				else
+			------------------------------------------------------------------------------
+					if Hercules_Cargo.Calculate_Object_Height_AGL(Cargo_Drop_initiator) < 10.0 then--aircraft less than 10m above ground
+						Herc_Cargo[Herc_j].all_cargo_survive_to_the_ground = true
+					else
+			------------------------------------------------------------------------------
+						if Hercules_Cargo.Calculate_Object_Height_AGL(Cargo_Drop_initiator) < 100.0 then--aircraft more than 10m but less than 100m above ground
+							Herc_Cargo[Herc_j].all_cargo_gets_destroyed = true
+						else
+			------------------------------------------------------------------------------
+							Herc_Cargo[Herc_j].destroy_cargo_dropped_without_parachute = true--aircraft more than 100m above ground
+						end
+					end
+				end
+			------------------------------------------------------------------------------
+				Herc_Cargo[Herc_j].scheduleFunctionID = timer.scheduleFunction(Hercules_Cargo.Cargo_Track, {Herc_Cargo[Herc_j]}, timer.getTime() + 0.1)
+			end
+		end
+	end) -- pcall
+	if not status then
+		-- env.error(string.format("Cargo_Initialize: %s", result))
+	else
+		return result
+	end
+end
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	-- EventHandlers
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+function Hercules_Cargo.Hercules_Cargo_Drop_Events:onEvent(Cargo_Drop_Event)
+	if Cargo_Drop_Event.id == world.event.S_EVENT_SHOT then
+		GT_DisplayName = Weapon.getDesc(Cargo_Drop_Event.weapon).typeName:sub(15, -1)--Remove "weapons.bombs." from string
+		 -- trigger.action.outTextForCoalition(coalition.side.BLUE, string.format("Cargo_Drop_Event: %s", Weapon.getDesc(Cargo_Drop_Event.weapon).typeName), 10)
+		 -- trigger.action.outTextForCoalition(coalition.side.RED, string.format("Cargo_Drop_Event: %s", Weapon.getDesc(Cargo_Drop_Event.weapon).typeName), 10)
+			 ---------------------------------------------------------------------------------------------------------------------------------
+			if (GT_DisplayName == "Squad 30 x Soldier [7950lb]") then
+				GT_Name = "Soldier M4 GRG"
+				SoldierGroup = true
+				ParatrooperGroupSpawnInit = true
+				Hercules_Cargo.Cargo_Initialize(Cargo_Drop_Event.initiator, Cargo_Drop_Event.weapon, GT_Name, SoldierGroup)
+			end
+			 ---------------------------------------------------------------------------------------------------------------------------------
+			if Hercules_Cargo.types[GT_DisplayName] then
+				local GT_Name = Hercules_Cargo.types[GT_DisplayName]['name']
+				local Cargo_Container_Enclosed = Hercules_Cargo.types[GT_DisplayName]['container']
+				Hercules_Cargo.Cargo_Initialize(Cargo_Drop_Event.initiator, Cargo_Drop_Event.weapon, GT_Name, Cargo_Container_Enclosed)
+			end
+	end
+end
+world.addEventHandler(Hercules_Cargo.Hercules_Cargo_Drop_Events)
+
+-- trigger.action.outTextForCoalition(coalition.side.BLUE, string.format("Cargo_Drop_Event.weapon: %s", Weapon.getDesc(Cargo_Drop_Event.weapon).typeName), 10)
+-- trigger.action.outTextForCoalition(coalition.side.BLUE, tostring('Calculate_Object_Height_AGL: ' .. aaaaa), 10)
+-- trigger.action.outTextForCoalition(coalition.side.BLUE, string.format("Speed: %.2f", Calculate_Object_Speed(Cargo_Drop_initiator)), 10)
+-- trigger.action.outTextForCoalition(coalition.side.BLUE, string.format("Russian Interceptor Patrol scrambled from Nalchik"), 10)
+
+-- function basicSerialize(var)
+	-- if var == nil then
+		-- return "\"\""
+	-- else
+		-- if ((type(var) == 'number') or
+				-- (type(var) == 'boolean') or
+				-- (type(var) == 'function') or
+				-- (type(var) == 'table') or
+				-- (type(var) == 'userdata') ) then
+			-- return tostring(var)
+		-- else
+			-- if type(var) == 'string' then
+				-- var = string.format('%q', var)
+				-- return var
+			-- end
+		-- end
+	-- end
+-- end
+	
+-- function tableShow(tbl, loc, indent, tableshow_tbls) --based on serialize_slmod, this is a _G serialization
+	-- tableshow_tbls = tableshow_tbls or {} --create table of tables
+	-- loc = loc or ""
+	-- indent = indent or ""
+	-- if type(tbl) == 'table' then --function only works for tables!
+		-- tableshow_tbls[tbl] = loc
+		-- local tbl_str = {}
+		-- tbl_str[#tbl_str + 1] = indent .. '{\n'
+		-- for ind,val in pairs(tbl) do -- serialize its fields
+			-- if type(ind) == "number" then
+				-- tbl_str[#tbl_str + 1] = indent
+				-- tbl_str[#tbl_str + 1] = loc .. '['
+				-- tbl_str[#tbl_str + 1] = tostring(ind)
+				-- tbl_str[#tbl_str + 1] = '] = '
+			-- else
+				-- tbl_str[#tbl_str + 1] = indent
+				-- tbl_str[#tbl_str + 1] = loc .. '['
+				-- tbl_str[#tbl_str + 1] = basicSerialize(ind)
+				-- tbl_str[#tbl_str + 1] = '] = '
+			-- end
+			-- if ((type(val) == 'number') or (type(val) == 'boolean')) then
+				-- tbl_str[#tbl_str + 1] = tostring(val)
+				-- tbl_str[#tbl_str + 1] = ',\n'
+			-- elseif type(val) == 'string' then
+				-- tbl_str[#tbl_str + 1] = basicSerialize(val)
+				-- tbl_str[#tbl_str + 1] = ',\n'
+			-- elseif type(val) == 'nil' then -- won't ever happen, right?
+				-- tbl_str[#tbl_str + 1] = 'nil,\n'
+			-- elseif type(val) == 'table' then
+				-- if tableshow_tbls[val] then
+					-- tbl_str[#tbl_str + 1] = tostring(val) .. ' already defined: ' .. tableshow_tbls[val] .. ',\n'
+				-- else
+					-- tableshow_tbls[val] = loc ..	'[' .. basicSerialize(ind) .. ']'
+					-- tbl_str[#tbl_str + 1] = tostring(val) .. ' '
+					-- tbl_str[#tbl_str + 1] = tableShow(val,	loc .. '[' .. basicSerialize(ind).. ']', indent .. '		', tableshow_tbls)
+					-- tbl_str[#tbl_str + 1] = ',\n'
+				-- end
+			-- elseif type(val) == 'function' then
+				-- if debug and debug.getinfo then
+					-- local fcnname = tostring(val)
+					-- local info = debug.getinfo(val, "S")
+					-- if info.what == "C" then
+						-- tbl_str[#tbl_str + 1] = string.format('%q', fcnname .. ', C function') .. ',\n'
+					-- else
+						-- if (string.sub(info.source, 1, 2) == [[./]]) then
+							-- tbl_str[#tbl_str + 1] = string.format('%q', fcnname .. ', defined in (' .. info.linedefined .. '-' .. info.lastlinedefined .. ')' .. info.source) ..',\n'
+						-- else
+							-- tbl_str[#tbl_str + 1] = string.format('%q', fcnname .. ', defined in (' .. info.linedefined .. '-' .. info.lastlinedefined .. ')') ..',\n'
+						-- end
+					-- end
+				-- else
+					-- tbl_str[#tbl_str + 1] = 'a function,\n'
+				-- end
+			-- else
+				-- tbl_str[#tbl_str + 1] = 'unable to serialize value type ' .. basicSerialize(type(val)) .. ' at index ' .. tostring(ind)
+			-- end
+		-- end
+		-- tbl_str[#tbl_str + 1] = indent .. '}'
+		-- return table.concat(tbl_str)
+	-- end
+-- end
+
+
+
+
+-- function F10CargoDrop(GroupId, Unitname)
+	-- local rootPath = missionCommands.addSubMenuForGroup(GroupId, "Cargo Drop")
+	-- missionCommands.addCommandForGroup(GroupId, "Drop direction", rootPath, CruiseMissilesMessage, {GroupId, Unitname})
+	-- missionCommands.addCommandForGroup(GroupId, "Drop distance", rootPath, ForwardConvoy, nil)
+	-- local measurementsSetPath = missionCommands.addSubMenuForGroup(GroupId,"Set measurement units",rootPath)
+	-- missionCommands.addCommandForGroup(GroupId, "Set to Imperial (feet, knts)",measurementsSetPath,setMeasurements,{GroupId, "imperial"})
+	-- missionCommands.addCommandForGroup(GroupId, "Set to Metric (meters, km/h)",measurementsSetPath,setMeasurements,{GroupId, "metric"})
+-- end
+
+-- function Calculate_Object_Speed(object)
+	-- return math.sqrt(object:getVelocity().x^2 + object:getVelocity().y^2 + object:getVelocity().z^2) * 3600 / 1852 -- knts
+-- end
+
+-- function vecDotProduct(vec1, vec2)
+	-- return vec1.x*vec2.x + vec1.y*vec2.y + vec1.z*vec2.z
+-- end
+
+-- function Calculate_Aircraft_ForwardVelocity(Drop_initiator)
+	-- return vecDotProduct(Drop_initiator:getPosition().x, Drop_initiator:getVelocity())
+-- end
+
+--- END HERCULES CARGO SUPPORT SECTION
+
+
   
 --------------------------------[core\spawntemplates.lua]-------------------------------- 
  
@@ -10026,6869 +18289,6 @@ SPAWNTEMPLATES.templates = {
 	------------------------ SHIP ------------------------
 
 }  
-  
---------------------------------[core\supportaircraft.lua]-------------------------------- 
- 
-env.info( "[JTF-1] supportaircraft.lua" )
-
---
---- Support Aircraft
---
--- **NOTE** THIS FILE MUST BE LOADED BEFORE SUPPORTAIRCRAFT_DATA.LUA IS LOADED
---
--- Spawn support aircraft (tankers, awacs) at zone markers placed in the mission editor.
---
--- Two files are required for this module;
---     supportaircraft.lua
---     supportaircraft_data.lua
---
--- 1. supportaircraft.lua
--- Core file. Contains functions, key values and GLOBAL settings.
---
--- 2. supportaircraft_data.lua
--- Contains settings that are specific to the miz.
---
--- Load order in miz MUST be;
---     1. supportaircraft.lua
---     2. supportaircraft_data.lua
---
--- In the mission editor, place a zone where you want the support aircraft to spawn.
--- Under SUPPORTAC.mission, add a config block for the aircraft you intend to spawn.
--- See the comments in the example block for explanations of each config option.
---
--- if the predefined templates are not being used a late activated template must be added 
--- to the miz for for each support *type* that is to be spawned.
--- The template should use the same name as the type in the SUPPORTAC.type data block, 
--- eg "KC-135" or "AWACS-E3A" etc.
---
--- Available support aircraft categories and types for which predefined templates are available [category] = [template name];
---
--- Category: tanker
---    tankerBoom = "KC-135" - SPAWNTEMPLATES.templates["KC-135"]
---    tankerProbe = KC-135MPRS" - SPAWNTEMPLATES.templates["KC-135MPRS"]
---    WIP** tankerProbeC130 = "KC-130" - SPAWNTEMPLATES.templates["KC-130"]
---
--- Category: awacs
--- awacsE3a = "AWACS-E3A" - SPAWNTEMPLATES.templates["AWACS-E3A"]
--- awacsE2d = "AWACS-E3A" - SPAWNTEMPLATES.templates["AWACS-E3A"]
---
-
-SUPPORTAC = {}
-SUPPORTAC.traceTitle = "[JTF-1 SUPPORTAC] "
-SUPPORTAC.ClassName = "SUPPORTAC"
-SUPPORTAC.useSRS = true -- if true, messages will be sent over SRS using the MISSIONSRS module. If false, messages will be sent as in-game text.
-
-SUPPORTAC = BASE:Inherit(SUPPORTAC, BASE:New())
-
-local _msg -- used for debug messages only
-local useSRS
-
--- function to start the SUPPORTAC module.
-function SUPPORTAC:Start()
-	_msg = string.format(self.traceTitle .. "Start()")
-	self:T(_msg)
-
-	-- default to not using SRS unless both the server AND the module request it AND MISSIONSRS.Radio.active is true
-	useSRS = (JTF1.useSRS and self.useSRS) and MISSIONSRS.Radio.active 
-	self:I({self.traceTitle .. "useSRS", self.useSRS})
-
-	for index, mission in ipairs(SUPPORTAC.mission) do -- FOR-DO LOOP
-		_msg = string.format(self.traceTitle .. "Start - mission %s", mission.name)
-		SUPPORTAC:T({_msg, mission})
-
-		local skip = false -- check value to exit early from the current for/do iteration
-
-		local missionZone = ZONE:FindByName(mission.zone)
-		-- check zone is present in miz
-		if missionZone then -- CHECK MISSION ZONE
-		
-			-- if trace is on, draw the zone on the map
-			-- if BASE:IsTrace() then 
-			-- 	-- draw mission zone on map
-			-- 	missionZone:DrawZone()
-			-- end
-
-			-- airbase to which aircraft will fly on RTB
-			local missionTheatre = env.mission.theatre
-			_msg = SUPPORTAC.traceTitle .. tostring(missionTheatre)
-			self:T(_msg)
-			local missionHomeAirbase = mission.homeAirbase or SUPPORTAC.homeAirbase[missionTheatre]
-			_msg = SUPPORTAC.traceTitle .. tostring(missionHomeAirbase)
-			self:T(_msg)
-			_msg = string.format(self.traceTitle .. "start - Mission %s set to use %s as home base.", mission.name, missionHomeAirbase)
-			SUPPORTAC:T(_msg)
-			if missionHomeAirbase then -- CHECK HOME AIRBASE
-				_msg = string.format(self.traceTitle .. "start - Mission %s using %s as home base.", mission.name, missionHomeAirbase)
-				SUPPORTAC:T(_msg)
-
-				-- set home airbase in mission
-				mission.homeAirbase = missionHomeAirbase
-
-				-- values used to create mission spawn prefix
-				local missionName = mission.name or SUPPORTAC.missionDefault.name
-				local missionSpawnType = mission.type or SUPPORTAC.missionDefault.type
-				-- set spawn prefix unique to support mission
-				local missionSpawnAlias = string.format("M%02d_%s_%s", index, missionName, missionSpawnType)
-
-				-- values used to define mission, spawn and waypoint locations
-				local missionFlightLevel = mission.flightLevel or SUPPORTAC.missionDefault.flightLevel
-				local missionSpawnDistance = mission.spawnDistance or SUPPORTAC.missionDefault.spawnDistance
-				local missionAltitude = UTILS.FeetToMeters(missionFlightLevel * 100)
-				local spawnDistance = UTILS.NMToMeters(missionSpawnDistance)
-				local spawnHeading = mission.heading or SUPPORTAC.missionDefault.heading
-				local spawnAngle = spawnHeading + 180
-				if spawnAngle > 360 then 
-					spawnAngle = spawnHeading - 180
-				end
-				local spawnUnlimitedFuel = mission.unlimitedFuel or SUPPORTAC.missionDefault.unlimitedFuel
-
-				-- coordinate used for the AUFTRAG
-				local missionCoordinate = missionZone:GetCoordinate()
-				missionCoordinate:SetAltitude(missionAltitude)
-				mission.missionCoordinate = missionCoordinate
-
-				-- coordinate used for the mission spawn template
-				local spawnCoordinate = missionCoordinate
-				spawnCoordinate:Translate(spawnDistance, spawnAngle, true, true)
-				mission.spawnCoordinate = spawnCoordinate
-
-				-- coordinate used for an initial waypoint for the flightgroup
-				local waypointCoordinate = missionCoordinate
-				waypointCoordinate = waypointCoordinate:Translate(spawnDistance/2, spawnAngle, true, true)
-				mission.waypointCoordinate = waypointCoordinate
-
-				if GROUP:FindByName(missionSpawnType) then -- FIND MISSION SPAWN TEMPLATE - use from mission block
-					_msg = string.format(self.traceTitle .. "start - Using spawn template from miz for %s.", missionSpawnType)
-					SUPPORTAC:T(_msg)
-
-					-- add mission spawn object using template in miz
-					mission.missionSpawnTemplate = SPAWN:NewWithAlias(missionSpawnType, missionSpawnAlias)
-				elseif SPAWNTEMPLATES.templates[missionSpawnType] then -- ELSEIF FIND MISSION SPAWN TEMPLATE-- Use predfined template from SPAWNTEMPLATES.templates[missionSpawnType]
-					_msg = string.format(self.traceTitle .. "start - Using spawn template from SPAWNTEMPLATES.templates for %s.", missionSpawnType)
-					SUPPORTAC:T(_msg)
-
-					-- get template to use for spawn
-					local spawnTemplate = SPAWNTEMPLATES.templates[missionSpawnType]
-
-					-- check "category" has been set in template
-					-- if not spawnTemplate["category"] then
-					-- 	spawnTemplate["category"] = Group.Category.AIRPLANE
-					-- end
-					
-					-- apply mission callsign to template (for correct display in F10 map)
-					local missionCallsignId = mission.callsign
-					local missionCallsignNumber = mission.callsignNumber or 1
-
-					-- default callsign name to use if not found
-					local missionCallsignName = "Ghost"
-
-					if missionCallsignId then
-						-- table of callsigns to search for callsign name
-						local callsignTable = CALLSIGN.Tanker
-						if mission.category == SUPPORTAC.category.awacs then
-							callsignTable = CALLSIGN.AWACS
-						end
-
-						for name, value in pairs(callsignTable) do
-							if value == missionCallsignId then
-								missionCallsignName = name
-							end
-						end
-						
-					else
-						missionCallsignId = 1
-					end
-
-					local missionUnit = spawnTemplate.units[1]
-
-					if type(missionUnit["callsign"]) == "table" then
-						-- local missionCallsign = string.format("%s%d1", missionCallsignName, missionCallsignNumber)
-						missionUnit["callsign"]["name"] = string.format("%s%d1", missionCallsignName, missionCallsignNumber)
-						missionUnit["callsign"][1] = missionCallsignId
-						missionUnit["callsign"][2] = missionCallsignNumber
-						missionUnit["callsign"][3] = 1
-						_msg = string.format(self.traceTitle .. "Callsign for mission %s is %s", mission.name, spawnTemplate.units[1]["callsign"]["name"])
-						SUPPORTAC:T(_msg)
-					elseif type(missionUnit["callsign"]) == "number" then
-						missionUnit["callsign"] = tonumber(missionCallsignId)
-					else
-						missionUnit["callsign"] = missionCallsignId
-					end
-					
-					local missionCountryid = mission.countryid or SUPPORTAC.missionDefault.countryid
-					local missionCoalition = mission.coalition or SUPPORTAC.missionDefault.coalition
-					local missionGroupCategory = mission.groupCategory or SUPPORTAC.missionDefault.groupCategory
-
-					-- add mission spawn object using template in SPAWNTEMPLATES.templates[missionSpawnType]
-					mission.missionSpawnTemplate = SPAWN:NewFromTemplate(spawnTemplate, missionSpawnType, missionSpawnAlias)
-						:InitCountry(missionCountryid) -- set spawn countryid
-						:InitCoalition(missionCoalition) -- set spawn coalition
-						:InitCategory(missionGroupCategory) -- set category
-				else -- FIND MISSION SPAWN TEMPLATE
-						skip = true -- can't exit to the next iteration so skip the rest of the mission creation
-				end -- FIND MISSION SPAWN TEMPLATE
-
-				-- if missionSpawnTamplate was not created continue to next iteration, otherwise set spawn inits and create a new mission
-				if skip then -- CHECK SKIP
-					_msg = string.format(self.traceTitle .. "Start - template for type %s for mission %s is not present in MIZ or as a predefined template!", missionSpawnType, missionSpawnAlias)
-					SUPPORTAC:E(_msg)
-				else -- CHECK SKIP
-					-- mission spawn object defaults
-					mission.missionSpawnTemplate:InitLateActivated() -- set template to late activated
-					mission.missionSpawnTemplate:InitPositionCoordinate(mission.spawnCoordinate) -- set the default location at which the template is created
-					mission.missionSpawnTemplate:InitHeading(mission.heading) -- set the default heading for the spawn template
-					mission.missionSpawnTemplate:OnSpawnGroup(
-						function(spawngroup)
-							local spawnGroupName = spawngroup:GetName()
-							_msg = string.format(SUPPORTAC.traceTitle .. "Spawned Group %s", spawnGroupName)
-							BASE:T(_msg)
-		
-							spawngroup:CommandSetUnlimitedFuel(spawnUnlimitedFuel)
-							spawngroup:CommandSetCallsign(mission.callsign, mission.callsignNumber) -- set the template callsign
-						end
-						,mission
-					)
-
-					_msg = string.format(self.traceTitle .. "New late activated mission spawn template added for %s", missionSpawnAlias)
-					SUPPORTAC:T({_msg, mission.missionSpawnTemplate})
-					
-					-- call NewMission() to create the initial mission for the support aircraft
-					-- subsequent mission restarts will be called after the mission's AUFTRAG is cancelled
-					SUPPORTAC:NewMission(mission, 0) -- create new mission with specified delay to flightgroup activation
-				end -- CHECK SKIP
-			
-			else -- CHECK HOME AIRBASE
-				
-				_msg = string.format(self.traceTitle .. "Start - Default Home Airbase for %s not defined! Mission skipped.", missionTheatre)
-				SUPPORTAC:E(_msg)
-
-			end -- CHECK HOME AIRBASE
-
-		else -- CHECK MISSION ZONE
-			_msg = string.format(self.traceTitle .. "Start - Zone %s not found! Mission skipped.", mission.zone)
-			SUPPORTAC:E(_msg)
-		end -- CHECK MISSION ZONE
-
-	end -- FOR-DO LOOP
-
-end -- SUPPORTAC:Start()
-
--- function to create new support mission and flightGroup
-function SUPPORTAC:NewMission(mission, initDelay)
-	_msg = string.format(self.traceTitle .. "Create new mission for %s", mission.name)
-	SUPPORTAC:T(_msg)
-
-	-- create new mission
-	local newMission = {}
-	local missionCoordinate = mission.missionCoordinate
-	local missionAltitude = mission.flightLevel * 100
-	local missionSpeed = mission.speed
-	local missionHeading = mission.heading
-	local missionDespawn = mission.despawn or SUPPORTAC.missionDefault.despawn
-	
-	-- use appropriate AUFTRAG type for mission
-	if mission.category == SUPPORTAC.category.tanker then
-		local missionLeg = mission.leg or SUPPORTAC.missionDefault.tankerLeg -- set leg length. Either mission defined or use default for tanker.
-		-- create new tanker AUFTRAG mission
-		newMission = AUFTRAG:NewTANKER(
-		missionCoordinate, 
-		missionAltitude, 
-		missionSpeed, 
-		missionHeading, 
-		missionLeg
-		)
-		_msg = string.format(self.traceTitle .. "New mission created: %s", newMission:GetName())
-		SUPPORTAC:T(_msg)
-	elseif mission.category == SUPPORTAC.category.awacs then
-		local missionLeg = mission.leg or SUPPORTAC.missionDefault.awacsLeg -- set leg length. Either mission defined or use default for AWACS.
-		-- create new AWACS AUFTRAG mission
-		newMission = AUFTRAG:NewAWACS(
-		missionCoordinate,
-		missionAltitude,
-		missionSpeed,
-		missionHeading,
-		missionLeg
-		)
-		_msg = string.format(self.traceTitle .. "New mission created: %s", newMission:GetName())
-		SUPPORTAC:T(_msg)
-	else
-		_msg = self.traceTitle .. "Mission category not defined!"
-		SUPPORTAC:E(_msg)
-		return -- exit mission creation
-	end
-
-	newMission:SetEvaluationTime(5)
-
-	if mission.tacan ~= nil then
-		newMission:SetTACAN(mission.tacan, mission.tacanid)
-	end
-
-	newMission:SetRadio(mission.radio)
-
-	local despawnDelay = mission.despawnDelay or SUPPORTAC.missionDefault.despawnDelay
-	local activateDelay = (mission.activateDelay or SUPPORTAC.missionDefault.activateDelay) + despawnDelay
-
-	-- spawn new group
-	local spawnGroup = mission.missionSpawnTemplate:SpawnFromCoordinate(mission.spawnCoordinate)
-	_msg = string.format(self.traceTitle .. "New late activated group %s spawned.", spawnGroup:GetName())
-	SUPPORTAC:T({_msg, spawnGroup})
-
-	-- create new flightGroup
-	local flightGroup = FLIGHTGROUP:New(spawnGroup)
-		:SetDefaultCallsign(mission.callsign, mission.callsignNumber)
-		:SetDefaultRadio(SUPPORTAC.missionDefault.radio)
-		--:SetDefaultAltitude(mission.flightLevel * 100)
-		:SetDefaultSpeed(mission.speed) -- mission.speed + (mission.flightLevel / 2)
-		
-	-- add an initial waypoint between the aircraft and the mission zone
-	--flightGroup:AddWaypoint(mission.waypointCoordinate, missionSpeed)
-	flightGroup:SetHomebase(mission.homeAirbase)
-
-	flightGroup:Activate(activateDelay)
-
-	-- function call after flightGroup is spawned
-	-- assign mission to new ac
-	function flightGroup:OnAfterSpawned()
-		_msg = string.format(SUPPORTAC.traceTitle .. "Flightgroup %s activated.", self:GetName())
-		SUPPORTAC:T(_msg)
-		-- assign mission to flightGroup
-		self:AddMission(newMission)
-	end
-
-	-- function called after flightGroup starts mission
-	-- set RTB criteria
-	function flightGroup:OnAfterMissionStart()
-		local missionName = newMission:GetName()
-		local flightGroupName = self:GetName()
-		local flightGroupCallSign = SUPPORTAC:GetCallSign(self)
-
-		_msg = string.format(SUPPORTAC.traceTitle .. "Mission %s for Flightgroup %s, %s has started.", missionName, flightGroupName, flightGroupCallSign) -- self:GetCallsignName(true)
-		SUPPORTAC:T(_msg)
-
-		self:SetFuelLowRefuel(false)
-		local fuelLowThreshold = mission.fuelLowThreshold or SUPPORTAC.missionDefault.fuelLowThreshold
-
-		if fuelLowThreshold > 0 then
-			self:SetFuelLowThreshold(fuelLowThreshold) -- tune fuel RTB trigger for each support mission
-		end
-
-		self:SetFuelLowRTB()
-
-		function flightGroup:OnAfterRTB()
-			_msg = string.format(SUPPORTAC.traceTitle .. "Flightgroup %s is RTB.", flightGroupName)
-			SUPPORTAC:T(_msg)
-		end
-
-		function newMission:OnAfterDone()
-			local missionName = self.name
-			local missionFreq = mission.radio
-			local flightGroupName = flightGroup:GetName()
-			local flightGroupCallSign = SUPPORTAC:GetCallSign(flightGroup)
-		
-			_msg = string.format(SUPPORTAC.traceTitle .. "newMission OnAfterDone - Mission %s for Flightgroup %s is done.", missionName, flightGroupName)
-			SUPPORTAC:T(_msg)
-
-			-- prepare off-station advisory message
-			local msgText = string.format("All players, %s is going off station. A new aircraft will be on station shortly.", flightGroupCallSign)
-			-- send off station advisory message
-			SUPPORTAC:SendMessage(msgText, missionFreq)
-			-- create a new mission to replace the departing support aircraft 
-			SUPPORTAC:NewMission(mission)
-
-			-- despawn this flightgroup, if it's still alive
-			if flightGroup:IsAlive() and missionDespawn then
-				_msg = string.format(SUPPORTAC.traceTitle .. "newMission OnAfterDone - Flightgroup %s will be despawned after %d seconds.", flightGroupName, despawnDelay)
-				SUPPORTAC:T(_msg)
-
-				flightGroup:Despawn(despawnDelay)
-			end
-
-		end -- newMission:OnAfterDone()
-
-	end -- flightGroup:OnAfterMissionStart()
-
-end -- SUPPORTAC:NewMission()
-
--- function called to send message
--- if MISSIONSRS is loaded, message will be sent on aupport aircraft freq.
--- Otherwise, message will be sent as text to all.
-function SUPPORTAC:SendMessage(msgText, msgFreq)
-	local _msg = string.format(self.traceTitle .. "SendMessage: %s", msgText)
-	SUPPORTAC:T(_msg)
-	if useSRS then
-		MISSIONSRS:SendRadio(msgText, msgFreq)
-	else
-		MESSAGE:New(msgText):ToAll()
-	end
-end -- SUPPORTAC:SendMessage()
-
--- function called to return callsign name with major number only
-function SUPPORTAC:GetCallSign(flightGroup)
-	local callSign=flightGroup:GetCallsignName()
-	if callSign then
-		local callsignroot = string.match(callSign, '(%a+)') or "Ghost" -- Uzi
-		local callnumber = string.match(callSign, "(%d+)$" ) or "91" -- 91
-		local callnumbermajor = string.char(string.byte(callnumber,1)) -- 9
-		callSign = callsignroot.." "..callnumbermajor -- Uzi/Victory 9
-		return callSign
-	end
-	-- default callsign to return if it cannot be determined
-	return "Ghostrider 1"
-end -- SUPPORTAC:GetCallSign()
-
--- Support categories used to define which AUFTRAG type is used
-SUPPORTAC.category = {
-	tanker = 1,
-	awacs = 2,
-} -- end SUPPORTAC.category
-
--- Support aircraft types. Used to define the late activated group to be used as the spawn template
--- for the type. A check is made to ensure the template exists in the miz or that the value is the
--- same as the ID in the SPAWNTEMPLATES.templates block (see supportaircraft.lua)
-SUPPORTAC.type = {
-	tankerBoom = "KC-135", -- template to be used for type = "tankerBoom" OR SPAWNTEMPLATES.templates["KC-135"]
-	tankerProbe = "KC-135MPRS", -- template to be used for type = "tankerProbe" OR SPAWNTEMPLATES.templates["KC-135MPRS"]
-	tankerProbeC130 = "KC-130", -- template for type = "tankerProbeC130" OR SPAWNTEMPLATES.templates["KC-130"]
-	awacsE3a = "AWACS-E3A", -- template to be used for type = "awacsE3a" OR SPAWNTEMPLATES.templates["AWACS-E3A"]
-	awacsE2d = "AWACS-E2D", -- template to be used for type = "awacsE2d" OR SPAWNTEMPLATES.templates["AWACS-E2D"]
-	awacsA50 = "AWACS-A50", -- template to be used for type = "awacsA50" OR SPAWNTEMPLATES.templates["AWACS-A50"]
-} -- end SUPPORTAC.type
-
--- Default home airbase. Added to the mission spawn template if not defined in
--- the mission data block
-SUPPORTAC.homeAirbase = {
-	["Nevada"] = AIRBASE.Nevada.Nellis_AFB,
-	["Caucasus"] = AIRBASE.Caucasus.Tbilisi_Lochini,
-	["PersianGulf"] = AIRBASE.PersianGulf.Al_Dhafra_AB,
-	["Syria"] = AIRBASE.Syria.Incirlik,
-	["Sinai"] = AIRBASE.Sinai.Cairo_International_Airport,
-	["MarianaIslands"] = AIRBASE.MarianaIslands.Andersen_AFB,
-} -- end SUPPORTAC.homeAirbase
-
--- default mission values to be used if not specified in the flight's mission data block
-SUPPORTAC.missionDefault = {
-	name = "TKR", -- default name for the mission
-	category = SUPPORTAC.category.tanker, -- default aircraft category
-	type = SUPPORTAC.type.tankerBoom, -- default spawn template that will be used
-	callsign = CALLSIGN.Tanker.Texaco, -- default callsign
-	callsignNumber = 1, -- default calsign number
-	tacan = 100, -- default TACAN preset
-	tacanid = "TEX", -- default TACAN ID
-	radio = 251, -- default radio freq the ac will use when not on mission
-	flightLevel = 200, -- default FL at which to fly mission
-	speed = 315, -- default speed at which to fly mission
-	heading = 90, --default heading on which to spawn aircraft
-	tankerLeg = 50, -- default tanker racetrack leg length
-	awacsLeg = 70, -- default awacs racetrack leg length
-	activateDelay = 10, -- delay, in seconds, after the previous ac has despawned before the new ac will be activated 
-	despawnDelay = 30, -- delay, in seconds, before the old ac will be despawned
-	unlimitedFuel = true, -- default unlimited fuel. Set to false in data if fuel RTB is desired
-	fuelLowThreshold = 30, -- default % fuel low level to trigger RTB
-	spawnDistance = 1, -- default distance in NM from the mission zone at which to spawn aircraft
-	countryid = country.id.USA, -- default country to be used for predfined templates
-	coalition = coalition.side.BLUE, -- default coalition to use for predefined templates
-	groupCategory = Group.Category.AIRPLANE, -- default group category to use for predefined templates
-	despawn = true, -- default deSpawn option. if false or nil the aircraft will fly to hom base on RTB
-} -- end SUPPORTAC.missionDefault
-
-
--- END SUPPORT AIRCRAFT SECTION  
---------------------------------[supportaircraft_data.lua]-------------------------------- 
- 
---------------------------------------------
---- Support Aircraft Defined in this file
---------------------------------------------
-
--- **NOTE**: SUPPORTAIRCRAFT.LUA MUST BE LOADED BEFORE THIS FILE IS LOADED!
-
--- This file contains the config data specific to the miz in which it will be used.
--- All functions and key values are in SUPPORTAIRCRAFT.LUA, which should be loaded first
--- supportaircraft_data.lua 
-
--- Error prevention. Create empty container if SUPPORTAIRCRAFT.LUA is not loaded or has failed.
-if not SUPPORTAC then 
-    SUPPORTAC = {}
-end
-
--- Support aircraft missions. Each mission block defines a support aircraft mission. Each block is processed
--- and an aircraft will be spawned for the mission. When the mission is cancelled, eg after RTB or if it is destroyed,
--- a new aircraft will be spawned and a fresh AUFTRAG created.
-SUPPORTAC.mission = {
-    -- {
-    --   name = "ARWK", -- text name for this support mission. Combined with this block's index and the mission type to define the group name on F10 map
-    --   category = SUPPORTAC.category.tanker, -- support mission category. Used to determine the auftrag type. Options are listed in SUPPORTAC.category
-    --   type = SUPPORTAC.type.tankerBoom, -- type defines the spawn template that will be used
-    --   zone = "ARWK", -- ME zone that defines the start waypoint for the spawned aircraft
-    --   callsign = CALLSIGN.Tanker.Arco, -- callsign under which the aircraft will operate
-    --   callsignNumber = 1, -- primary callsign number that will be used for the aircraft
-    --   tacan = 35, -- TACAN channel the ac will use
-    --   tacanid = "ARC", -- TACAN ID the ac will use. Also used for the morse ID
-    --   radio = 276.5, -- freq the ac will use when on mission
-    --   flightLevel = 160, -- flight level at which to spwqan aircraft and at which track will be flown
-    --   speed = 315, -- IAS when on mission
-    --   heading = 94, -- mission outbound leg in degrees
-    --   leg = 40, -- mission leg length in NM
-    --   fuelLowThreshold = 30, -- lowest fuel threshold at which RTB is triggered
-    --   activateDelay = 5, -- delay, after this aircraft has been despawned, before new aircraft is spawned
-    --   despawnDelay = 10, -- delay before this aircraft is despawned
-    -- },
-    {
-      name = "ARWK", -- TANKER
-      category = SUPPORTAC.category.tanker,
-      type = SUPPORTAC.type.tankerProbe,
-      zone = "ARWK",
-      callsign = CALLSIGN.Tanker.Shell,
-      callsignNumber = 1,
-      tacan = 115,
-      tacanid = "SHL",
-      radio = 317.5,
-      flightLevel = 215,
-      speed = 315,
-      heading = 94,
-      leg = 40,
-    },
-    {
-      name = "ARWK", -- TANKER
-      category = SUPPORTAC.category.tanker,
-      type = SUPPORTAC.type.tankerBoom,
-      zone = "ARWK",
-      callsign = CALLSIGN.Tanker.Texaco,
-      callsignNumber = 1,
-      tacan = 105,
-      tacanid = "TEX",
-      radio = 317.55,
-      flightLevel = 240,
-      speed = 315,
-      heading = 94,
-      leg = 40,
-    },
-    {
-      name = "ARXJYJ", -- TANKER
-      category = SUPPORTAC.category.tanker,
-      type = SUPPORTAC.type.tankerProbe,
-      zone = "ARXJYJ",
-      callsign = CALLSIGN.Tanker.Shell,
-      callsignNumber = 4,
-      tacan = 119,
-      tacanid = "SHL",
-      radio = 317.9,
-      flightLevel = 215,
-      speed = 315,
-      heading = 94,
-      leg = 40,
-    },
-    {
-      name = "ARXJYJ", -- TANKER
-      category = SUPPORTAC.category.tanker,
-      type = SUPPORTAC.type.tankerBoom,
-      zone = "ARXJYJ",
-      callsign = CALLSIGN.Tanker.Texaco,
-      callsignNumber = 4,
-      tacan = 120,
-      tacanid = "TEX",
-      radio = 317.95,
-      flightLevel = 240,
-      speed = 315,
-      heading = 94,
-      leg = 40,
-    },
-    {
-      name = "ARYHBN", -- TANKER
-      category = SUPPORTAC.category.tanker,
-      type = SUPPORTAC.type.tankerProbe,
-      zone = "ARYHBN",
-      callsign = CALLSIGN.Tanker.Shell,
-      callsignNumber = 2,
-      tacan = 116,
-      tacanid = "SHL",
-      radio = 317.6,
-      flightLevel = 215,
-      speed = 315,
-      heading = 94 ,
-      leg = 40,
-    },
-    {
-      name = "ARYHBN", -- TANKER
-      category = SUPPORTAC.category.tanker,
-      type = SUPPORTAC.type.tankerBoom,
-      zone = "ARYHBN",
-      callsign = CALLSIGN.Tanker.Texaco,
-      callsignNumber = 2,
-      tacan = 106,
-      tacanid = "TEX",
-      radio = 317.65,
-      flightLevel = 240,
-      speed = 315,
-      heading = 94,
-      leg = 40,
-    },
-    {
-      name = "ARDP", -- TANKER
-      category = SUPPORTAC.category.tanker,
-      type = SUPPORTAC.type.tankerProbe,
-      zone = "ARDP",
-      callsign = CALLSIGN.Tanker.Shell,
-      callsignNumber = 3,
-      tacan = 117,
-      tacanid = "SHL",
-      radio = 317.7,
-      flightLevel = 215,
-      speed = 315,
-      heading = 324,
-      leg = 40,
-    },
-    {
-      name = "ARDP", -- TANKER
-      category = SUPPORTAC.category.tanker,
-      type = SUPPORTAC.type.tankerProbe,
-      zone = "ARDP",
-      callsign = CALLSIGN.Tanker.Texaco,
-      callsignNumber = 3,
-      tacan = 107,
-      tacanid = "TEX",
-      radio = 317.75,
-      flightLevel = 240,
-      speed = 315,
-      heading = 324,
-      leg = 40,
-    },
-    {
-      name = "AWACSWKYJ", -- AWACS
-      category = SUPPORTAC.category.awacs,
-      type = SUPPORTAC.type.awacsE3a,
-      zone = "AWACSWKYJ",
-      callsign = CALLSIGN.AWACS.Magic,
-      callsignNumber = 1,
-      tacan = nil,
-      tacanid = nil,
-      radio = 282.025,
-      flightLevel = 300,
-      speed = 400,
-      heading = 123,
-      leg = 70,
-      activateDelay = 5,
-      despawnDelay = 10,
-      fuelLowThreshold = 15,
-    },
-}
-
--- call the function that initialises the SUPPORTAC module
-if SUPPORTAC.Start ~= nil then
-  _msg = "[SUPPORTAC] SUPPORTAIRCRAFT_DATA - call SUPPORTAC:Start()."
-  BASE:I(_msg)
-  SUPPORTAC:Start()
-else
-  _msg = "[SUPPORTAC] function SUPPORTAC.Start() is missing!"
-  BASE:E(_msg)
-end
-  
---------------------------------[core\staticranges.lua]-------------------------------- 
- 
-env.info( "[JTF-1] staticranges.lua" )
-
---
--- Add static bombing and strafing range(s)
---
--- Two files are used by this module;
---     staticranges.lua
---     staticranges_data.lua
---
--- 1. staticranges.lua
--- Core file. Contains functions, key values and GLOBAL settings.
---
--- 2. staticranges_data.lua
--- Contains settings that are specific to the miz.
--- Settings in staticranges_data.lua will override the defaults in the core file.
---
--- Load order in miz MUST be;
---     1. staticranges.lua
---     2. staticranges_data.lua
---
-
-STATICRANGES = {}
-STATICRANGES.traceTitle = "[JTF-1 STATICRANGES] "
-
-local _msg
-
-STATICRANGES.default = {
-	strafeMaxAlt             = 1530, -- [5000ft] in metres. Height of strafe box.
-	strafeBoxLength          = 3000, -- [10000ft] in metres. Length of strafe box.
-	strafeBoxWidth           = 300, -- [1000ft] in metres. Width of Strafe pit box (from 1st listed lane).
-	strafeFoullineDistance   = 610, -- [2000ft] in metres. Min distance for from target for rounds to be counted.
-	strafeGoodPass           = 20, -- Min hits for a good pass.
-	--rangeSoundFilesPath      = "Range Soundfiles/" -- Range sound files path in miz
-}
-
-function STATICRANGES:Start()
-	_msg = self.traceTitle .. "Start()."
-	BASE:T(_msg)
-	-- set defaults
-	self.strafeMaxAlt = self.strafeMaxAlt or self.default.strafeMaxAlt
-	self.strafeBoxLength = self.strafeBoxLength or self.default.strafeBoxLength
-	self.strafeBoxWidth = self.strafeBoxWidth or self.default.strafeBoxWidth
-	self.strafeFoullineDistance = self.strafeFoullineDistance or self.default.strafeFoullineDistance
-	self.strafeGoodPass = self.strafeGoodPass or self.default.strafeGoodPass
-	-- Parse STATICRANGES.Ranges and build each range
-	if self.Ranges then
-		_msg = self.traceTitle .. "Add ranges."
-		BASE:T({_msg,self.Ranges})
-		self:AddStaticRanges(self.Ranges)
-	else
-		_msg = self.traceTitle .. "No Ranges defined!"
-		BASE:E(_msg)
-	end
-end
-
-function STATICRANGES:AddStaticRanges(ranges)
-	_msg = self.traceTitle .. "AddStaticRanges()."
-	BASE:T(_msg)
-	for rangeIndex, rangeData in ipairs(ranges) do
-
-		-- create RANGE object
-		local range = RANGE:New(rangeData.rangeName)
-			:DebugOFF()
-			:SetMaxStrafeAlt(self.strafeMaxAlt)
-			:SetDefaultPlayerSmokeBomb(false)
-
-		-- add range zone if defined
-		local rangeZone = ZONE:FindByName(rangeData.rangeZone) or ZONE_POLYGON:FindByName(rangeData.rangeZone)
-		if not rangeZone then
-			_msg = string.format(self.traceTitle .. "Range Zone for %s not defined!", rangeData.rangeName)
-			BASE:E(_msg)
-		else
-			_msg = string.format(self.traceTitle .. "Add Range Zone %s for %s.", rangeZone:GetName(), rangeData.rangeName)
-			BASE:T(_msg)
-			range:SetRangeZone(rangeZone)
-		end
-
-		-- add groups of targets
-		if rangeData.groups ~= nil then 
-			_msg = string.format(self.traceTitle .. "Add range groups for %s.", rangeData.rangeName) 
-			BASE:T(_msg)
-			for tgtIndex, tgtName in ipairs(rangeData.groups) do
-				range:AddBombingTargetGroup(GROUP:FindByName(tgtName))
-			end
-		end
-		
-		-- add individual targets
-		if rangeData.units ~= nil then 
-			_msg = string.format(self.traceTitle .. "Add range units for %s.", rangeData.rangeName)
-			BASE:T(_msg)
-			for tgtIndex, tgtName in ipairs(rangeData.units) do
-				range:AddBombingTargets( tgtName )
-			end
-		end
-		
-		-- add strafe targets
-		if rangeData.strafepits ~= nil then 
-			_msg = string.format(self.traceTitle .. "Add range strafe pits for %s.", rangeData.rangeName)
-			BASE:T(_msg)
-			for strafepitIndex, strafepit in ipairs(rangeData.strafepits) do
-				range:AddStrafePit(strafepit, self.strafeBoxLength, self.strafeBoxWidth, nil, true, self.strafeGoodPass, self.strafeFoullineDistance)
-			end  
-		end
-
-		-- add range radio
-		if rangeData.rangeControlFrequency ~= nil then
-			_msg = string.format(self.traceTitle .. "Range Control frequency = %.3f for %s.", rangeData.rangeControlFrequency, rangeData.rangeName)
-			BASE:T(_msg)
-		end
-
-		-- Start the Range
-		range:Start()
-	end
-end
-
---- END STATIC RANGES  
---------------------------------[staticranges_data.lua]-------------------------------- 
- 
-env.info( "[JTF-1] staticranges_data" )
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
---- STATIC RANGES SETTINGS FOR MIZ
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
---
--- This file MUST be loaded AFTER staticranges.lua
---
--- These values are specific to the miz and will override the default values in STATICRANGES.default
---
-
--- Error prevention. Create empty container if module core lua not loaded.
-if not STATICRANGES then 
-	STATICRANGES = {}
-	STATICRANGES.traceTitle = "[JTF-1 STATICRANGES] "
-	_msg = self.traceTitle .. "CORE FILE NOT LOADED!"
-	BASE:E(_msg)
-	end
-
--- These values will overrides the default values in staticranges.lua
-STATICRANGES.strafeMaxAlt             = 1530 -- [5000ft] in metres. Height of strafe box.
-STATICRANGES.strafeBoxLength          = 3000 -- [10000ft] in metres. Length of strafe box.
-STATICRANGES.strafeBoxWidth           = 300 -- [1000ft] in metres. Width of Strafe pit box (from 1st listed lane).
-STATICRANGES.strafeFoullineDistance   = 610 -- [2000ft] in metres. Min distance for from target for rounds to be counted.
-STATICRANGES.strafeGoodPass           = 20 -- Min hits for a good pass.
-
--- Range targets table
-STATICRANGES.Ranges = {
-	{ --YG77
-		rangeId               = "YG77",
-		rangeName             = "Range YG77",
-		rangeZone             = "ZONE_YG77",
-		rangeControlFrequency = 250.1,
-		groups = {
-		},
-		units = {
-			"RANGE_YG77_EAST_bombing", 
-			"RANGE_YG77_WEST_bombing",
-			"RANGE_YG77_TAC_01",
-			"RANGE_YG77_TAC_02",
-			"RANGE_YG77_TAC_03",
-			"RANGE_YG77_TAC_04",
-			"RANGE_YG77_TAC_05",
-			"RANGE_YG77_TAC_06",
-			"RANGE_YG77_TAC_07",
-			"RANGE_YG77_TAC_08",
-			"RANGE_YG77_TAC_09",
-			"RANGE_YG77_TAC_10"
-		},
-		strafepits = {
-			{ 	-- WEST
-				"RANGE_YG77_strafepit_A",
-				"RANGE_YG77_strafepit_B"
-			},
-			{ 	-- EAST
-				"RANGE_YG77_strafepit_C",
-				"RANGE_YG77_strafepit_D"
-			},
-		},
-	},--YG77 END
-	{ --BM22
-		rangeId               = "BM22",
-		rangeName             = "Range BM22",
-		rangeZone             = "ZONE_BM22",
-		rangeControlFrequency = 250.2,
-		groups = {
-		},
-		units = {
-			"RANGE_BM64_bombing_01", 
-			"RANGE_BM64_bombing_02",
-			"RANGE_BM64_bombing_03",
-			"RANGE_BM64_bombing_04",
-			"RANGE_BM64_TAC_01",
-			"RANGE_BM64_TAC_02",
-			"RANGE_BM64_TAC_03",
-			"RANGE_BM64_TAC_04",
-			"RANGE_BM64_TAC_05",
-			"RANGE_BM64_TAC_06",
-			"RANGE_BM64_TAC_07",
-			"RANGE_BM64_TAC_08",
-			"RANGE_BM64_TAC_09",
-			"RANGE_BM64_TAC_10",
-			"RANGE_BM64_TAC_11",
-			"RANGE_BM64_TAC_12",
-			"RANGE_BM64_TAC_13",
-			"RANGE_BM64_TAC_14",
-			"RANGE_BM64_TAC_15"
-		},
-		strafepits = {
-			{
-				"RANGE_BM64_Strafepit_A",
-				"RANGE_BM64_Strafepit_B"
-	    	},
-		},
-	},--BM22 END
-	{ --BM52
-		rangeId               = "BM52",
-		rangeName             = "Range BM52",
-		rangeZone             = "ZONE_BM52",
-		rangeControlFrequency = 250.3,
-		groups = {
-		},
-		units = {
-			"RANGE_BM52_WEST_bombing", 
-			"RANGE_BM52_EAST_bombing",
-		},
-		strafepits = {
-			{
-				"RANGE_BM52_strafepit_A",
-				"RANGE_BM52_strafepit_B",
-	    	},
-			{
-				"RANGE_BM52_strafepit_C",
-				"RANGE_BM52_strafepit_D",
-	    	},
-		},
-	},--BM52 END
-	{ --CR94
-		rangeId               = "CR94",
-		rangeName             = "Range CR94",
-		rangeZone             = "ZONE_CR94",
-		rangeControlFrequency = 250.4,
-		groups = {
-		},
-		units = {
-			"RANGE_CR94_WEST_bombing", 
-			"RANGE_CR94_EAST_bombing",
-		},
-		strafepits = {
-			{
-				"RANGE_CR94_strafepit_A",
-				"RANGE_CR94_strafepit_B",
-	    	},
-		},
-	},--CR94 END
-}
-  
--- Start the STATICRANGES module
-if STATICRANGES.Start then
-	_msg = STATICRANGES.traceTitle .. "Call Start()"
-	BASE:T(_msg)
-
-	STATICRANGES:Start()
-end  
---------------------------------[core\missionstrike.lua]-------------------------------- 
- 
-env.info("[JTF-1] mission_strike")
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
---- BEGIN MISSIONSTRIKE
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
---
--- Mission Strike Module
---
--- Templates can be either provided in the MIZ, or by using the SPAWNTEMPLATES module
--- 
--- If custom templates are to be used (ie in-MIZ) the groups musty either be named in
--- accordance with the names used in MISSIONSTRIKE.defenceTemplates,
--- MISSIONSTRIKE.campTemplates and MISSIONSTRIKE.convoyTemplates.
--- OR, they should be overriden in missionstrike_data.lua
---
-
-MISSIONSTRIKE = {}
-MISSIONSTRIKE.traceTitle = "[JTF-1 MISSIONSTRIKE] "
-MISSIONSTRIKE.version = "0.1"
-
-MISSIONSTRIKE.menu = {} -- MISSIONSTRIKE menus container
---MISSIONSTRIKE.spawn = {} -- MISSIONSTRIKE spawn objects container
-
--- start MISSIONSTRIKE module
-function MISSIONSTRIKE:Start()
-	_msg = self.traceTitle .. "Start()"
-	BASE:T(_msg)
-
-	-- add main menu
-	local textTop = "Strike Missions"
-	self.menu.top = MENU_COALITION:New( coalition.side.BLUE, textTop )
-
-	--- generate strike defence spawn templates if defined in missionstrike_data.lua
-	if self.defenceTemplates then
-		-- replace built-in defence templates with those listed in MISSIONSTRIKE.defenceTemplates
-		self.defenceSpawns = {}
-		for defIndex, defenceTemplate in pairs(self.defenceTemplates) do
-			for templateIndex = 1, #defenceTemplate do
-				local templateName = defenceTemplate[templateIndex]
-				_msg = string.format("%sStart(). Add defence spawn object %s", 
-					self.traceTitle, 
-					templateName
-				)
-				BASE:T(_msg)
-				local addSpawn = self:AddSpawnTemplate(templateName)
-				if addSpawn then
-					self.defenceSpawns[templateName] = addSpawn
-				else
-					_msg = string.format("%sError! Start(). NIL returned by AddSpawn() for template %s!", 
-						self.traceTitle, 
-						templateName
-					)
-					BASE:E(_msg)
-				end
-			end
-		end
-	end
-
-	-- generate camp spawn objects
-	if self.campTemplates then
-		self.campSpawns = {}
-		for type, template in pairs(self.campTemplates) do
-			-- type defence contains list of templates for random selection
-			if type == "defence" then
-				for index, defenceName in ipairs(template) do
-					_msg = string.format("%sAdd camp spawn defence object %s", 
-						self.traceTitle, 
-						defenceName
-					)
-					BASE:T(_msg)
-					local addSpawn = self:AddSpawnTemplate(defenceName)
-					if addSpawn then
-						self.campSpawns[defenceName] = addSpawn
-					else
-						_msg = string.format("%sError! NIL returned by AddSpawn() for template %s!", 
-							self.traceTitle, 
-							defenceName
-						)
-						BASE:E(_msg)
-					end
-				end
-			else
-				_msg = string.format("%sAdd camp spawn object %s", 
-					self.traceTitle, 
-					template
-				)
-				BASE:T(_msg)
-				local addSpawn = self:AddSpawnTemplate(template)
-				if addSpawn then
-					self.campSpawns[type] = addSpawn
-				else
-					_msg = string.format("%sError! Start(). NIL returned by AddSpawn() for template %s!", 
-						self.traceTitle, 
-						template
-					)
-					BASE:E(_msg)
-				end
-			end
-		end
-	end
-
-	-- generate convoy spawn objects
-	if self.convoyTemplates then
-		-- table of convoy spawn objects
-		self.convoyspawn = {}
-		for templateType, templateValue in pairs(self.convoyTemplates) do
-			-- add type for templates
-			self.convoyspawn[templateType] = {}
-			-- step through each type template
-			for index, typeTemplate in ipairs(templateValue) do
-				_msg = string.format("%sAdd convoy spawn type %s at index %d", 
-					self.traceTitle, 
-					templateType, 
-					index
-				)
-				BASE:T(_msg)
-				local addSpawn = self:AddSpawnTemplate(typeTemplate.template)
-				local description = typeTemplate.description
-				local threats = typeTemplate.threats
-				if addSpawn then
-					self.convoyspawn[templateType][index] = addSpawn
-					self.convoyspawn[templateType][index]["description"] = description
-					self.convoyspawn[templateType][index]["threats"] = threats
-				else
-					_msg = string.format("%sError adding convoy spawn. NIL returned by AddSpawn() for template index %d!", 
-						self.traceTitle, 
-						index
-					)
-					BASE:E(_msg)
-				end
-			end
-		end
-	end
-
-	--- initialise missions and generate strike attack menus ---
-	for strikeIndex, mission in pairs(self.missions) do -- step through self.mission and grab the mission data for each key ( = "location")
-
-		-- set ID for mission
-		mission.strikeindex = strikeIndex
-
-		local strikeType = mission.striketype
-		local strikeRegion = mission.strikeregion
-		local strikeName = mission.strikename
-		local strikeIvo = mission.strikeivo
-		local strikeZone = mission.strikezone
-		local strikeOptions = mission.options
-		local strikeTargets = mission.striketargets
-
-		-- Mission root contains a strikezone
-		if strikeZone then
-
-			-- add a container for strikezone target spawn templates
-			if not mission.striketargetspawn then
-				mission.striketargetspawn = {}
-			end
-			
-			local zoneStrikeZone = ZONE:FindByName(strikeZone)
-			if zoneStrikeZone then
-				_msg = string.format("%sStrike Zone %s found.", 
-					self.traceTitle, 
-					strikeZone
-				)
-				BASE:T(_msg)
-
-				mission.zonestrikezone = zoneStrikeZone
-
-				-- add text for map mark and briefing message to mission
-				local strikeMarkText, strikeAttackBriefSummary, strikeAttackBriefMission = self:AddBriefingText(mission)
-				mission.strikemarktext = strikeMarkText
-				mission.strikeattackbriefsummary = strikeAttackBriefSummary
-				mission.strikeattackbriefmission = strikeAttackBriefMission
-
-				-- generate spawn templates for late activated groups in the mission.strikezone
-				local strikeTargetPrefix = mission.striketargetprefix
-
-				-- build a set of groups with names containing the mission strikeTargetPrefix
-				local setStrikeTargetGroups = SET_GROUP:New()
-					:FilterPrefixes(strikeTargetPrefix)
-					:FilterOnce()
-
-				if setStrikeTargetGroups == nil then
-					_msg = string.format("%sNo target templates found with prefix %s in zone %s", 
-						self.traceTitle, 
-						strikeTargetPrefix, 
-						strikeZone
-					)
-					BASE:E(_msg)
-				else
-					_msg = string.format("%sStrike Target templates in zone %s", 
-						self.traceTitle, 
-						strikeZone
-					)
-					BASE:T({_msg, setStrikeTargetGroups})
-					-- add a spawn template for each group
-					setStrikeTargetGroups:ForEachGroup(
-						function(group)
-							local groupName = group:GetName()
-
-							-- add spawn to mission
-							mission.striketargetspawn[groupName] = SPAWN:New(groupName)
-								:InitUnControlled()
-
-							_msg = string.format("%sCreate Strike Target spawn %s", 
-								self.traceTitle, 
-								groupName
-							)
-							BASE:T(_msg)
-
-						end
-					) -- end ForEachGroup
-				end
-				-- add asset spawn zones on map to mission if not already explicitly defined
-				if mission.zones == nil then
-					_msg = string.format("%sNo mission.zones pre-defined for strike zone %s. Building list of sub-zones using prefix.", 
-						self.traceTitle, 
-						strikeZone
-					)
-					BASE:T(_msg)
-					-- add table of zones to mission
-					mission.zones = {}
-					local zonePrefix = mission.zoneprefix
-					-- find zones with this mission's prefix and add them to the zone list
-					if zonePrefix then
-						for _, zone in pairs(zonePrefix) do
-							local class = zone.class
-							local prefix = zone.prefix
-							mission.zones[class] = {}
-							local setStrikeZone = SET_ZONE:New()
-								:FilterPrefixes(prefix)
-								:FilterOnce()
-							if setStrikeZone == nil then
-								_msg = string.format("%sNo % class zones found with prefix %s for strike zone %s", 
-									self.traceTitle, 
-									class,  
-									prefix, 
-									strikeZone
-								)
-								BASE:E(_msg)
-							else
-								setStrikeZone:ForEachZone(
-									function(zone)
-										local addZone = {}
-										addZone.class = class
-										addZone.loc = zone:GetName()
-										addZone.is_open = true
-										-- add zone to mission zone table
-										table.insert(mission.zones[class], addZone)
-									end)
-								_msg = self.traceTitle .. "Zone table"
-								BASE:T({_msg, mission.zones[class]})
-							end
-						end
-					end
-				end
-				-- add list of static objects to mission if not already explicitly defined
-				if mission.statics == nil then
-					mission.statics = {}
-					_msg = string.format("%sAdd Statics for mission %s.", 
-						self.traceTitle, 
-						strikeName
-					)
-					BASE:T(_msg)
-					-- build a SET of static object within the mission.strikezone
-					local setStrikeTargetStatics = SET_STATIC:New()
-						:FilterZones({zoneStrikeZone})
-						:FilterStart()
-					-- add each static to the mission
-					setStrikeTargetStatics:ForEachStatic(
-						function(static)
-							local addStatic = static
-							local staticName = addStatic:GetName()
-							addStatic.isAlive = true
-							table.insert(mission.statics, addStatic)
-							_msg = string.format("%sStatic %s added to mission %s", 
-								self.traceTitle, 
-								staticName, 
-								strikeName
-							)
-							BASE:T({_msg, static})
-						end
-					)
-				end
-				-- clear the mission static objects in the zone from the map. respawn them when mission is activated
-				self:RemoveStatics(mission)
-			-- log error if zone is not found in the miz
-			else
-				_msg = string.format("%sError! Strike Zone %s not found in MIZ!", 
-					self.traceTitle, 
-					mission.strikezone
-				)
-				BASE:E(_msg)
-			end
-
-		elseif mission.striketargets ~= nil then -- mission has multiple strike targets from which to randomly select one
-			-- step through each of the targets in the strike mission
-			for index, strikeTarget in pairs(mission.striketargets)  do
-				_msg = string.format("%s",self.traceTitle)
-				BASE:T({_msg, strikeTarget = strikeTarget})
-
-				-- Create a Strike Name
-				-- get coordinates of strikezone
-				local strikeZone = strikeTarget.strikezone
-				local zoneStrikeZone = ZONE:FindByName(strikeZone)
-				if zoneStrikeZone ~= nil then
-
-					strikeTarget.zonestrikezone = zoneStrikeZone
-
-					local spawnZoneCoord = zoneStrikeZone:GetCoordinate()
-					-- convert to MGRS
-					local spawnZoneMGRS = spawnZoneCoord:ToStringMGRS(_SETTINGS:SetMGRS_Accuracy(2))
-					-- remove spaces from MGRS and take use the last four characters
-					local strikeName = string.sub(string.gsub(spawnZoneMGRS, "%s+", ""), -6, -1)
-	
-					-- add mission context to the selected target
-					strikeTarget.striketype = mission.striketype
-					strikeTarget.strikeregion = mission.strikeregion
-					strikeTarget.strikename = strikeName
-					strikeTarget.strikeindex = strikeName
-					strikeTarget.strikemission = mission.strikemission
-	
-					-- add text for map mark and briefing message to mission
-					_msg = string.format("%sAdd briefing text to selected target %s", 
-						self.traceTitle, 
-						strikeName
-					)
-					BASE:T(_msg)
-					if mission.options then
-						strikeTarget.strikeattackbriefsummary = {}
-						strikeTarget.strikeattackbriefmission = {}
-						strikeTarget.strikemarktext = {}
-						for _, option in ipairs(mission.options) do
-							local optionText = string.format(" %s ", option)
-							local strikeMarkText, strikeAttackBriefSummary, strikeAttackBriefMission = self:AddBriefingText(strikeTarget, option)
-							strikeTarget.strikemarktext[option] = strikeMarkText
-							strikeTarget.strikeattackbriefsummary[option] = strikeAttackBriefSummary
-							strikeTarget.strikeattackbriefmission[option] = strikeAttackBriefMission
-							--strikeTarget.strikemarktext[option], strikeTarget.strikeattackbrieftext[option] = self:AddBriefingText(strikeTarget, option)
-						end						
-					else
-						local strikeMarkText, strikeAttackBriefSummary, strikeAttackBriefMission = self:AddBriefingText(strikeTarget)
-						strikeTarget.strikemarktext = strikeMarkText
-						strikeTarget.strikeattackbriefsummary = strikeAttackBriefSummary
-						strikeTarget.strikeattackbriefmission = strikeAttackBriefMission
-					end
-
-				else
-					_msg = string.format("%sError. Zone %s for strike %s type %s in region %s %s not found!", 
-						self.traceTitle, 
-						strikeZone, 
-						strikeName, 
-						strikeType, 
-						strikeRegion
-					)
-					BASE:E(_msg)
-					return
-				end
-
-			end
-		else -- no targets in mission!
-			_msg = string.format("%sError. No targets defined for region %s, type %s, mission %s!",
-				self.traceTitle, 
-				strikeRegion,
-				strikeType,
-				strikeName
-			)
-			BASE:E(_msg)
-
-		end
-
-		-- Add menus for strike mission
-		_msg = string.format("%sAdding Menus for Type: %s, Region: %s, Name: %s, IVO: %s", 
-			self.traceTitle, 
-			strikeType, 
-			strikeRegion, 
-			strikeName, 
-			strikeIvo
-		)
-		BASE:T(_msg)
-
-		-- add strike type menu
-		if not self.menu[strikeType] then
-			-- menu text
-			local textType = string.format("%s Strike", strikeType)		
-			-- add menu
-			self.menu[strikeType] = MENU_COALITION:New( coalition.side.BLUE, 
-				textType, 
-				self.menu.top
-			)
-		end
-
-		-- add region menu
-		if not self.menu[strikeType][strikeRegion] then
-			if (strikeTargets == nil) or (strikeOptions ~= nil) then
-				-- menu text
-				local textRegion = string.format("%s Region", strikeRegion)
-				-- add menu
-				self.menu[strikeType][strikeRegion] = MENU_COALITION:New( coalition.side.BLUE, 
-					textRegion, 
-					self.menu[strikeType]
-				)
-			end
-		end
-
-		-- add mission menus
-		-- add command menu for each option
-		if strikeOptions ~= nil then
-			for _, option in ipairs(strikeOptions) do
-				-- menu text
-				local textAdd = string.format("%s %s %s", 
-					strikeName, 
-					option, 
-					strikeIvo
-				)
-				-- add menu
-				self.menu[strikeType][strikeRegion][strikeIndex] = MENU_COALITION_COMMAND:New( coalition.side.BLUE, 
-					textAdd, 
-					self.menu[strikeType][strikeRegion], 
-					self.SpawnStrikeTarget, 
-					self, 
-					mission, 
-					option 
-				) -- add menu command to launch the mission
-			end
-		
-		-- random target without options. add command at region level
-		elseif strikeTargets ~= nil then
-			-- menu text
-			local textAdd = string.format("%s Region %s %s", 
-				strikeRegion,
-				strikeName, 
-				strikeIvo
-			)
-			-- add menu			
-			self.menu[strikeType][strikeIndex] = MENU_COALITION_COMMAND:New( coalition.side.BLUE, 
-				textAdd, 
-				self.menu[strikeType], 
-				self.SpawnStrikeTarget, 
-				self, 
-				mission
-			) -- add menu command to launch the mission
-		
-		-- otherwise, add command menu to region
-		else 
-			-- menu text
-			textAdd = string.format("%s %s", 
-				strikeName, 
-				strikeIvo
-			)
-			-- add menu
-			self.menu[strikeType][strikeRegion][strikeIndex] = MENU_COALITION_COMMAND:New( coalition.side.BLUE, 
-				textAdd, 
-				self.menu[strikeType][strikeRegion], 
-				self.SpawnStrikeTarget, 
-				self, 
-				mission
-			) -- add menu command to launch the mission
-		end
-	end
-
-	-- add remove menu for active missions
-	local textRemove = "CANCEL MISSIONS"
-	self.menu.remove = MENU_COALITION:New(coalition.side.BLUE, textRemove, self.menu.top)
-end
-
-function MISSIONSTRIKE:SpawnStrikeTarget (mission, option) -- "location name"
-
-	mission.option = option or nil
-
-	--local mission = self.mission[strikeIndex]
-	_msg = string.format("%sSpawnStrikeTarget() Type = %s, Name = %s.", 
-		self.traceTitle, 
-		mission.striketype, 
-		mission.strikeregion
-	)
-	BASE:T(_msg)
-
-	local strikeType = mission.striketype
-	
-
-	if (strikeType == MISSIONSTRIKE.enums.striketype.camp) or (strikeType == MISSIONSTRIKE.enums.striketype.convoy) then
-		_msg = string.format("%sActivating mission type: %s.", 
-			self.traceTitle, 
-			mission.striketype
-		)
-		BASE:T(_msg)
-
-		self:SpawnRandomStrikeTarget(mission)
-		--self:SpawnCamp(mission)
-
-	elseif UTILS.IsInTable(MISSIONSTRIKE.enums.striketype, strikeType) then -- other strike types
-
-		_msg = string.format("%sActivating mission type: %s.", 
-			self.traceTitle, 
-			mission.striketype
-		)
-		BASE:T(_msg)
-
-		self:SpawnOther(mission)
-	
-	else -- unknowm mission type!
-		_msg = string.format("%sError. Unknown mission type: %s!", 
-			self.traceTitle, 
-			mission.striketype
-		)
-		BASE:E(_msg)
-	end
-
-end --SpawnStrikeTarget
-
-
---- Remove strike attack mission ---
-function MISSIONSTRIKE:RemoveStrikeAttack (mission)
-	--local mission = self.mission[strikeIndex]
-
-	_msg = string.format("%sRemoveStrikeAttack() %s %s.", 
-		self.traceTitle, 
-		mission.striketype, 
-		mission.strikename
-	)
-	BASE:T(_msg)
-
-	local strikeIndex = mission.strikeindex
-	local strikeType = mission.striketype
-	local strikeRegion = mission.strikeregion
-	local strikeName = mission.strikename
-	local strikeIvo = mission.strikeivo
-
-	if not mission.is_open then
-
-		-- remove map mark from map
-		COORDINATE:RemoveMark( mission.mapMark )
-		-- reset map
-		mission.mapMark = nil 
-		
-		-- remove spawned objects
-		--local objectcount = #mission.spawnedobjects
-		--for index = 1, objectcount do
-		for index, spawn in ipairs(mission.spawnedobjects) do
-			if spawn:IsAlive() then
-				_msg = string.format("%sRemove Spawned Object %s from mission %s %s.", 
-					self.traceTitle, 
-					spawn:GetName(), 
-					mission.striketype, 
-					mission.strikename
-				)
-				BASE:T(_msg)
-				spawn:Destroy() --false
-			end
-		end
-		-- clear list of now despawned objects
-		mission.spawnedobjects = {}
-
-		-- remove statics
-		self:RemoveStatics(mission)
-
-		--reset mission zone(s)
-		if mission.striketype ~= MISSIONSTRIKE.enums.striketype.camp then
-			for _indexZone, zoneType in pairs(mission.zones) do
-				for _indexType, zone in pairs(zoneType) do
-					zone.is_open = true
-				end
-			end
-		end
-		
-		-- remove reset menu option
-		self.menu[strikeType][strikeIndex]:Remove()
-		if mission.striketype ~= MISSIONSTRIKE.enums.striketype.camp then
-			_msg = string.format("%sReactivate mission %s in menu", 
-				self.traceTitle,
-				mission.strikename
-			)
-			BASE:T(_msg)
-
-			-- reset mission menu
-			self.menu[strikeType][strikeRegion][strikeIndex] = MENU_COALITION_COMMAND:New(
-				coalition.side.BLUE, 
-				strikeName .. " " .. strikeIvo, 
-				self.menu[strikeType][strikeRegion], 
-				self.SpawnStrikeTarget, 
-				self, 
-				mission
-			) -- add menu command to launch the mission
-		end
-
-		-- set strike mission as available
-		mission.is_open = true 
-
-		_msg = string.format("The %s %s strike attack mission has been removed.", 
-			mission.striketype, 
-			mission.strikename
-		)
-		MESSAGE:New( _msg, 5, "" ):ToAll()
-		_msg = self.traceTitle .. _msg
-		BASE:T(_msg)
-
-	else
-		_msg = string.format("%sStrike attack mission %s %s is not active!", 
-			self.traceTitle, 
-			mission.striketype, 
-			mission.strikename
-		)
-		BASE:E(_msg)		
-	end
-
-end --RemoveStrikeAttack
-
-
-function MISSIONSTRIKE:SpawnRandomStrikeTarget(mission)
-	-- Select a random strike target within the region
-	-- spawn assets in randomly selected zones within the camp
-
-	local strikeType = mission.striketype
-	local strikeRegion = mission.strikeregion
-	local strikeOption = mission.option
-	-- spawned target
-	local strikeSpawn = {}
-	-- table of open targets available for activation wthin the region
-	local openTargets = {}
-
-	-- build list of open targets
-	for index, strikeTarget in ipairs(mission.striketargets) do 
-		if strikeTarget.is_open then
-			table.insert(openTargets, strikeTarget)
-		end
-	end
-
-	_msg = string.format("%sOpen Tagets table", self.traceTitle)
-	BASE:T({_msg, openTargets})
-
-	-- select random target from list
-	local targetCount = #openTargets
-	local targetIndex = 1 -- default to first entry
-	
-	if targetCount > 1 then -- Randomize spawn location if more than 1 available
-		targetIndex = math.random ( 1, targetCount)
-	elseif targetCount == 0 then -- no open targets remaining
-		_msg = string.format("All %s Strike missions for the Region %s are already active!", 
-			strikeType, 
-			strikeRegion
-		)
-		MESSAGE:New( _msg, 5, "" ):ToAll()
-		_msg = self.traceTitle .. _msg
-		BASE:E(_msg)
-		return
-	end
-
-	-- select the target from the list
-	local selectedTarget = openTargets[targetIndex]
-	if strikeOption ~= nil then
-		selectedTarget.option = strikeOption
-	end
-
-	local strikeName = selectedTarget.strikename
-
-	_msg = string.format("%s%s %s Selected Target %s.", 
-		self.traceTitle, 
-		strikeType, 
-		strikeRegion, 
-		strikeName
-	)
-	BASE:T({_msg, selectedTarget = selectedTarget})
-
-	-- find the zone object for the selected
-	local zoneStrike = selectedTarget.zonestrikezone
-
-	if zoneStrike then
-		selectedTarget.zonestrike = zoneStrike
-		-- add container for spawned objects
-		if not selectedTarget.spawnedobjects then
-			selectedTarget.spawnedobjects = {}
-		end
-		-- spawn mission objects
-		if selectedTarget.striketype == MISSIONSTRIKE.enums.striketype.camp then
-			self:SpawnCamp(selectedTarget)
-		elseif selectedTarget.striketype == MISSIONSTRIKE.enums.striketype.convoy then
-			strikeSpawn = self:SpawnConvoy(selectedTarget)
-		else
-			_msg = string.format("%sstriketype %s for selected target %s not recognised!", 
-				self.traceTitle, 
-				selectedTarget.striketype, 
-				selectedTarget.strikename
-			)
-			BASE:E(_msg)
-		end
-		--  mark the selected target target as closed
-		selectedTarget.is_open = false
-
-		_msg = string.format("%sstriketype %s for selected target %s", 
-			self.traceTitle, 
-			selectedTarget.striketype, 
-			selectedTarget.strikename
-		)
-		BASE:T({_msg, selectedTarget = selectedTarget})
-
-		-- display mission briefing
-		self:Briefing(selectedTarget)
-		-- add remove menu option for the selected target
-		local textRemove = string.format("Remove %s %s", 
-			strikeType, 
-			strikeName
-		)
-		self.menu[strikeType][strikeName] = MENU_COALITION_COMMAND:New( coalition.side.BLUE, 
-			textRemove,  
-			self.menu.remove, 
-			self.RemoveStrikeAttack, 
-			self, 
-			selectedTarget
-		)
-		-- self.menu[strikeType][strikeName] = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Remove ".. strikeName,  self.menu[strikeType], self.RemoveStrikeAttack, self, selectedTarget )
-	else
-		_msg = string.format("%sstrikezone %s for selected target not found!", 
-			self.traceTitle, 
-			selectedTarget.strikezone
-		)
-		BASE:E(_msg)
-		return
-	end
-	
-end --SpawnRandomStrikeTarget
-
-
-function MISSIONSTRIKE:SpawnCamp(selectedTarget)
-
-	local strikeType = selectedTarget.striketype
-	local strikeName = selectedTarget.strikename
-	local strikeRegion = selectedTarget.strikeregion
-	local zone = selectedTarget.zonestrike
- 
-	_msg = string.format("%sSpawning mission type %s for mission %s in region %s.", 
-		self.traceTitle, 
-		strikeType,
-		strikeName,
-		strikeRegion
-	)
-	BASE:T(_msg)
-
-	local campTemplateOptions = MISSIONSTRIKE.campTemplates.defence
-	
-	-- check if more than one spawn object is available for the camp main template and randomly select one
-	local templateCount = #campTemplateOptions
-	
-	_msg = string.format("%s camp main template options count = %d", 
-		self.traceTitle, 
-		templateCount
-	)
-	BASE:T(_msg)
-	
-	local templateIndex = 1
-	
-	if templateCount > 1 then
-		templateIndex = math.random(1,templateCount)
-	end
-
-	local campTemplate = campTemplateOptions[templateIndex]
-	
-	_msg = string.format("%sselected campSpawn template; %s",
-		self.traceTitle,
-		campTemplate
-		)
-	BASE:T(_msg)
-
-	local campSpawn = MISSIONSTRIKE.campSpawns[campTemplate]
-		:InitRandomizeUnits( true, 35, 5 )
-		:InitHeading( 1,359 )
-		:OnSpawnGroup(
-			function(SpawnGroup)
-				-- add this spawngroup to spawned objects list
-				table.insert(selectedTarget.spawnedobjects, SpawnGroup)
-				-- spawn tents
-				MISSIONSTRIKE.campSpawns.tentGroup:InitRandomizeUnits( true, 77, 35 )
-					:OnSpawnGroup(
-						function(SpawnGroup)
-							-- add this spawngroup to spawned objects list
-							table.insert(selectedTarget.spawnedobjects, SpawnGroup)
-						end
-						,zone, selectedTarget)
-					:SpawnInZone ( zone )
-				-- spawn infantry
-				MISSIONSTRIKE.campSpawns.infantryGroup:InitRandomizeUnits( true, 77, 5 )
-					:OnSpawnGroup(
-						function(SpawnGroup)
-							-- add this spawngroup to spawned objects list
-							table.insert(selectedTarget.spawnedobjects, SpawnGroup)
-						end
-						,zone, selectedTarget)
-					:SpawnInZone(zone)
-			end
-			,zone, selectedTarget 
-		)
-	campSpawn:SpawnInZone( zone )
-
-end --SpawnCamp
-
-
-function MISSIONSTRIKE:SpawnConvoy(selectedTarget) -- ConvoyTemplates, SpawnHost {conv, dest, destzone, strikecoords, is_open}, ConvoyType, ConvoyThreats
-	local strikeType = selectedTarget.striketype
-	local strikeOption = selectedTarget.option
-	local strikeName = selectedTarget.strikename
-	local strikeRegion = selectedTarget.strikeregion
-	local strikeZone = selectedTarget.zonestrike
-	local strikeZoneEnd = ZONE:FindByName(selectedTarget.endzone)
-	-- check that a destination has been defined
-	if strikeZoneEnd ~= nil then
-		_msg = string.format("%sSpawning mission type %s for mission %s in region %s with option %s.", 
-			self.traceTitle, 
-			strikeType,
-			strikeName,
-			strikeRegion,
-			strikeOption
-		)
-		BASE:T(_msg)
-		-- set default spawn object
-		local convoySpawn = self.convoyspawn[strikeOption]
-		_msg = string.format("%sconvoySpawn template options", self.traceTitle)
-		BASE:T({_msg, convoySpawn})
-		-- more than one spawn object is available for the convoy type randomly select one
-		local templateCount = #convoySpawn
-		_msg = string.format("%s template count = %d", 
-			self.traceTitle, 
-			templateCount
-		)
-		BASE:T(_msg)
-		local templateIndex = 1
-		if templateCount > 1 then
-			templateIndex = math.random(1,templateCount)
-			convoySpawn = convoySpawn[templateIndex]
-		end
-		_msg = string.format("%sselected convoySpawn template", self.traceTitle)
-		BASE:T({_msg, convoySpawn})
-		-- add convoy description to selected target
-		selectedTarget.strikedescription = convoySpawn.description
-		-- add convoy threats to selected target
-		selectedTarget.strikethreats = convoySpawn.threats
-		-- get coordinate of destination zone
-		local toCoordinate = strikeZoneEnd:GetCoordinate()
-		-- draw start and destination zones if trace is on
-		-- if BASE:IsTrace() then 
-		-- 	strikeZone:DrawZone()
-		-- 	strikeZoneEnd:DrawZone()
-		-- end
-		-- set functions to trigger when convoy spawns
-		convoySpawn:OnSpawnGroup(
-			function(SpawnGroup)
-				-- add this spawngroup to spawned objects list
-				table.insert(selectedTarget.spawnedobjects, SpawnGroup)
-				-- route group to destination via roads
-				SpawnGroup:RouteGroundOnRoad(toCoordinate)
-				-- add scheduled check for convoy reaching destination and remove the mission if it has
-				SCHEDULER:New(
-					SpawnGroup, 
-					function(SpawnGroup, selectedTarget, strikeZoneEnd)
-						if SpawnGroup:IsPartlyInZone(strikeZoneEnd) then
-							MISSIONSTRIKE:RemoveStrikeAttack(selectedTarget)
-						end
-					end,
-					{selectedTarget, strikeZoneEnd}, 0, 60
-			  	)
-
-			end,
-			selectedTarget, toCoordinate, strikeZoneEnd
-		)
-		-- spawn the convoy in the start zone
-		convoySpawn:SpawnInZone(strikeZone)
-	else
-		-- error to log if an end zone has not been defined/found
-		_msg = string.format("%sError. End zone not found for mission type %s for mission %s in region %s with option %s!",
-			self.traceTitle, 
-			strikeType,
-			strikeName,
-			strikeRegion,
-			strikeOption
-		)
-		BASE:E(_msg)
-	end
-end --SpawnConvoy  
-
-
-function MISSIONSTRIKE:SpawnOther(mission)
-
-	if mission.is_open then -- check mission is not already active
-
-		local strikeType = mission.striketype
-		local strikeRegion = mission.strikeregion
-		local strikeIndex = mission.strikeindex
-		local strikeIvo = mission.strikeivo
-		local strikeName = mission.strikename
-
-		-- create container for spawned objects if not already present
-		if not mission.spawnedobjects then
-			mission.spawnedobjects = {}
-		end
-
-		local medZonesCount = #mission.zones["medium"] -- number of medium defzones
-		local smallZonesCount = #mission.zones["small"] -- number of small defzones
-
-		_msg = string.format("%sZone type counts; medium = %d, small = %d", 
-			self.traceTitle, 
-			medZonesCount, 
-			smallZonesCount
-		)
-		BASE:T(_msg)
-
-		local samQty = math.random( 1, mission.defassets.sam ) or 0-- number of SAM defences min 1
-		local aaaQty = math.random( 1, mission.defassets.aaa ) or 0 -- number of AAA defences min 1
-		local manpadQty = math.random( 0, mission.defassets.manpad ) or 0 -- number of manpad defences min 0. Spawn in AAA zones. aaaQty + manpadQty MUST NOT exceed smallZonesCount
-		local armourQty = math.random( 1, mission.defassets.armour ) or 0-- number of armour groups min 1. spawn in SAM zones. samQty + armourQty MUST NOT exceed medZonesCount
-		--local strikeMarkZone = ZONE:FindByName( mission.strikezone ) -- ZONE object for zone named in strikezone
-
-		-- set threat message with threat counts
-		mission.strikethreats = string.format("%dx RADAR SAM,  %dx AAA, %dx MANPAD, %dx LIGHT ARMOUR", 
-			samQty, 
-			aaaQty, 
-			manpadQty, 
-			armourQty
-		)
-		BASE:T(self.traceTitle .. mission.strikethreats)
-
-		--- Check sufficient zones exist for the mission air defences ---
-		if samQty + armourQty > medZonesCount then
-			_msg = mission.strikename .. " Error! SAM+Armour count exceedes medium zones count"
-			BASE:E(_msg)
-			return
-		elseif aaaQty + manpadQty > smallZonesCount then
-			_msg = mission.strikename .. " Error! AAA+MANPAD count exceedes small zones count"
-			BASE:E(_msg)
-			return
-		end
-		
-		-- spawn static objects
-		_msg = string.format("%sRefresh Statics for mission %s.", 
-			self.traceTitle, 
-			strikeName
-		)
-		BASE:T(_msg)
-
-		self:AddStatics(mission)
-		
-		-- spawn target groups
-		_msg = string.format("%s{Spawn Target Groups for mission} %s.", 
-			self.traceTitle, 
-			strikeName
-		)
-		BASE:T(_msg)
-
-		_msg = string.format("%sstriketargetspawn", self.traceTitle)
-		BASE:T({_msg,mission.striketargetspawn})
-
-		for spawnName, spawnData in pairs(mission.striketargetspawn) do
-			_msg = string.format("%s%s Spawn Target Group %s", self.traceTitle, 
-				mission.strikename, 
-				spawnName
-			)
-			BASE:T(_msg)
-			local spawnGroup = {}
-			local airbase = mission.striketargetspawn[spawnName].airbase
-			spawnGroup = mission.striketargetspawn[spawnName]:Spawn()
-			table.insert(mission.spawnedobjects, spawnGroup )
-		end
-		
-		-- add SAM assets
-		if samQty > 0 then
-			self:AddStrikeAssets(mission, "sam", samQty, "medium", medZonesCount) -- AssetType ["sam", "aaa", "manpads", "armour"], AssetQty, AssetZoneType ["med", "small"], AssetZonesCount
-		end
-		-- add AAA assets
-		if samQty > 0 then
-			self:AddStrikeAssets(mission, "aaa", aaaQty, "small", smallZonesCount)
-		end
-		-- add Manpad assets
-		if manpadQty > 0 then
-			self:AddStrikeAssets(mission, "manpads", manpadQty, "small", smallZonesCount)
-		end
-		-- add armour assets
-		if armourQty > 0 then
-			self:AddStrikeAssets(mission, "armour", armourQty, "medium", medZonesCount)
-		end
-		
-		mission.is_open = false -- mark strike mission as active
-		
-		--- menu: remove mission start command
-		self.menu[strikeType][strikeRegion][strikeIndex]:Remove()
-		-- add mission remove command
-		local textRemove = string.format("Remove %s %s %s", 
-			strikeType,
-			strikeName,
-			strikeIvo
-		)
-		self.menu[strikeType][strikeIndex] = MENU_COALITION_COMMAND:New(
-			coalition.side.BLUE, 
-			textRemove, 
-			self.menu.remove, 
-			-- self.menu[strikeType], 
-			self.RemoveStrikeAttack, 
-			self, 
-			mission
-		)
-
-		MISSIONSTRIKE:Briefing(mission)
-	else
-		_msg = string.format("The %s %s strike attack mission is already active!", 
-			mission.strikename, 
-			mission.striketype
-		)
-		MESSAGE:New( _msg, 5, "" ):ToAll()
-		_msg = self.traceTitle .. _msg
-		BASE:E(_msg)
-	end
-
-end --SpawnOther
-
-
-function MISSIONSTRIKE:AddStrikeAssets(mission, AssetType, AssetQty, AssetZoneType, AssetZonesCount ) -- AssetType ["sam", "aaa", "manpads", "armour"], AssetQty, AssetZoneType ["med", "small"], AssetZonesCount
-	_msg = self.traceTitle .. "AddStrikeAssets()"
-	BASE:T({_msg, AssetType, AssetQty, AssetZoneType, AssetZonesCount})
-
-	if AssetQty > 0 then
-	
-		local TableStrikeAssetZones = {}
-
-		-- select indexes of zones in which to spawn assets 
-		for index = 1, AssetQty do
-			-- generate a random index for the zone type 
-			local zoneindex = math.random( 1, AssetZonesCount )
-			-- ensure selected zone has not been used
-			while ( not mission.zones[AssetZoneType][zoneindex].is_open ) do 
-				_msg = self.traceTitle .. "Regenerate random Zone index."
-				BASE:T(_msg)
-				zoneindex = math.random ( 1, AssetZonesCount )
-			end
-			-- close zone for selection
-			mission.zones[AssetZoneType][zoneindex].is_open = false 
-			-- add selected zone to list
-			TableStrikeAssetZones[index] = zoneindex 
-			
-		end
-
-		-- spawn assets
-		for index = 1, #TableStrikeAssetZones do
-			-- randomise template (MOOSE removes unit orientation in template)
-			local defenceTemplateIndex = math.random( 1, #self.defenceTemplates[AssetType] ) -- generate random index for template
-			local assetTemplate = self.defenceTemplates[AssetType][defenceTemplateIndex] -- select indexed template
-			-- local assetSpawn = self.spawn["DEFSTUB_" .. assetTemplate] -- [contenation for name of generated DEFSTUB_ spawn]
-			local assetSpawn = self.defenceSpawns[assetTemplate] -- [contenation for name of generated DEFSTUB_ spawn]
-			local assetzoneindex = TableStrikeAssetZones[index]
-			local assetspawnzone = ZONE:FindByName( mission.zones[AssetZoneType][assetzoneindex].loc ) -- [concatenation for name of generated spawnzone]
-			
-			-- assetSpawn:SpawnInZone( assetspawnzone ) -- spawn asset in zone in generated zone list
-			local assetSpawnGroup = assetSpawn:SpawnInZone( assetspawnzone ) -- spawn asset in zone in generated zone list
-			
-			--local assetspawngroup, assetspawngroupindex = assetSpawn:GetLastAliveGroup()
-			table.insert(mission.spawnedobjects, assetSpawnGroup ) -- add spawned asset to spawnobjects list
-		end
-
-	end
-
-end --AddStrikeAssets
-
-
-function MISSIONSTRIKE:AddBriefingText(mission, option)
-
-	local strikeMarkName = mission.strikename
-	local strikeMarkOption = option or ""
-	local strikeMarkType = mission.striketype
-	local strikeMarkRegion = mission.strikeregion
-	local strikeMarkIvo = mission.strikeivo
-	local strikeAttackMission = mission.strikemission
-	
-	-- local strikeMarkCoordsLLDMS = ""
-	-- local strikeMarkCoordsLLDDM = ""
-	-- local strikeMarkCoordsMGRS = ""
-
-	--- Create Mission Mark textp ---
-	local strikeMarkZone = mission.zonestrikezone --ZONE:FindByName( strikeMarkZoneName ) -- ZONE object for zone named in strikezone
-	-- if strikeMarkZone ~= nil then 
-	local strikeMarkZoneCoord = strikeMarkZone:GetCoordinate() -- get coordinates of strikezone
-
-	strikeMarkCoordsLLDMS = strikeMarkZoneCoord:ToStringLLDMS(SETTINGS:SetLL_Accuracy(0))  or "" --mission.strikecoords
-	strikeMarkCoordsLLDDM = strikeMarkZoneCoord:ToStringLLDDM(SETTINGS:SetLL_Accuracy(3))  or "" --mission.strikecoords
-	strikeMarkCoordsMGRS = strikeMarkZoneCoord:ToStringMGRS(SETTINGS:SetMGRS_Accuracy(5))  or ""  --mission.strikecoords
-
-	-- else
-	-- 	_msg = string.format("%sError in AddBriefingText. strikeZone %s, mission %s, type %s, region %s not found!",
-	-- 		self.traceTitle,
-	-- 		strikeMarkZoneName,
-	-- 		strikeMarkName,
-	-- 		strikeMarkType,
-	-- 		strikeMarkRegion
-	-- 	)
-	-- 	BASE:E(_msg)
-	-- end
-
-
-	-- add briefing summary to mission
-	local strikeAttackSummary = ""
-
-	if strikeMarkType == MISSIONSTRIKE.enums.striketype.airfield then
-		strikeAttackSummary = string.format("Air Interdiction mission against %s %s", 
-			strikeMarkType, 
-			strikeMarkName
-		)
-	elseif strikeMarkType == MISSIONSTRIKE.enums.striketype.camp then
-		strikeAttackSummary = string.format("Air Interdiction mission against %s region %s %s", 
-			strikeMarkRegion, 
-			strikeMarkType, 
-			strikeMarkName
-		)
-	elseif strikeMarkType == MISSIONSTRIKE.enums.striketype.convoy then
-		local destName = mission.destname
-		strikeAttackSummary = string.format("Air Interdiction mission in %s region against %s %s routing to %s",
-			strikeMarkRegion, 
-			strikeMarkOption,
-			strikeMarkType, 
-			destName
-		)
-		strikeMarkRegion = string.format("%s\nLast known position", 
-			strikeMarkRegion
-		)
-	else -- default summary
-		strikeAttackSummary = string.format("Air Interdiction mission against %s %s IVO %s", 
-			strikeMarkType, 
-			strikeMarkName, 
-			strikeMarkIvo
-		)
-	end
-
-	local strikeMarkText = string.format("%s %s %s Strike %s\n%s\n%s\n%s", 
-		strikeMarkName,
-		strikeMarkOption, 
-		strikeMarkType, 
-		strikeMarkRegion, 
-		strikeMarkCoordsLLDMS, 
-		strikeMarkCoordsLLDDM, 
-		strikeMarkCoordsMGRS
-	)
-
-	_msg = string.format("%sAdd strike mark text for mission %s",
-		MISSIONSTRIKE.traceTitle,
-		strikeMarkName	
-	)
-	BASE:T({_msg, strikeMarkText = strikeMarkText})
-
-	local strikeAttackBriefSummary = string.format("\n\n++++++++++++++++++++++++++++++++++++\n\n%s", 
-		strikeAttackSummary 
-	)
-
-	_msg = string.format("%sAdd summary text for mission %s",
-		MISSIONSTRIKE.traceTitle,
-		strikeMarkName
-	)
-	BASE:T({_msg, strikeAttackBriefSummary = strikeAttackBriefSummary})
-
-	local strikeAttackBriefMission = string.format("\nMission: %s\n\nCoordinates:\n%s\n%s\n%s",
-		strikeAttackMission, 
-		strikeMarkCoordsLLDMS, 
-		strikeMarkCoordsLLDDM, 
-		strikeMarkCoordsMGRS 
-	)
-
-	_msg = string.format("%sAdd mission text for mission %s",
-		MISSIONSTRIKE.traceTitle,
-		strikeMarkName
-	)
-	BASE:T({_msg, strikeAttackBriefMission = strikeAttackBriefMission})
-
-	return strikeMarkText, strikeAttackBriefSummary, strikeAttackBriefMission
-
-end --AddBriefingText
-
-
-function MISSIONSTRIKE:Briefing(mission)
-
-	_msg = string.format("%sBriefing()", self.traceTitle)
-	BASE:T(_msg)
-
-	local strikeType = mission.striketype
-	local strikeName = mission.strikename
-	local strikeRegion = mission.strikeregion
-	local strikeZone = mission.strikezone
-	local strikeOption = mission.option
-
-	-- summary and mission for brief text
-	local strikeAttackBriefSummary = mission.strikeattackbriefsummary
-	local strikeAttackBriefMission = mission.strikeattackbriefmission
-	if strikeOption then
-		strikeAttackBriefSummary = mission.strikeattackbriefsummary[strikeOption]
-		strikeAttackBriefMission = mission.strikeattackbriefmission[strikeOption]
-	end
-
-	-- add description if available
-	local strikeAttackBriefDescription = ""
-	if mission.strikedescription then
-		strikeAttackBriefDescription = string.format("\nConsisting of %s", 
-			mission.strikedescription
-		)
-	end
-
-	if (strikeAttackBriefSummary ~= nil) and (strikeAttackBriefMission ~= nil) then
-
-		-- add threats to brief if provided
-		local strikeThreats = mission.strikethreats
-		if strikeThreats then
-			strikeThreats = string.format("\nThreats: %s\n\n++++++++++++++++++++++++++++++++++++", 
-				strikeThreats
-			)
-		else 
-			strikeThreats = "++++++++++++++++++++++++++++++++++++"
-		end
-	
-		strikeAttackBrief = string.format("%s%s\n%s\n%s",
-			strikeAttackBriefSummary,
-			strikeAttackBriefDescription,
-			strikeAttackBriefMission,
-			strikeThreats
-		) 
-
-		_msg = string.format("%sBriefing for mission %s, type %s, region %s", 
-			self.traceTitle, 
-			strikeName, 
-			strikeType, 
-			strikeRegion
-		)
-		BASE:T({_msg, strikeAttackBrief})
-
-		MESSAGE:New (strikeAttackBrief, 5, "" ):ToAll()
-			
-	else
-		_msg = string.format("%sError showing briefing. Briefing text for mission %s, type %s, region %s not found!", 
-			self.traceTitle, 
-			strikeName, 
-			strikeType, 
-			strikeRegion
-		)
-		BASE:T(_msg)
-		return
-	end
-
-	--- Create Mission Mark on F10 map ---
-	local strikeMarkText = mission.strikemarktext
-	if strikeOption then
-		strikeMarkText = mission.strikemarktext[strikeOption]
-	end
-
-	local strikeMarkZone = ZONE:FindByName( strikeZone ) -- ZONE object for zone named in strikezone
-
-	if strikeMarkZone ~= nil then
-		_msg = string.format("%sAdd Map Mark for mission %s, type %s, region %s",
-			self.traceTitle,
-			strikeName, 
-			strikeType, 
-			strikeRegion
-		)
-		BASE:T({_msg, strikeMarkZone = strikeMarkZone})
-
-		local strikeMarkZoneCoord = strikeMarkZone:GetCoordinate() -- get coordinates of strikezone
-		mission.mapMark = strikeMarkZoneCoord:MarkToAll(strikeMarkText, true) -- add mark to map
-	else
-		_msg = string.format("%sError showing briefing. Zone %s for mission %s type %s in region %s not found!", 
-			self.traceTitle, 
-			strikeMarkZone, 
-			strikeName, 
-			strikeType, 
-			strikeRegion
-		)
-		return
-	end
-
-end --Briefing
-
-
-function MISSIONSTRIKE:AddSpawnTemplate(templateName, spawnCategory, spawnCountry, spawnCoalition)
-
-	local category = spawnCategory or Group.Category.GROUND
-	local country = spawnCountry or self.enums.default.countryidred
-	local coalition = spawnCoalition or self.enums.default.coalitionred
-	local addSpawn = {}
-
-	if GROUP:FindByName(templateName) then
-		-- Template found in MIZ
-		_msg = string.format("%sAddSpawn(). using MIZ template %s.", 
-			self.traceTitle, 
-			templateName
-		)
-		BASE:T(_msg)
-		addSpawn = SPAWN:New( templateName )
-	-- elseif self.template[templateName] then
-	-- 	-- template found in MISSIONSTRIKE templates
-	-- 	_msg = string.format("%sAddSpawn(). Using MISSIONSTRIKE template %s.", 
-	-- 		self.traceTitle, 
-	-- 		templateName
-	-- 	)
-	-- 	BASE:T(_msg)
-	-- 	addSpawn = SPAWN:NewFromTemplate(self.template[templateName],templateName)
-	-- 		:InitCountry(country) -- set spawn countryid
-	-- 		:InitCoalition(coalition) -- set spawn coalition
-	-- 		:InitCategory(category) -- set category
-	elseif SPAWNTEMPLATES.templates[templateName] then
-		-- template found in SPAWNTEMPLATES
-		_msg = string.format("%sAddSpawn(). Using SPAWNTEMPLATES template %s.", 
-			self.traceTitle, 
-			templateName
-		)
-		BASE:T(_msg)
-		addSpawn = SPAWN:NewFromTemplate(SPAWNTEMPLATES.templates[templateName],templateName)
-			:InitCountry(country) -- set spawn countryid
-			:InitCoalition(coalition) -- set spawn coalition
-			:InitCategory(category) -- set category
-	else
-		-- cannot find requested template
-		_msg = string.format("%sError! AddSpawn(). Template %s not found!", 
-			self.traceTitle, 
-			templateName
-		)
-		BASE:E(_msg)
-	end
-	return addSpawn
-end --AddSpawnTemplate
-
-
-function MISSIONSTRIKE:RemoveStatics(mission)
-
-	if mission.statics then
-		-- respawn each static objects
-		for _, static in pairs(mission.statics) do
-			staticName = static:GetName()
-			static.isAlive = false
-			_msg = string.format("%s%s Destroy Static %s", 
-				self.traceTitle, 
-				mission.strikename, 
-				staticName
-			)
-			BASE:T({_msg, static})
-			static:Destroy()
-		end
-	else
-		_msg = string.format("%sRemoveStatics(): No statics table for mission %s", 
-			self.traceTitle, 
-			mission.strikename
-		)
-		BASE:T(_msg)
-	end
-	
-end --RemoveStatics
-
-
-function MISSIONSTRIKE:AddStatics(mission)
-
-	-- respawn each static objects
-	for _, static in pairs(mission.statics) do
-		staticName = static:GetName()
-		static.isAlive = true
-		_msg = string.format("%s%s Respawn Static %s", 
-			self.traceTitle, 
-			mission.strikename, 
-			staticName
-		)
-		BASE:T({_msg, static})
-		static:ReSpawn(country.id.RUSSIA)
-	end
-
-end --AddStatics
-
--- DEFAULT DATA
-
--- enumerators
-MISSIONSTRIKE.enums = {
-	default = {
-        coalitionred = coalition.side.RED,
-        countryidred = country.id.RUSSIA,
-	},
-	region = {
-		east = "East",
-		northeast = "North East",
-		central = "Central",
-		northcentral = "North Cnetral",
-		west = "West",
-		northwest = "North West",
-		north = "North",
-		alpha = "Alpha",
-		bravo = "Bravo"
-
-	},
-	striketype = { -- strike mission types
-		airfield = "Airfield",
-		factory = "Factory",
-		port = "Port",
-		bridge = "Bridge",
-		convoy = "Convoy",
-		camp = "Camp",
-	},
-	strikemission = {
-		airfield = "CRATER RUNWAY AND ATTRITE AVIATION ASSETS ON THE GROUND",
-		factory = {
-			weapons = "DESTROY WEAPONS MANUFACTURING FACILITY",
-			chemical = "DESTROY CHEMICAL PRODUCTION FACILITY",
-		},
-		bridge = {
-			road = "DESTROY ROAD BRIDGE",
-			rail = "DESTROY RAIL BRIDGE",
-			roadrail = "DESTROY ROAD AND RAIL BRIDGES",
-		},
-		port = {
-			fuel = "DESTROY FUEL PROCESSING AND STORAGE FACILITIES",
-			docks = "DESTROY CARGO DOCKS AND VESSELS",
-			ships = "DESTROY DOCKED CARGO VESSELS",
-		},
-		camp = "FIND AND DESTROY INSURGENT CAMP",
-		convoy = "LOCATE AND DESTROY ENEMY CONVOY",
-	},
-	convoy = {
-		supply = "supply",
-		armoured = "armoured"
-	},
-		
-}
-
--- airfield defence asset templates
-MISSIONSTRIKE.defenceTemplates = {
-	sam = {
-		"SA3", --"SAM_Sa3Battery",
-		"SA6", --"SAM_Sa6Battery",
-		"SA6", --"SAM_Sa6Battery",
-		"SA6", --"SAM_Sa6Battery",
-		"SA6", --"SAM_Sa6Battery",
-		"SA11", --"SAM_Sa11Battery",
-	},
-	aaa = {
-		"ZU23_Ural",
-		"ZU23_Emp",
-		"ZU23_Closed",
-		"ZSU23_Shilka",
-		-- "AAA_Zu23Ural",
-		-- "AAA_Zu23Emplacement",
-		-- "AAA_Zu23Closed",
-		-- "AAA_Zsu23Shilka",
-	},
-	manpads = {
-		"SA18Manpads",
-		"SA18SManpads",
-		-- "SAM_Sa18Manpads",
-		-- "SAM_Sa18sManpads",
-	},
-	armour = {
-		"ARMOUR_Heavy_01",
-		"ARMOUR_Heavy_02",
-		"ARMOUR_Heavy_03",
-		"ARMOUR_Heavy_04",
-	},
-}
-
--- camp asset templates
-MISSIONSTRIKE.campTemplates = {
-	main = 	"CAMP_Heavy",
-	tentGroup = "CAMP_Tent_Group",
-	infantryGroup = "CAMP_Inf_02",
-	defence = {
-		"ARMOUR_Heavy_01",
-		"ARMOUR_Heavy_02",
-		"ARMOUR_Heavy_03",
-		"ARMOUR_Heavy_04",
-	}
-}
-
--- convoy templates
-MISSIONSTRIKE.convoyTemplates = {
-	-- main = {
-	-- 	{template = "CONVOY_base", convoytext = "Single Unit"}
-	-- },
-	supply = {
-		{
-			template = "CONVOY_light-1", 
-			description = "Soft-skinned transport vehicles, BTR-80",
-			threats = "Radar SAM, AAA"
-		},
-		{
-			template = "CONVOY_light-2", 
-			description = "Fuel Supply vehicles, BTR-80",
-			threats = "Radar SAM, AAA"
-		},
-	},
-	armoured = {
-		{
-			template = "CONVOY_heavy-1", 
-			description = "BMP-2, BTR-RD, BTR-80",
-			threats = "Radar SAM, AAA"
-		},
-		{
-			template = "CONVOY_heavy-2", 
-			description = "T-72, BTR-80",
-			threats = "Radar SAM, AAA"
-		},
-		{
-			template = "CONVOY_heavy-3", 
-			description = "T-90, BTR-80",
-			threats = "Radar SAM, AAA"
-		},
-	},
-	artillery = {
-		{
-			template = "CONVOY_base", 
-			description = "Artillery",
-			threats = nil
-		},
-	},
-	missile = {
-		{
-			template = "CONVOY_base", 
-			description = "Missile",
-			threats = nil
-		},
-	},
-}  
---------------------------------[missionstrike_data.lua]-------------------------------- 
- 
-env.info( "[JTF-1] staticranges_data" )
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
---- STRIKE MISSION SETTINGS FOR MIZ
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
---
--- This file MUST be loaded AFTER missionstrike.lua
---
--- These values are specific to the miz and will override the default values in MISSIONSTRIKE.default
---
-
--- Error prevention. Create empty container if module core lua not loaded.
-if not MISSIONSTRIKE then 
-	MISSIONSTRIKE = {}
-	MISSIONSTRIKE.traceTitle = "[JTF-1 MISSIONSTRIKE] "
-	_msg = self.traceTitle .. "CORE FILE NOT LOADED!"
-	BASE:E(_msg)
-	-- EXIT MODULE DATA
-	return
-end
-
-----------------------------------
---- Strike Attack Mission Data ---
-----------------------------------
-
---- MISSIONSTRIKE.mission table 
--- @type MISSIONSTRIKE.mission
--- @field #string striketype type of strike; Airfield, Factory, Bridge, Communications, C2
--- @field #string strikeregion Region in which mission is located (East, Central, West)
--- @field #string strikename Friendly name for the location used in briefings, menus etc. Currently the same as the key, but will probably change
--- @field #string strikeivo "in the vacinity of" ("AFB" if airfield, "[TOWN/CITY]" other targets)
--- @field #string strikecoords LatLong
--- @field #string strikemission mission description
--- @field #string strikethreats threats description
--- @field #string ME zone at center of strike location
--- @field #table striketargets static objects to be respawned for object point strikes (Factory, refinery etc)
--- @field #table medzones ME zones in which medium assets will be spawned. (AAA batteries, vehicle groups, infantry groups etc)
--- @field #string loc ME defence zone at location
--- @field #boolean is_open tracks whether defence zone is occupied
--- @field #table ME zones in which small assets will be spawned
--- @field #string loc ME defence zone at location
--- @field #boolean is_open tracks whether defence zone is occupied
--- @field #table defassets max number of each defence asset. sum of zone types used must not exceed number of zone type available
--- @field #number sam uses medzones
--- @field #number aaa uses smallzones
--- @field #number manpads uses smallzones
--- @field #number armour uses medzones
--- @field #table spawnobjects table holding names of the spawned objects relating the mission
--- @field #boolean is_open mission status. true if mission is avilable for spawning. false if it is in-progress
-
--- XXX: MISSIONSTRIKE.mission
-
-
-MISSIONSTRIKE.missions = { -- TableStrikeAttack
-
-	------------ AIRFIELD ALPHA ------------
-	{ -- Fujairah Intl Airfield-Alpha
-		striketype = MISSIONSTRIKE.enums.striketype.airfield,
-        strikeregion = MISSIONSTRIKE.enums.region.alpha,
-		strikename = "Fujairah",
-		strikeivo = "AFB",
-		strikemission = MISSIONSTRIKE.enums.strikemission.airfield, -- text mission description
-		strikezone = "ZONE_FujairahStrike",
-		striketargetprefix = "TARGET_FUJAIRAH",
-		zoneprefix = {
-			{class = "small", prefix = "ZONE_FujairahSmall"},
-			{class = "medium", prefix = "ZONE_FujairahMed"},
-		},
-		defassets = {
-			sam = 2,
-			aaa = 4,
-			manpad = 2,
-			armour = 3,
-		},
-		spawnobjects = {},
-		is_open = true,
-	},-- End Fujairah
-
-	------------ AIRFIELD EAST ------------
-	{ -- Bandar-e-Jask Airfield-East
-		striketype = MISSIONSTRIKE.enums.striketype.airfield,
-        strikeregion = MISSIONSTRIKE.enums.region.east,
-		strikename = "Bandar-e-Jask",
-		strikeivo = "AFB",
-		strikemission = MISSIONSTRIKE.enums.strikemission.airfield, -- text mission description
-		strikezone = "ZONE_BandareJaskStrike",
-		striketargetprefix = "TARGET_BandareJask",
-		zoneprefix = {
-			{class = "small", prefix = "ZONE_BandareJaskSmall"},
-			{class = "medium", prefix = "ZONE_BandareJaskMed"},
-		},
-		defassets = {
-			sam = 2,
-			aaa = 4,
-			manpad = 2,
-			armour = 3,
-		},
-		spawnobjects = {},
-		is_open = true,
-	},-- End Bandar-e-Jask Airfield-East
-
-	------------ AIRFIELD CENTRAL ------------
-	{ -- Bandar Abbas Intl Airfield
-		striketype = MISSIONSTRIKE.enums.striketype.airfield,
-        strikeregion = MISSIONSTRIKE.enums.region.central,
-		strikename = "Bandar Abbas Intl",
-		strikeivo = "AFB",
-		strikemission = MISSIONSTRIKE.enums.strikemission.airfield, -- text mission description
-		strikezone = "ZONE_BandarAbbasStrike",
-		striketargetprefix = "TARGET_BANDARABBAS",
-		zoneprefix = {
-			{class = "small", prefix = "ZONE_BandarAbbasSmall"},
-			{class = "medium", prefix = "ZONE_BandarAbbasMed"},
-		},
-		defassets = {
-			sam = 2,
-			aaa = 4,
-			manpad = 2,
-			armour = 3,
-		},
-		spawnobjects = {},
-		is_open = true,
-	},-- End Bandar Abbas
-	{ -- Havadarya Airfield
-		striketype = MISSIONSTRIKE.enums.striketype.airfield,
-        strikeregion = MISSIONSTRIKE.enums.region.central,
-		strikename = "Havadarya",
-		strikeivo = "AFB",
-		strikemission = MISSIONSTRIKE.enums.strikemission.airfield, -- text mission description
-		strikezone = "ZONE_HavadaryaStrike",
-		striketargetprefix = "TARGET_HAVADARYA",
-		zoneprefix = {
-			{class = "small", prefix = "ZONE_HavadaryaSmall"},
-			{class = "medium", prefix = "ZONE_HavadaryaMed"},
-		},
-		defassets = {
-			sam = 2,
-			aaa = 4,
-			manpad = 2,
-			armour = 3,
-		},
-		spawnobjects = {},
-		is_open = true,
-	},-- End Havadarya
-	{ -- Qeshm Airfield
-		striketype = MISSIONSTRIKE.enums.striketype.airfield,
-        strikeregion = MISSIONSTRIKE.enums.region.central,
-		strikename = "Qeshm",
-		strikeivo = "AFB",
-		strikemission = MISSIONSTRIKE.enums.strikemission.airfield, -- text mission description
-		strikezone = "ZONE_QeshmStrike",
-		striketargetprefix = "TARGET_QESHM",
-		zoneprefix = {
-			{class = "small", prefix = "ZONE_QeshmSmall"},
-			{class = "medium", prefix = "ZONE_QeshmMed"},
-		},
-		defassets = {
-			sam = 2,
-			aaa = 4,
-			manpad = 2,
-			armour = 3,
-		},
-		spawnobjects = {},
-		is_open = true,
-	},-- End Qeshm
-	{ -- Lar Airfield
-		striketype = MISSIONSTRIKE.enums.striketype.airfield,
-        strikeregion = MISSIONSTRIKE.enums.region.central,
-		strikename = "Lar",
-		strikeivo = "AFB",
-		strikemission = MISSIONSTRIKE.enums.strikemission.airfield, -- text mission description
-		strikezone = "ZONE_LarStrike",
-		striketargetprefix = "TARGET_LAR",
-		zoneprefix = {
-			{class = "small", prefix = "ZONE_LarSmall"},
-			{class = "medium", prefix = "ZONE_LarMed"},
-		},
-		defassets = {
-			sam = 2,
-			aaa = 4,
-			manpad = 2,
-			armour = 3,
-		},
-		spawnobjects = {},
-		is_open = true,
-	},-- End Lar
-
-	------------ AIRFIELD NORTH WEST ------------
-	{ -- Shiraz Intl Airfield
-		striketype = MISSIONSTRIKE.enums.striketype.airfield,
-        strikeregion = MISSIONSTRIKE.enums.region.northwest,
-		strikename = "Shiraz Intl",
-		strikeivo = "AFB",
-		strikemission = MISSIONSTRIKE.enums.strikemission.airfield, -- text mission description
-		strikezone = "ZONE_ShirazStrike",
-		striketargetprefix = "TARGET_SHIRAZ",
-		zoneprefix = {
-			{class = "small", prefix = "ZONE_ShirazSmall"},
-			{class = "medium", prefix = "ZONE_ShirazMed"},
-		},
-		defassets = {
-			sam = 4,
-			aaa = 5,
-			manpad = 3,
-			armour = 4,
-		},
-		spawnobjects = {},
-		is_open = true,
-	},-- End Shiraz
-
-	------------ FACTORY CENTRAL ------------
-	{ -- DR30 Factory
-		striketype = MISSIONSTRIKE.enums.striketype.factory,
-        strikeregion = MISSIONSTRIKE.enums.region.central,                            
-		strikename = "DR30",
-		strikeivo = "Bandar Abbas",
-		strikemission = MISSIONSTRIKE.enums.strikemission.factory.chemical, -- text mission description
-		--strikethreats = "RADAR SAM, I/R SAM, AAA, LIGHT ARMOUR",
-		strikezone = "ZONE_DR30Strike",
-		striketargetprefix = "TARGET_DR30",
-		zoneprefix = {
-			{class = "small", prefix = "ZONE_DR30Small"},
-			{class = "medium", prefix = "ZONE_DR30Med"},
-		},
-		defassets = { 
-			sam = 3, 
-			aaa = 3, 
-			manpad = 2, 
-			armour = 3, 
-		},
-		spawnobjects = {},
-		is_open = true,
-	},-- End LN83
-
-	------------ PORT ------------
---[[ 	{ -- DK05 Port-North
-		striketype = MISSIONSTRIKE.enums.striketype.port,
-        strikeregion = MISSIONSTRIKE.enums.region.north,                            
-		strikename = "DK05",
-		strikeivo = "Novorossiysk",
-		strikemission = MISSIONSTRIKE.enums.strikemission.port.docks, -- text mission description
-		--strikethreats = "RADAR SAM, I/R SAM, AAA, LIGHT ARMOUR",
-		strikezone = "ZONE_DK05Strike",
-		striketargetprefix = "TARGET_DK05",
-		zoneprefix = {
-			{class = "small", prefix = "ZONE_DK05Small"},
-			{class = "medium", prefix = "ZONE_DK05Med"},
-		},
-		defassets = { 
-			sam = 2, 
-			aaa = 4, 
-			manpad = 2, 
-			armour = 2, 
-		},
-		spawnobjects = {},
-		is_open = true,
-	},-- End DK05 ]]
-
-	------------ BRIDGE ------------
---[[ 	{ -- EJ19 Bridge-North
-		striketype = MISSIONSTRIKE.enums.striketype.bridge,
-        strikeregion = MISSIONSTRIKE.enums.region.north,                            
-		strikename = "EJ19",
-		strikeivo = "Krivenkovskoe",
-		strikemission = MISSIONSTRIKE.enums.strikemission.bridge.rail, -- text mission description
-		--strikethreats = "RADAR SAM, I/R SAM, AAA, LIGHT ARMOUR",
-		strikezone = "ZONE_EJ19Strike",
-		striketargetprefix = "TARGET_EJ19",
-		zoneprefix = {
-			{class = "small", prefix = "ZONE_EJ19Small"},
-			{class = "medium", prefix = "ZONE_EJ19Med"},
-		},
-		defassets = { 
-			sam = 2, 
-			aaa = 4, 
-			manpad = 1, 
-			armour = 2, 
-		},
-		spawnobjects = {},
-		is_open = true,
-	},-- End EJ19 ]]
-
-	------------ CAMP ------------
-	{ -- CAMP REGION ALPHA
-		striketype = MISSIONSTRIKE.enums.striketype.camp,
-        strikeregion = MISSIONSTRIKE.enums.region.alpha,                            
-		strikename = "Add",
-		strikeivo = "Mission",
-		strikemission = MISSIONSTRIKE.enums.strikemission.camp, -- text mission description
-		striketargets = {
-			{ 
-				strikezone = "ZONE_camp_a-1",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_a-2",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_a-3",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_a-4",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_a-5",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_a-6",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_a-7",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_a-8",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_a-9",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_a-10",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_a-11",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_a-12",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_a-13",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_a-14",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_a-15",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_a-16",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_a-17",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_a-18",
-				is_open = true 
-			},
-		},
-	},-- End CAMP REGION ALPHA
-	{ -- CAMP REGION BRAVO
-		striketype = MISSIONSTRIKE.enums.striketype.camp,
-        strikeregion = MISSIONSTRIKE.enums.region.bravo,                            
-		strikename = "Add",
-		strikeivo = "Mission",
-		strikemission = MISSIONSTRIKE.enums.strikemission.camp, -- text mission description
-		striketargets = {
-			{ 
-				strikezone = "ZONE_camp_b-1",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_b-2",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_b-3",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_b-4",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_b-5",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_b-6",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_b-7",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_b-8",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_b-9",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_b-10",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_b-11",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_b-12",
-				is_open = true 
-			},
-			{ 
-				strikezone = "ZONE_camp_b-13",
-				is_open = true 
-			},
-		},
-	},-- End CAMP REGION BRAVO
-
-	------------ CONVOY ------------
-	{ -- Convoy-ALPHA
-		striketype = MISSIONSTRIKE.enums.striketype.convoy,
-        strikeregion = MISSIONSTRIKE.enums.region.alpha,                            
-		strikename = "Add",
-		strikeivo = "Convoy Mission",
-		strikemission = MISSIONSTRIKE.enums.strikemission.convoy, -- text mission description
-		striketargets = {
-			{ 
-				strikezone = "ZONE_Convoy_Start_a-1",
-				endzone = "ZONE_Convoy_End_a-1",
-				destname = "DP1717",
-				is_open = true
-			},
-			{ 
-				strikezone = "ZONE_Convoy_Start_a-2",
-				endzone = "ZONE_Convoy_End_a-2",
-				destname = "DP3426 Rul Dadna",
-				is_open = true
-			},
-			{ 
-				strikezone = "ZONE_Convoy_Start_a-3",
-				endzone = "ZONE_Convoy_End_a-3",
-				destname = "DN3377 Fujairah Intl",
-				is_open = true
-			},
-			{ 
-				strikezone = "ZONE_Convoy_Start_a-4",
-				endzone = "ZONE_Convoy_End_a-3",
-				destname = "DN3377 Fujairah Intl",
-				is_open = true
-			},
-			{ 
-				strikezone = "ZONE_Convoy_Start_a-5",
-				endzone = "ZONE_Convoy_End_a-3",
-				destname = "DN3377 Fujairah Intl",
-				is_open = true
-			},
-			{ 
-				strikezone = "ZONE_Convoy_Start_a-6",
-				endzone = "ZONE_Convoy_End_a-5",
-				destname = "DP2733 Dibba Al-Hisn",
-				is_open = true
-			},
-			{ 
-				strikezone = "ZONE_Convoy_Start_a-7",
-				endzone = "ZONE_Convoy_End_a-5",
-				destname = "DP2733 Dibba Al-Hisn",
-				is_open = true
-			},
-			{ 
-				strikezone = "ZONE_Convoy_Start_a-8",
-				endzone = "ZONE_Convoy_End_a-3",
-				destname = "DN3377 Fujairah Intl",
-				is_open = true
-			},
-			{ 
-				strikezone = "ZONE_Convoy_Start_a-9",
-				endzone = "ZONE_Convoy_End_a-3",
-				destname = "DN3377 Fujairah Intl",
-				is_open = true
-			},
-			{ 
-				strikezone = "ZONE_Convoy_Start_a-10",
-				endzone = "ZONE_Convoy_End_a-3",
-				destname = "DN3377 Fujairah Intl",
-				is_open = true
-			},
-		},
-		options = {
-			MISSIONSTRIKE.enums.convoy.supply,
-			MISSIONSTRIKE.enums.convoy.armoured,
-		},
-	},-- End Convoy-ALPHA
-	{ -- Convoy-BRAVO
-		striketype = MISSIONSTRIKE.enums.striketype.convoy,
-        strikeregion = MISSIONSTRIKE.enums.region.bravo,                            
-		strikename = "Add",
-		strikeivo = "Convoy Mission",
-		strikemission = MISSIONSTRIKE.enums.strikemission.convoy, -- text mission description
-		striketargets = {
-			{ 
-				strikezone = "ZONE_Convoy_Start_b-1",
-				endzone = "ZONE_Convoy_End_b-1",
-				destname = "DP2184 Al Jowar",
-				is_open = true
-			},
-			{ 
-				strikezone = "ZONE_Convoy_Start_b-2",
-				endzone = "ZONE_Convoy_End_b-2",
-				destname = "DP2489 Al Haqt",
-				is_open = true
-			},
-			{ 
-				strikezone = "ZONE_Convoy_Start_b-3",
-				endzone = "ZONE_Convoy_End_b-1",
-				destname = "DP2184 Al Jowar",
-				is_open = true
-			},
-		},
-		options = {
-			MISSIONSTRIKE.enums.convoy.supply,
-			MISSIONSTRIKE.enums.convoy.armoured,
-		},
-	},-- End Convoy-BRAVO
-}
-
--- Start Strike Attack Module
-if MISSIONSTRIKE.Start then
-	_msg = MISSIONSTRIKE.traceTitle .. "Call Start() from missionstrike_data."
-	BASE:T(_msg)
-	MISSIONSTRIKE:Start()
-end
-
--- END STRIKE ATTACK DATA  
---------------------------------[core\cvncontrol.lua]-------------------------------- 
- 
-env.info( "[JTF-1] cvncontrol.lua" )
-
---- BEGIN CVNCONTROL MENU SECTION
-
-CVNCONTROL = {}
--- inherit methods,  properties etc from BASE for event handler, trace etc
-CVNCONTROL = BASE:Inherit( CVNCONTROL, BASE:New() )
-CVNCONTROL.ClassName = "CVNCONTROL"
-CVNCONTROL.traceTitle = "[JTF-1] "
-CVNCONTROL.version = "1.0"
-
-CVNCONTROL.menu = {}
-
-CVNCONTROL.enums = {
-	setlightsauto = 1, -- auto
-	setlightslaunch = 2, -- launch
-	setlightsrecovery = 3, -- recovery
-	setlightsnav = 4, -- nav
-}
-
-CVNCONTROL.default = {
-	recoverywindow = {15, 30, 60, 90},
-	cruise = 12,
-	deckoffset = -9,
-	countryid = country.id.USA, -- default country to be used for predfined templates
-	coalition = coalition.side.BLUE, -- default coalition to use for predefined templates
-	groupcategory = Group.Category.AIRPLANE, -- default group category to use for predefined templates
-	recoverydelay = 0, -- time, in seconds, for which to delay the commencement of the launch/recovery window
-	flagsetlights = 6666, -- mission trigger flag for setting carrier lights (0 = NAV, 1 = Launch, 2 = Recovery)
-	setlightsdefault = CVNCONTROL.enums.setlightsauto, -- default light mode for carrier
-}
-
-function CVNCONTROL:Start()
-
-	for index, cvn in ipairs(CVNCONTROL.cvn) do
-
-		-- local cvn = self.cvn[index]
-		-- use data file values or set to default if not defined
-		cvn.deckOffset = cvn.deckoffset or self.default.deckoffset
-		cvn.recoverySpeed = cvn.recoveryspeed or self.default.recoveryspeed
-		cvn.cruise = cvn.cruise or self.default.cruise
-		cvn.recoveryWindow = cvn.recoveryWindow or self.default.recoverywindow
-		cvn.recoveryDelay = cvn.recoveryDelay or self.default.recoverydelay
-		cvn.flagsetlights = cvn.flagsetlights or self.default.flagsetlights
-		--local tacan = cvn.tacan
-		
-		cvn.navygroup = NAVYGROUP:New(GROUP:FindByName(cvn.group)) -- cvn.navygroup
-			--:Activate()
-		
-		cvn.navygroup:SetDefaultSpeed(cvn.cruise)
-		cvn.navygroup:SetVerbosity(3)
-		cvn.navygroup:SwitchTACAN(cvn.tacan, cvn.tacanid) -- add
-		cvn.navygroup:SwitchICLS(cvn.icls, cvn.iclsid) -- add
-		cvn.navygroup:SwitchRadio(cvn.radio,cvn.radiomodulation) -- add
-		cvn.navygroup:SwitchAlarmstate(ENUMS.AlarmState.Red) -- add
-		cvn.navygroup:SwitchROE(ENUMS.ROE.WeaponFree) -- add
-		cvn.navygroup:SetPatrolAdInfinitum(true)
-
-		-- if trace is on, draw the zone on the map
-		-- if BASE:IsTrace() then 
-		-- 	local _msg = string.format("Add waypoint marks for group %s", cvn.name)
-		-- 	CVNCONTROL:T(_msg)
-		-- 	-- draw waypoints on map
-		-- 	cvn.navygroup:MarkWaypoints()
-		-- end
-
-		-- add recovery tanker if cvn.recoverytanker is true
-		function cvn.navygroup:OnAfterElementSpawned(From, Event, To, Element)
-			local _msg = string.format("%sOnAfterElementSpawned for Element %s", CVNCONTROL.traceTitle, Element.name)
-			CVNCONTROL:T({_msg,Element})
-
-			local elementName = Element.name
-	
-	
-			if Element.name == cvn.unit then
-				local _msg = string.format("%sLead Element %s", CVNCONTROL.traceTitle, Element.name)
-				CVNCONTROL:T(_msg)
-	
-				-- add recovery tanker
-				if cvn.tanker then
-					_msg = string.format("%sRecovery Tanker for %s is required", CVNCONTROL.traceTitle, cvn.name)
-					CVNCONTROL:T(_msg)
-					CVNCONTROL:recoveryTanker(cvn)
-				end
-				-- insert unit ID into DYNDECK group
-				local unit = UNIT:FindByName(cvn.unit)--GROUP:FindByName(cvn.group):GetUnit(1)
-				local unitid = unit:GetID()
-				_msg = string.format("%sUnit object for %s", CVNCONTROL.traceTitle, cvn.unit)
-				CVNCONTROL:T({_msg, unit})
-	
-			end
-	
-		end
-	
-		function cvn.navygroup:OnAfterTurnIntoWind(From, Event, To, TurnIntoWind)
-
-			local _msg=string.format("%s is turning into wind for Recovery/Launch. BRC will be %d, WOD will be %d knots.", 
-				cvn.name,
-				cvn.brc,
-				cvn.recoveryspeed
-			)
-			CVNCONTROL:T(_msg)
-			MESSAGE:New(_msg, 5):ToBlue()
-
-		end
-
-		function cvn.navygroup:OnAfterCruise(From, Event, To, Speed)
-			
-			local _msg = string.format("%s is returning to Cruise.",
-				cvn.name
-			)
-			CVNCONTROL:T(_msg)
-			MESSAGE:New(_msg, 5):ToBlue()
-
-			--cvn.navygroup:SetSpeed(cvn.cruise, true)
-
-		end
-
-		local _msg = string.format("%sNew Navygroup =", self.traceTitle)
-		self:T({_msg,cvn.navygroup})
-		
-		-- add top menu if not already added
-		if not self.menu.top then
-			--if JTF1.menu.root then
-				self.menu.top = MENU_COALITION:New(coalition.side.BLUE,"Carrier Control", JTF1.menu.root)
-			--else
-			-- 	self.menu.top = MENU_COALITION:New(coalition.side.BLUE,"Carrier Control")
-			-- end
-		end
-	
-		-- add menu for this CVN
-		self.menu[cvn.name] = MENU_COALITION:New(coalition.side.BLUE, cvn.menutext, self.menu.top)
-		
-		for index, minutes in ipairs(cvn.recoveryWindow) do
-			local menuText = string.format("Recovery/%dmin", minutes)
-			local menuId = tostring(minutes)
-	
-			-- add command menus for this cvn
-			self.menu[cvn.name][menuId] = MENU_COALITION_COMMAND:New( coalition.side.BLUE, menuText, self.menu[cvn.name], self.start_recovery, CVNCONTROL, cvn, minutes)
-			_msg = string.format("%sAdd command menu for CVN %s window %s minutes.", self.traceTitle, cvn.name, menuId)
-			self:T(_msg)
-		
-		end
-		
-		self.menu[cvn.name]["lights"] = MENU_COALITION:New(coalition.side.BLUE, "Change Lights", self.menu[cvn.name])
-		-- add commands to set carrier lights mode
-		self.menu[cvn.name]["recovery"] = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Recovery mode", self.menu[cvn.name]["lights"], self.setLights, CVNCONTROL, cvn, self.enums.setlightsrecovery)
-		self.menu[cvn.name]["launch"] = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Launch mode", self.menu[cvn.name]["lights"], self.setLights, CVNCONTROL, cvn, self.enums.setlightslaunch)
-
-
-		-- add command to cancel current recovery window
-		self.menu[cvn.name]["cancel"] = MENU_COALITION_COMMAND:New( coalition.side.BLUE, "Cancel current recovery window.", self.menu[cvn.name], self.recoveryCancel, CVNCONTROL, cvn, cruise)
-		_msg = string.format("%sAdd command menu to cancel recovery for CVN %s.", self.traceTitle, cvn.name)
-		self:T(_msg)
-			
-	end
-
-end
-
-function CVNCONTROL:start_recovery(cvn, minutes)
-
-	_msg = string.format("%sstart_recovery().", self.traceTitle)
-	self:T({_msg,cvn})
-
-	self:setLights(cvn, self.enums.setlightsrecovery)
-	
-	if cvn.navygroup:IsSteamingIntoWind() then
-		_msg = string.format("%sCVN %s already steaming into wind.", 
-			self.traceTitle, 
-			cvn.name
-		)
-		self:T(_msg)
-
-		--local brc =  UTILS.Round(cvn.brc, 0)
-
-		_msg = string.format("%s is currently Launching/Recovering.\n\nWindow closes at time %s\n\nBRC is %d",
-			cvn.name, 
-			cvn.timeend, 
-			cvn.brc
-		)
-		MESSAGE:New(_msg, 5):ToBlue()
-
-	else
-
-		local brc = cvn.navygroup:GetHeadingIntoWind(-4, cvn.recoveryspeed)
-		brc = UTILS.Round(brc, 0)
-
-		_msg = string.format("%sAdd turn into wind for CVN %s. BRC=%d", 
-			self.traceTitle, 
-			cvn.name,
-			brc
-		)
-		self:T(_msg)
-
-		local durationSeconds = minutes * 60
-		local timeNow = timer.getAbsTime()
-		local secondsStart = timeNow + cvn.recoveryDelay
-		local timeStart = UTILS.SecondsToClock(secondsStart,true)
-		local secondsEnd = secondsStart + durationSeconds
-		local timeEnd = UTILS.SecondsToClock(secondsEnd,true)
-		local windDir = UTILS.Round(cvn.navygroup:GetWind(),0)
-		local deckOffSet = cvn.deckoffset
-		local uturn = cvn.uturn
-		if uturn == nil then
-			uturn = true
-		end
-		local recoverySpeed = cvn.recoveryspeed
-
-		_msg =string.format("%s will be turning for Recovery/Launch.\nWindow will be open from %s until %s.\nWind is at %d.\nBRC will be %d", 
-			cvn.name, 
-			timeStart, 
-			timeEnd, 
-			windDir,
-			brc
-		)
-		Message_01 = MESSAGE:New(_msg, 10):ToBlue()
-
-		cvn.navygroup:AddTurnIntoWind(nil, durationSeconds , recoverySpeed, uturn, deckOffSet)
-		cvn.timeend = timeEnd
-		cvn.brc = brc
-
-	end 
-
-end
-
-function CVNCONTROL:recoveryCancel(cvn, cruise)
-	_msg = string.format("%sCancel recovery window for CVN %s.", self.traceTitle, cvn.name)
-	self:T(_msg)
-
-	if cvn.navygroup:IsSteamingIntoWind() then
-
-		self:setLights(cvn, self.enums.setlightsnav)
-
-		cvn.navygroup:TurnIntoWindStop()
-		--cvn.navygroup:SetSpeed(cruise)
-	
-		_msg = string.format("The recovery window for %s has been cancelled.", cvn.name)
-		MESSAGE:New(_msg, 5):ToBlue()
-	end
-
-end
-
-function CVNCONTROL:setLights(cvn, mode)
-	_msg = string.format("%sSet lights to mode %d for CVN %s.", 
-		self.traceTitle, 
-		mode, 
-		cvn.name
-	)
-	self:T(_msg)
-
-	-- set mode to default if not defined
-	mode = mode or CVNCONTROL.default.setlightsdefault
-	-- set mission trigger flag to mode
-	trigger.action.setUserFlag(cvn.flagsetlights, mode)
-
-end
-
-function CVNCONTROL:recoveryTanker(cvn)
-	_msg = string.format("%sAdd Recovery Tanker for CVN %s.", 
-		self.traceTitle, 
-		cvn.name
-	)
-	self:T(_msg)
-
-	if cvn.tankertemplate and GROUP:FindByName(cvn.tankertemplate) then
-		_msg = string.format("%sUsing tanker spawn template in MIZ for CVN %s.", self.traceTitle, cvn.name)
-		self:T(_msg)
-		-- spawn from template in miz
-		cvn.spawntemplate = SPAWN:New(cvn.tankertemplate)
-	else
-		_msg = string.format("%sUsing default tanker spawn template for CVN %s.", self.traceTitle, cvn.name)
-		self:T(_msg)
-		-- spawn using CVNCONTROL default template
-		local countryId = cvn.countryid or CVNCONTROL.default.countryid
-		local coalition = cvn.coalition or CVNCONTROL.default.coalition
-		local groupCategory = cvn.groupcategory or CVNCONTROL.default.groupcategory
-		local spawnTemplatePrefix = "S3BTANKER"
-		local spawnAliasPrefix = string.format("%s_HAWK", cvn.name)
-
-		-- add mission spawn object using template in SUPPORTAC.template[missionSpawnType]
-		cvn.spawntemplate = SPAWN:NewFromTemplate(SPAWNTEMPLATES.templates[spawnTemplatePrefix], spawnTemplatePrefix, spawnAliasPrefix)
-			:InitCountry(countryId) -- set spawn countryid
-			:InitCoalition(coalition) -- set spawn coalition
-			:InitCategory(groupCategory) -- set category
-	end
-	
-	cvn.spawntemplate:InitLateActivated() -- set template to late activated
-
-	-- add RECOVERYTANKER object after spawning
-	cvn.spawntemplate:OnSpawnGroup(
-		function(spawngroup)
-			local spawnGroupName = spawngroup:GetName()
-			_msg = string.format(CVNCONTROL.traceTitle .. "Spawned Group %s", spawnGroupName)
-			CVNCONTROL:T(_msg)
-
-			cvn.spawntanker = RECOVERYTANKER:New(UNIT:FindByName(cvn.unit), spawnGroupName)
-				:SetCallsign(cvn.tankercallsign, cvn.tankercallsignnumber)
-				:SetTACAN(cvn.tankertacan, cvn.tankertacanid)
-				:SetRadio(cvn.tankerradio)
-				:SetTakeoffAir()
-				:SetAltitude(6000)
-				:SetRespawnInAir()
-				:SetRecoveryAirboss( false )
-				
-			cvn.spawntanker:Start()
-		end, cvn
-	)
-
-	-- spawn the tanker
-	cvn.spawntemplate:Spawn()
-
-end
-
--- CVNCONTROL.templates = {
--- 	["S3BTANKER"] = {
--- 		["category"] = Group.Category.AIRPLANE,
--- 		["lateActivation"] = true,
--- 		["tasks"] = 
--- 		{
--- 		}, -- end of ["tasks"]
--- 		["radioSet"] = false,
--- 		["task"] = "Refueling",
--- 		["uncontrolled"] = false,
--- 		["route"] = 
--- 		{
--- 			["routeRelativeTOT"] = true,
--- 			["points"] = 
--- 			{
--- 				[1] = 
--- 				{
--- 					["alt"] = 1828.8,
--- 					["action"] = "Turning Point",
--- 					["alt_type"] = "BARO",
--- 					["speed"] = 141.31944444444,
--- 					["task"] = 
--- 					{
--- 						["id"] = "ComboTask",
--- 						["params"] = 
--- 						{
--- 							["tasks"] = 
--- 							{
--- 								[1] = 
--- 								{
--- 									["number"] = 1,
--- 									["auto"] = true,
--- 									["id"] = "Tanker",
--- 									["enabled"] = true,
--- 									["params"] = 
--- 									{
--- 									}, -- end of ["params"]
--- 								}, -- end of [1]
--- 								[2] = 
--- 								{
--- 									["number"] = 2,
--- 									["auto"] = true,
--- 									["id"] = "WrappedAction",
--- 									["enabled"] = true,
--- 									["params"] = 
--- 									{
--- 										["action"] = 
--- 										{
--- 											["id"] = "ActivateBeacon",
--- 											["params"] = 
--- 											{
--- 												["type"] = 4,
--- 												["AA"] = false,
--- 												["callsign"] = "TKR",
--- 												["system"] = 4,
--- 												["channel"] = 1,
--- 												["modeChannel"] = "X",
--- 												["bearing"] = true,
--- 												["frequency"] = 962000000,
--- 											}, -- end of ["params"]
--- 										}, -- end of ["action"]
--- 									}, -- end of ["params"]
--- 								}, -- end of [2]
--- 								[3] = 
--- 								{
--- 									["number"] = 3,
--- 									["auto"] = false,
--- 									["id"] = "WrappedAction",
--- 									["enabled"] = true,
--- 									["params"] = 
--- 									{
--- 										["action"] = 
--- 										{
--- 											["id"] = "SetInvisible",
--- 											["params"] = 
--- 											{
--- 												["value"] = true,
--- 											}, -- end of ["params"]
--- 										}, -- end of ["action"]
--- 									}, -- end of ["params"]
--- 								}, -- end of [3]
--- 							}, -- end of ["tasks"]
--- 						}, -- end of ["params"]
--- 					}, -- end of ["task"]
--- 					["type"] = "Turning Point",
--- 					["ETA"] = 0,
--- 					["ETA_locked"] = true,
--- 					["y"] = 606748.96393416,
--- 					["x"] = -358539.84033849,
--- 					["formation_template"] = "",
--- 					["speed_locked"] = true,
--- 				}, -- end of [1]
--- 			}, -- end of ["points"]
--- 		}, -- end of ["route"]
--- 		["groupId"] = 1,
--- 		["hidden"] = false,
--- 		["units"] = 
--- 		{
--- 			[1] = 
--- 			{
--- 				["alt"] = 1828.8,
--- 				["alt_type"] = "BARO",
--- 				["livery_id"] = "usaf standard",
--- 				["skill"] = "High",
--- 				["speed"] = 141.31944444444,
--- 				["type"] = "S-3B Tanker",
--- 				["unitId"] = 1,
--- 				["psi"] = 0,
--- 				["y"] = 606748.96393416,
--- 				["x"] = -358539.84033849,
--- 				["name"] = "Aerial-1-1",
--- 				["payload"] = 
--- 				{
--- 					["pylons"] = 
--- 					{
--- 					}, -- end of ["pylons"]
--- 					["fuel"] = "7813",
--- 					["flare"] = 30,
--- 					["chaff"] = 30,
--- 					["gun"] = 100,
--- 				}, -- end of ["payload"]
--- 				["heading"] = 0,
--- 				["callsign"] = 
--- 				{
--- 					[1] = 1,
--- 					[2] = 1,
--- 					["name"] = "Texaco11",
--- 					[3] = 1,
--- 				}, -- end of ["callsign"]
--- 				["onboard_num"] = "010",
--- 			}, -- end of [1]
--- 		}, -- end of ["units"]
--- 		["y"] = 606748.96393416,
--- 		["x"] = -358539.84033849,
--- 		["name"] = "S3BTANKER",
--- 		["communication"] = true,
--- 		["start_time"] = 0,
--- 		["modulation"] = 0,
--- 		["frequency"] = 251,
--- 	}, -- end of ["S3BTANKER"]
--- }
-
---CVNCONTROL:Start() -- called from cvncontrol_data
-
-  
---------------------------------[cvncontrol_data.lua]-------------------------------- 
- 
-env.info( "[JTF-1] cvncontrol_data" )
-
---- MISSION JTF1 MENU SETTINGS FOR MIZ
---
--- This file MUST be loaded AFTER JTF1menu.lua
---
--- These values are specific to the miz and will override the default values in JTF1
---
-
--- Error prevention. Create empty container if module core lua not loaded.
-if not CVNCONTROL then 
-	CVNCONTROL = {}
-	CVNCONTROL.traceTitle = "[JTF-1 CVNCONTROL] "
-	_msg = CVNCONTROL.traceTitle .. "CORE FILE NOT LOADED!"
-	BASE:E(_msg)
-end
-
--- table of Carriers
-CVNCONTROL.cvn = {
-	{
-		name = "CVN72", -- identifier for this CVN
-		group = "JTF-1_CVN72", -- name of the GROUP in the ME
-		unit = "JTF-1_CVN72", -- name of the carrier unit in the GROUP
-		menutext = "CVN-72 Lincoln",-- text used for the carrier's control menu
-		deckoffset = -4, -- deck offset from boat heading
-        uturn = false, -- whether boat should return to the position it was in prior to the recover/launch request
-		recoveryspeed = 30, -- wind speed over the deck dunring recovery
-		tacan = 72, -- boat TACAN channel
-		tacanid = "ABE", -- TACAN morse ID
-		icls = 4,-- ICLS channel
-		iclsid = "ABE", -- ICLS morse ID
-		radio = 274.075, -- AI ATC freq
-		radiomodulation = radio.modulation.AM, -- AI ATC freq modulation [radio.modulation.AM/FM]
-		cruise = 11, -- speed at which boat should steam when not on launch/recovery
-		tanker = true, -- if a Hawk tanker should be spawned
-		tankertemplate = nil, -- name of GROUP template to be used. If nil, use the built-in template (default nil)
-		tankercallsign = CALLSIGN.Tanker.Texaco, -- Hawk tanker callsign [CALLSIGN.Tanker.Texaco/Shell/Arco]
-		tankercallsignnumber = 6, -- hawk tanker callsign number
-		tankertacan = 38, -- hawk tanker TACAN channel
-		tankertacanid = "TEX", -- hawk tanker TACAN morse ID
-		tankerradio = 317.775, -- hawk tanker radio freq
-		flagsetlights = 6672, -- mission trigger flag for setting carrier light mode
-	},
-	{
-		name = "LHA1", -- identifier for this CVN
-		group = "CSG_CarrierGrp_Tarawa", -- name of the GROUP in the ME
-		unit = "CSG_CarrierGrp_Tarawa", -- name of the carrier unit in the GROUP
-		menutext = "LHA-1 Tarawa",-- text used for the carrier's control menu
-		deckoffset = 0, -- deck offset from boat heading
-        uturn = false, -- whether boat should return to the position it was in prior to the recover/launch request
-		recoveryspeed = 20, -- wind speed over the deck dunring recovery
-		tacan = 1, -- boat TACAN channel
-		tacanid = "TAR", -- TACAN morse ID
-		icls = 1,-- ICLS channel
-		iclsid = "TAR", -- ICLS morse ID
-		radio = 255.725, -- AI ATC freq
-		radiomodulation = radio.modulation.AM, -- AI ATC freq modulation [radio.modulation.AM/FM]
-		cruise = 11, -- speed at which boat should steam when not on launch/recovery
-		tanker = true, -- if a Hawk tanker should be spawned
-		tankertemplate = nil, -- name of GROUP template to be used. If nil, use the built-in template (default nil)
-		tankercallsign = CALLSIGN.Tanker.Arco, -- Hawk tanker callsign [CALLSIGN.Tanker.Texaco/Shell/Arco]
-		tankercallsignnumber = 2, -- hawk tanker callsign number
-		tankertacan = 39, -- hawk tanker TACAN channel
-		tankertacanid = "ARC", -- hawk tanker TACAN morse ID
-		tankerradio = 278.325, -- hawk tanker radio freq
-	},
-}
-
--- start the mission timer
-if CVNCONTROL.Start then
-	_msg = CVNCONTROL.traceTitle .. "Call Start()"
-	BASE:T(_msg)
-	CVNCONTROL:Start()
-end
-  
---------------------------------[core\dynamic_deck.lua]-------------------------------- 
- 
-env.info( "[JTF-1] dynamic_deck_population" )
---
--- F10 menu driven population of carrier deck with templated static objects.
---
--- Three files are required for this module;
---     dynamic_deck.lua
---     dynamic_deck_templates.lua
---     dynamic_deck_data.lua
---
--- 1. dynamic_dec.lua
--- Contains functions, key values and GLOBAL settings.
---
--- 2. dynamic_deck_templates.lua
--- Contains templates for the various staic objects/groups that can be placed on the carrier deck.
---
--- 3. dynamic_deck_data.lua
--- Contains settings that are specific to the miz.
---
--- Load order in miz MUST be;
---     1. dynamic_deck.lua
---     2. dynamic_deck_templates.lua
---     3. dynamic_deck_data.lua
---
-
-DYNDECK = DYNDECK or {}
--- inherit methods,  properties etc from BASE for event handler, trace etc
-DYNDECK = BASE:Inherit( DYNDECK, BASE:New() )
-DYNDECK.ClassName = "DYNDECK"
-DYNDECK.traceTitle = "[JTF-1] "
-DYNDECK.version = "1.0"
-
-DYNDECK.menu = {}
-DYNDECK.templates = {}
-
--- Function to parse through DYNDECK.ship and add menu items
-function DYNDECK:Start()
-
-    self:T("[JTF-1 DYNDECK] Add template menus to mission.")
-    
-    local menu_root
-
-    if JTF1.menu.root then
-        menu_root = JTF1.menu.root
-    else
-        -- add menu root
-        menu_root = DYNDECK.menuroot or nil
-    end
-    
-    DYNDECK.menu = MENU_MISSION:New("Dynamic Deck", menu_root)
- 
-    -- add menu root
-    DYNDECK.menu = MENU_MISSION:New("Dynamic Deck", menu_root)
-
-    -- add ship menus
-     for shipIndex, menuship in ipairs(DYNDECK.ship) do
-
-        if menuship.unit then
-            local unit = UNIT:FindByName(menuship.unit)
-            local unitId = unit:GetID()
-            _msg = self.traceTitle .. "Group ID = " .. unitId
-            self:T(_msg)
-            menuship.id = tonumber(unitId)
-        end
-  
-        -- add menu for ship
-        DYNDECK.menu[menuship.id] = MENU_MISSION:New(menuship.name, DYNDECK.menu)
-        -- add submenu for COMPLETE templates
-        DYNDECK.menu[menuship.id].complete = MENU_MISSION:New("Complete Templates", DYNDECK.menu[menuship.id])
-        -- add submenu for PARTIAL templates
-        DYNDECK.menu[menuship.id].partial = MENU_MISSION:New("Partial Templates", DYNDECK.menu[menuship.id])
-  
-        
-        -- add menu commands for full templates first
-        for templateIndex, template in ipairs(menuship.templates) do
-  
-            if template.group == "" then -- this is a full template and should be placed in the ship's root menu
-  
-             end
-  
-        end
-
-        -- add group submenus and add/remove commands for partial templates
-        for templateIndex, template in ipairs(menuship.templates) do
- 
-            if template.group == "" then -- this is a complete template and should be placed in the Complete Templates submenu
-                self:T("[JTF-1 DYNDECK] Add Full Template: " .. template.name)
-  
-                -- add command to ship root menu for full template 
-                MENU_MISSION_COMMAND:New(template.menutext, DYNDECK.menu[menuship.id].complete, DYNDECK.applyTemplate, self, template.name, menuship.id, menuship.coalitionID, false, shipIndex ,templateIndex)
-
-            else -- this is a partial template and should be placed in the Partial Templates submenu
-                self:T("[JTF-1 DYNDECK] Add partial template.")
-
-                -- add submenu for group if it doesn't already exist
-                if not DYNDECK.menu[menuship.id].partial[template.group] then
-                    self:T("[JTF-1 DYNDECK] Add Group submenu: " .. template.group)
- 
-                    DYNDECK.menu[menuship.id].partial[template.group] = MENU_MISSION:New(template.group, DYNDECK.menu[menuship.id].partial) -- add group submenu
-                    DYNDECK.menu[menuship.id].partial[template.group].templates = {} -- container for grouped template submenus
- 
-                end
- 
-                if not DYNDECK.menu[menuship.id].partial[template.group].templates[template.name] then -- check template entry isn't a duplicate
-                    self:T("[JTF-1 DYNDECK] Add template submenu: " .. template.name)
-
-                    -- add a submenu for the group template
-                    DYNDECK.menu[menuship.id].partial[template.group].templates[template.name] = MENU_MISSION:New(template.menutext, DYNDECK.menu[menuship.id].partial[template.group])
-
-                    -- add a menu to apply the partial template
-                    MENU_MISSION_COMMAND:New("Add",  DYNDECK.menu[menuship.id].partial[template.group].templates[template.name], DYNDECK.applyTemplate, self, template.name, menuship.id, menuship.coalitionID, true, shipIndex ,templateIndex)
-
-                    -- add a menu to remove the partial template
-                    MENU_MISSION_COMMAND:New("Remove", DYNDECK.menu[menuship.id].partial[template.group].templates[template.name], DYNDECK.clearDeck, self, template.name, menuship.id, menuship.coalitionID, shipIndex ,templateIndex)  
-
-                else
-                    self:T("[JTF-1 DYNDECK] ERROR! Menu has already been added for template: " .. template.name)
-                end
- 
-            end
- 
-        end
-
-        -- add menu to completely clear the ships deck of all statics
-        MENU_MISSION_COMMAND:New("Clear Deck", DYNDECK.menu[menuship.id], DYNDECK.clearDeck, self, false, menuship.id, menuship.coalitionID, shipIndex)  
- 
-    end
-
-end
-
--- Function to remove templates from the deck
-function DYNDECK:clearDeck(templateName, shipID, coalitionID, shipIndex, templateIndex)
-    self:T("[JTF-1 DYNDECK] clearDeck called.")
-
-    local staticFind = templateName or ("dyndeck_" .. shipID) -- search string for identifying objects to remove
-    local statObj = coalition.getStaticObjects(coalitionID) -- table of all static objects for coalition
- 
-    -- step through table to find statics with the search string in thier name
-    for i, static in pairs(statObj) do
-        local staticName = static:getName()
-        if string.match(staticName, ".*" .. staticFind .. ".*") then
-            static:destroy() -- destroy found static
-        end
-    end
-    
-    if templateName then
-        -- if a template name was passed to clearDeck change its active tag to false
-        DYNDECK.ship[shipIndex].templates[templateIndex].active = false
-    else
-        -- if no template name was provided change the active tag for all the ship's templates to false 
-        for j, template in ipairs(DYNDECK.ship[shipIndex].templates) do
-            DYNDECK.ship[shipIndex].templates[j].active = false
-        end
-        -- set the ship's fullTemplateActive tag to false
-        DYNDECK.ship[shipIndex].fullTemplateActive = false
-    end
-
-end
-
--- Function to Apply the selected template to the ship
-function DYNDECK:applyTemplate(templateName, shipID, coalitionID, noClear, shipIndex, templateIndex)
-    self:T("[JTF-1 DYNDECK] applyTemplate called.")
- 
-    if DYNDECK[templateName] then -- check called template exists!
-        -- only apply the template if it is *not* already active
- 
-        if not DYNDECK.ship[shipIndex].templates[templateIndex].active then
-            self:T("[JTF-1 DYNDECK] Template not active.")
- 
-            if DYNDECK.ship[shipIndex].fullTemplateActive or (not noClear) then -- a full template is being, or has already been, applied
-                self:T("[JTF-1 DYNDECK] Clear Deck.")
-                -- clear deck before applying template
-                DYNDECK:clearDeck(false, shipID, coalitionID, shipIndex)
-            end
- 
-            self:T("[JTF-1 DYNDECK] Apply template: " .. templateName)
-            -- call function for the template
-            DYNDECK[templateName](shipID, templateName)
-            -- mark the template as active
-            DYNDECK.ship[shipIndex].templates[templateIndex].active = true
- 
-            if not noClear then 
-                -- mark ship as having a full template applied
-                DYNDECK.ship[shipIndex].fullTemplateActive = true
-            end
-        else
-            self:T("[JTF-1 DYNDECK] TEMPLATE ALREADY ACTIVE!")
-        end
- 
-    else -- if template does not exist
-        _msg = "[JTF-1 DYNDECK] ERROR! REQUESTED SHIP TEMPLATE NOT FOUND: " .. templateName
-        self:T(_msg)
-        MESSAGE:New(_msg):ToAll()
-    end
-end
-
-
---DYNDECK:Start()
-
--- default templates for SC and Forrestal. Additional templates should be placed in dynamic_deck_templates.lua and loaded in ME after this file.
-
-function DYNDECK.sc_flex4c234(shipID, templateName) 
-
-    local namePrefix = "dyndeck_" .. shipID .. templateName
-
-	-- Created by Redkite: https://www.youtube.com/user/RedKiteRender/
-
-	local staticObj = {
-
-		["groupId"] = 400,		-- ids of the unit we're spawning (will auto increment if id taken)
-		["unitId"] = 401,
-		["rate"] = 30,
-		["name"] = namePrefix .. "4temp EL1 Hornet 1", -- unit name (Name this something identifiable if you wish to remove it later)
-
-		["type"] = "FA-18C_hornet", 			-- unit, category and livery of unit to place.
-		["category"] = "Planes",
-		["livery_id"] = "VFA-37",
-
-		["y"] = -274433.54379664,
-		["heading"] = 37.55948550292,		-- The initial location of the unit (required else unit will offet on origin of map)
-		["x"] = -90767.765053252,
-
-		["offsets"] = {				-- The offsets that choose where on the deck it will spawn
-			["y"] = 31.035356269975,
-			["angle"] = 4.7123889803847,
-			["x"] = 23.392320767991
-		}, -- end of ["offsets"]
-		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-		["linkOffset"] = true,
-		["dead"] = false,
-	}
-	coalition.addStaticObject(country.id.USA, staticObj)
-
-	-- ********************************************************
-
-
-
-	local staticObj = {
-
-		["groupId"] = 401,		-- ids of the unit we're spawning (will auto increment if id taken)
-		["unitId"] = 401,
-		["rate"] = 30,
-		["name"] = namePrefix .. "4temp EL1 Hornet 2", -- unit name (Name this something identifiable if you wish to remove it later)
-
-		["type"] = "FA-18C_hornet", 			-- unit, category and livery of unit to place.
-		["category"] = "Planes",
-		["livery_id"] = "VFA-37",
-
-		["y"] = 274432.9647788,
-		["heading"] =  4.7123889803847,		-- The initial location of the unit (required else unit will offet on origin of map)
-		["x"] =  -90757.458535686,
-
-		["offsets"] = {				-- The offsets that choose where on the deck it will spawn
-			["y"] = 31.61437411001,
-			["angle"] = 4.7123889803847,
-			["x"] = 33.698838333992,
-		}, -- end of ["offsets"]
-		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-		["linkOffset"] = true,
-		["dead"] = false,
-	}
-	coalition.addStaticObject(country.id.USA, staticObj)
-
-	-- ********************************************************
-
-
-
-	local staticObj = {
-
-		["groupId"] = 403,		-- ids of the unit we're spawning (will auto increment if id taken)
-		["unitId"] = 403,
-		["rate"] = 30,
-		["name"] = namePrefix .. "4temp EL2 S3", -- unit name (Name this something identifiable if you wish to remove it later)
-
-		["type"] = "S-3B Tanker", 			-- unit, category and livery of unit to place.
-		["category"] = "Planes",
-		["livery_id"] = "usaf standard",
-		
-		["offsets"] = {				-- The offsets that choose where on the deck it will spawn
-			["y"] = 29.84889531997,
-			["angle"] =  4.4505895925855,
-			["x"] = -14.761768433003,
-		}, -- end of ["offsets"]
-
-		["y"] = -274434.73025759,	-- The initial location of the unit (required else unit will offet on origin of map)
-		["x"] =  -90805.919142453,
-		["heading"] =  4.4505895925855,	
-
-		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-		["linkOffset"] = true,
-		["dead"] = false,
-	}
-	coalition.addStaticObject(country.id.USA, staticObj)
-
-	-- ********************************************************
-
-	local staticObj = {
-		
-	-- Segment you need to change start  
-		["groupId"] = 1,		-- id's of the unit we're spawning (will auto increment if id taken)
-		["unitId"] = 1,
-		["name"] = namePrefix .. "4temp EL2 Hornet", -- unit name (Name this something identifiable if you wish to remove it later)
-		
-		
-	
-		["livery_id"] = "VFA-37",
-		["category"] = "Planes",
-		["offsets"] = {				-- The offsets that choose where on the deck it will spawn
-			["y"] = 31.382766969968,
-			["angle"] = 4.7123889803847,
-			["x"] = -25.013570722003,
-		}, -- end of ["offsets"]
-		["type"] = "FA-18C_hornet", 			-- unit, category and livery of unit to place.
-	-- Segment you need to change end
-
-
-		["x"] = -90816.170944742,			-- The initial location of the unit (required else unit will offet on origin of map)
-		["y"] = -274433.19638594,
-		["heading"] = 4.7123889803847,
-		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-		["linkOffset"] = true,
-		["dead"] = false,
-		["rate"] = 30,
-	}
-	coalition.addStaticObject(country.id.USA, staticObj)
-
-	-- ********************************************************
-
-
-	local staticObj = {
-
-	-- Segment you need to change start  
-
-		["name"] = namePrefix .. "4temp Finger Seahawk", -- unit name (Name this something identifiable if you wish to remove it later)
-
-
-		["livery_id"] = "standard",
-		["category"] = "Helicopters",
-		["offsets"] = {				-- The offsets that choose where on the deck it will spawn
-			["y"] = -25.023610410048,
-			["angle"] = 1.7976891295542,
-			["x"] = -120.511512843,
-		}, -- end of ["offsets"]
-		["type"] = "SH-60B",			-- unit, category and livery of unit to place.
-	-- Segment you need to change end
-
-	-- these can be left as is, but are required.
-		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken)
-		["unitId"] = 33,
-		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
-		["x"] = -00126557,			
-		["heading"] = 37.55948550292,
-		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-		["linkOffset"] = true,
-		["dead"] = false,
-		["rate"] = 30,
-	}
-	coalition.addStaticObject(country.id.USA, staticObj)
-
-	-- ********************************************************
-
-
-	local staticObj = {
-
-	-- Segment you need to change start  
-
-		["name"] = namePrefix .. "4temp Corral Crane", -- unit name (Name this something identifiable if you wish to remove it later)
-
-
-		["category"] = "ADEquipment",
-		["offsets"] = {				-- The offsets that choose where on the deck it will spawn
-			["y"] = 33.351427629997,
-			["angle"] = 4.6600291028249,
-			["x"] = -0.92642854900623,
-		}, -- end of ["offsets"]
-		["type"] = "AS32-36A",			-- unit, category and livery of unit to place.
-	-- Segment you need to change end
-
-	-- these can be left as is, but are required.
-		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken)
-		["unitId"] = 33,
-		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
-		["x"] = -00126557,			
-		["heading"] = 37.55948550292,
-		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-		["linkOffset"] = true,
-		["dead"] = false,
-		["rate"] = 30,
-	}
-	coalition.addStaticObject(country.id.USA, staticObj)
-
-	-- ********************************************************
-
-	local staticObj = {
-
-	-- Segment you need to change start  
-
-		["name"] = namePrefix .. "4temp Point Firetruck", -- unit name (Name this something identifiable if you wish to remove it later)
-
-
-		["category"] = "ADEquipment",
-		["offsets"] = {				-- The offsets that choose where on the deck it will spawn
-												["y"] = 32.424999079958,
-												["angle"] = 5.4279739737024,
-												["x"] = 72.724640796994,
-		}, -- end of ["offsets"]
-		["type"] = "AS32-p25",			-- unit, category and livery of unit to place.
-	-- Segment you need to change end
-
-	-- these can be left as is, but are required.
-		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken)
-		["unitId"] = 33,
-		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
-		["x"] = -00126557,			
-		["heading"] = 37.55948550292,
-		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-		["linkOffset"] = true,
-		["dead"] = false,
-		["rate"] = 30,
-	}
-	coalition.addStaticObject(country.id.USA, staticObj)
-
-	-- ********************************************************
-
-	local staticObj = {
-		
-	-- Segment you need to change start  
-
-		["name"] = namePrefix .. "4temp Junk Yard Tug", -- unit name (Name this something identifiable if you wish to remove it later)
-
-
-		["category"] = "ADEquipment",
-		["offsets"] = {				-- The offsets that choose where on the deck it will spawn
-												["y"] = 30.242116749985,
-												["angle"] = 2.4958208303519,
-												["x"] = -79.610005513998,
-		}, -- end of ["offsets"]
-		["type"] = "AS32-31A",			-- unit, category and livery of unit to place.
-	-- Segment you need to change end
-
-	-- these can be left as is, but are required.
-		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken)
-		["unitId"] = 33,
-		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
-		["x"] = -00126557,			
-		["heading"] = 37.55948550292,
-		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-		["linkOffset"] = true,
-		["dead"] = false,
-		["rate"] = 30,
-	}
-	coalition.addStaticObject(country.id.USA, staticObj)
-
-
-	-- ********************************************************
-
-	local staticObj = {
-	-- Segment you need to change start  
-
-		["name"] = namePrefix .. "4temp EL4 Tomcat 1", -- unit name (Name this something identifiable if you wish to remove it later)
-
-											["livery_id"] = "VF-102 Diamondbacks",
-											["category"] = "Planes",
-											["offsets"] = 
-											{
-												["y"] = -32.180430089997,
-												["angle"] = 1.9373154697137,
-												["x"] = -98.393250321998,
-											}, -- end of ["offsets"]
-											["type"] = "F-14B",
-	-- Segment you need to change end
-
-	-- these can be left as is, but are required.
-	--	["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
-		["unitId"] = 33,
-		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
-		["x"] = -00126557,			
-		["heading"] = 37.55948550292,
-		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-		["linkOffset"] = true,
-		["dead"] = false,
-		["rate"] = 30,
-	}
-	coalition.addStaticObject(country.id.USA, staticObj)
-
-	-- ********************************************************
-
-
-	local staticObj = {
-
-		["name"] = namePrefix .. "4temp EL4 Tomcat 2", -- unit name (Name this something identifiable if you wish to remove it later)
-	-- Copy and paste over this with the units information
-										["livery_id"] = "VF-102 Diamondbacks 102",
-											["category"] = "Planes",
-											["offsets"] = 
-											{
-												["y"] = -32.924847350048,
-												["angle"] = 1.7627825445143,
-												["x"] = -110.574623714,
-											}, -- end of ["offsets"]
-											["type"] = "F-14B",
-	-- Copy and paste over this with the units information end
-
-	-- these can be left as is, but is required.
-		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
-		["unitId"] = 33,
-		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
-		["x"] = -00126557,			
-		["heading"] = 37.55948550292,
-		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-		["linkOffset"] = true,
-		["dead"] = false,
-		["rate"] = 30,
-	}
-	coalition.addStaticObject(country.id.USA, staticObj)
-
-	-- ********************************************************
-
-	local staticObj = {
-
-		["name"] = namePrefix .. "4temp Corral E2", -- unit name (Name this something identifiable if you wish to remove it later)
-	-- Copy and paste over this with the units information
-										["livery_id"] = "E-2D Demo",
-											["category"] = "Planes",
-											["offsets"] = 
-											{
-												["y"] = 30.665721859958,
-												["angle"] = 4.6949356878647,
-												["x"] = 8.8025239199924,
-											}, -- end of ["offsets"]
-											["type"] = "E-2C",
-	-- Copy and paste over this with the units information end
-
-	-- these can be left as is, but is required.
-		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
-		["unitId"] = 33,
-		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
-		["x"] = -00126557,			
-		["heading"] = 37.55948550292,
-		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-		["linkOffset"] = true,
-		["dead"] = false,
-		["rate"] = 30,
-	}
-	coalition.addStaticObject(country.id.USA, staticObj)
-
-	-- ********************************************************
-
-	local staticObj = {
-
-		["name"] = namePrefix .. "4temp Point Hornet", -- unit name (Name this something identifiable if you wish to remove it later)
-	-- Copy and paste over this with the units information
-											["livery_id"] = "VFA-37",
-											["category"] = "Planes",
-											["type"] = "FA-18C_hornet",
-											["offsets"] = 
-											{
-												["y"] = 34.190822379955,
-												["angle"] = 3.3335788713092,
-												["x"] = 61.561528349994,
-											}, -- end of ["offsets"]
-	-- Copy and paste over this with the units information end
-
-	-- these can be left as is, but is required.
-		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
-		["unitId"] = 33,
-		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
-		["x"] = -00126557,			
-		["heading"] = 37.55948550292,
-		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-		["linkOffset"] = true,
-		["dead"] = false,
-		["rate"] = 30,
-	}
-	coalition.addStaticObject(country.id.USA, staticObj)
-
-	-- ********************************************************
-
-
-	local staticObj = {
-
-		["name"] = namePrefix .. "4temp LSO Station 3", -- unit name (Name this something identifiable if you wish to remove it later)
-	-- Copy and paste over this with the units information
-											["category"] = "Personnel",
-											["offsets"] = 
-											{
-												["y"] = -22.370473980031,
-												["angle"] = 2.4434609527921,
-												["x"] = -130.61201797701,
-											}, -- end of ["offsets"]
-											["shape_name"] = "carrier_lso_usa",
-											["type"] = "Carrier LSO Personell",
-	-- Copy and paste over this with the units information end
-
-	-- these can be left as is, but is required.
-		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
-		["unitId"] = 33,
-		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
-		["x"] = -00126557,			
-		["heading"] = 37.55948550292,
-		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-		["linkOffset"] = true,
-		["dead"] = false,
-		["rate"] = 30,
-	}
-	coalition.addStaticObject(country.id.USA, staticObj)
-
-	-- ********************************************************
-
-
-
-	local staticObj = {
-
-		["name"] = namePrefix .. "4temp LSO Station 1", -- unit name (Name this something identifiable if you wish to remove it later)
-	-- Copy and paste over this with the units information
-											["category"] = "Personnel",
-											["offsets"] = 
-											{
-												["y"] = -21.789118479996,
-												["angle"] = 4.2935099599061,
-												["x"] = -129.42353100701,
-											}, -- end of ["offsets"]
-											["shape_name"] = "carrier_lso1_usa",
-											["type"] = "Carrier LSO Personell 1",
-	-- Copy and paste over this with the units information end
-
-	-- these can be left as is, but is required.
-		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
-		["unitId"] = 33,
-		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
-		["x"] = -00126557,			
-		["heading"] = 37.55948550292,
-		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-		["linkOffset"] = true,
-		["dead"] = false,
-		["rate"] = 30,
-	}
-	coalition.addStaticObject(country.id.USA, staticObj)
-
-	-- ********************************************************
-
-
-	local staticObj = {
-
-		["name"] = namePrefix .. "4temp LSO Station 2", -- unit name (Name this something identifiable if you wish to remove it later)
-	-- Copy and paste over this with the units information
-										["livery_id"] = "white",
-											["category"] = "Personnel",
-											["offsets"] = 
-											{
-												["y"] = -22.656188270019,
-												["angle"] = 1.850049007114,
-												["x"] = -129.497732263,
-											}, -- end of ["offsets"]
-											["shape_name"] = "carrier_tech_USA",
-											["type"] = "us carrier tech",
-											["unitId"] = 17,
-	-- Copy and paste over this with the units information end
-
-	-- these can be left as is, but is required.
-		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
-		["unitId"] = 33,
-		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
-		["x"] = -00126557,			
-		["heading"] = 37.55948550292,
-		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-		["linkOffset"] = true,
-		["dead"] = false,
-		["rate"] = 30,
-	}
-	coalition.addStaticObject(country.id.USA, staticObj)
-
-	-- ********************************************************
-
-	local staticObj = {
-
-		["name"] = namePrefix .. "4temp Point Tech 3", -- unit name (Name this something identifiable if you wish to remove it later)
-	-- Copy and paste over this with the units information
-											["livery_id"] = "white",
-											["category"] = "Personnel",
-											["offsets"] = 
-											{
-												["y"] = 31.799837369996,
-												["angle"] = 1.850049007114,
-												["x"] = 58.869844022993,
-											}, -- end of ["offsets"]
-											["shape_name"] = "carrier_tech_USA",
-											["type"] = "us carrier tech",
-	-- Copy and paste over this with the units information end
-
-	-- these can be left as is, but is required.
-		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
-		["unitId"] = 33,
-		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
-		["x"] = -00126557,			
-		["heading"] = 37.55948550292,
-		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-		["linkOffset"] = true,
-		["dead"] = false,
-		["rate"] = 30,
-	}
-	coalition.addStaticObject(country.id.USA, staticObj)
-	-- ********************************************************
-	local staticObj = {
-
-		["name"] = namePrefix .. "4temp Point Tech 2", -- unit name (Name this something identifiable if you wish to remove it later)
-	-- Copy and paste over this with the units information
-											["livery_id"] = "purple",
-											["category"] = "Personnel",
-											["offsets"] = 
-											{
-												["y"] = 36.657607259986,
-												["angle"] = 5.9341194567807,
-												["x"] = 60.15744568099,
-											}, -- end of ["offsets"]
-											["shape_name"] = "carrier_tech_USA",
-											["type"] = "us carrier tech",
-	-- Copy and paste over this with the units information end
-
-	-- these can be left as is, but is required.
-		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
-		["unitId"] = 33,
-		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
-		["x"] = -00126557,			
-		["heading"] = 37.55948550292,
-		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-		["linkOffset"] = true,
-		["dead"] = false,
-		["rate"] = 30,
-	}
-	coalition.addStaticObject(country.id.USA, staticObj)
-	-- ********************************************************
-	local staticObj = {
-
-		["name"] = namePrefix .. "4temp Point Tech 1", -- unit name (Name this something identifiable if you wish to remove it later)
-	-- Copy and paste over this with the units information
-											["livery_id"] = "purple",
-											["category"] = "Personnel",
-											["offsets"] = 
-											{
-												["y"] = 32.502165549959,
-												["angle"] = 2.460914245312,
-												["x"] = 67.356309497001,
-											}, -- end of ["offsets"]
-											["shape_name"] = "carrier_tech_USA",
-											["type"] = "us carrier tech",
-	-- Copy and paste over this with the units information end
-
-	-- these can be left as is, but is required.
-		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
-		["unitId"] = 33,
-		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
-		["x"] = -00126557,			
-		["heading"] = 37.55948550292,
-		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-		["linkOffset"] = true,
-		["dead"] = false,
-		["rate"] = 30,
-	}
-	coalition.addStaticObject(country.id.USA, staticObj)
-	-- ********************************************************
-	local staticObj = {
-
-		["name"] = namePrefix .. "4temp Corral Tech 1", -- unit name (Name this something identifiable if you wish to remove it later)
-	-- Copy and paste over this with the units information
-											["livery_id"] = "yellow",
-											["category"] = "Personnel",
-											["offsets"] = 
-											{
-												["y"] = 25.203805239988,
-												["angle"] = 4.7472955654246,
-												["x"] = 15.325497041995,
-											}, -- end of ["offsets"]
-											["shape_name"] = "carrier_tech_USA",
-											["type"] = "us carrier tech",
-	-- Copy and paste over this with the units information end
-
-	-- these can be left as is, but is required.
-		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
-		["unitId"] = 33,
-		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
-		["x"] = -00126557,			
-		["heading"] = 37.55948550292,
-		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-		["linkOffset"] = true,
-		["dead"] = false,
-		["rate"] = 30,
-	}
-	coalition.addStaticObject(country.id.USA, staticObj)
-	-- ********************************************************
-	local staticObj = {
-
-		["name"] = namePrefix .. "4temp Corral Tech 2", -- unit name (Name this something identifiable if you wish to remove it later)
-	-- Copy and paste over this with the units information
-											["livery_id"] = "yellow",
-											["category"] = "Personnel",
-											["offsets"] = 
-											{
-												["y"] = 24.753144659975,
-												["angle"] = 5.218534463463,
-												["x"] = 13.844755134996,
-											}, -- end of ["offsets"]
-											["shape_name"] = "carrier_tech_USA",
-											["type"] = "us carrier tech",
-	-- Copy and paste over this with the units information end
-
-	-- these can be left as is, but is required.
-		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
-		["unitId"] = 33,
-		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
-		["x"] = -00126557,			
-		["heading"] = 37.55948550292,
-		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-		["linkOffset"] = true,
-		["dead"] = false,
-		["rate"] = 30,
-	}
-	coalition.addStaticObject(country.id.USA, staticObj)
-	-- ********************************************************
-	local staticObj = {
-
-		["name"] = namePrefix .. "4temp Junk Yard Seaman", -- unit name (Name this something identifiable if you wish to remove it later)
-	-- Copy and paste over this with the units information
-											["category"] = "Personnel",
-											["offsets"] = 
-											{
-												["y"] = 31.255831669958,
-												["angle"] = 4.7472955654246,
-												["x"] = -78.473079361007,
-											}, -- end of ["offsets"]
-											["shape_name"] = "carrier_seaman_USA",
-											["type"] = "Carrier Seaman",
-	-- Copy and paste over this with the units information end
-
-	-- these can be left as is, but is required.
-		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
-		["unitId"] = 33,
-		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
-		["x"] = -00126557,			
-		["heading"] = 37.55948550292,
-		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-		["linkOffset"] = true,
-		["dead"] = false,
-		["rate"] = 30,
-	}
-	coalition.addStaticObject(country.id.USA, staticObj)
-	-- ********************************************************
-	local staticObj = {
-
-		["name"] = namePrefix .. "4temp EL2 Tug", -- unit name (Name this something identifiable if you wish to remove it later)
-	-- Copy and paste over this with the units information
-											["category"] = "ADEquipment",
-											["offsets"] = 
-											{
-												["y"] = 25.035044669989,
-												["angle"] = 2.4958208303519,
-												["x"] = -22.810439552006,
-											}, -- end of ["offsets"]
-											["type"] = "AS32-31A",
-	-- Copy and paste over this with the units information end
-
-	-- these can be left as is, but is required.
-		["groupId"] = 33,		-- id's of the unit we're spawning (will auto increment if id taken?)
-		["unitId"] = 33,
-		["y"] = -00127900,			-- The initial location of the unit (required else unit will offet on origin of map)
-		["x"] = -00126557,			
-		["heading"] = 37.55948550292,
-		["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-		["linkOffset"] = true,
-		["dead"] = false,
-		["rate"] = 30,
-	}
-	coalition.addStaticObject(country.id.USA, staticObj)
-
-    local staticObj = {
-        ["name"] = namePrefix .. "PatioR F-14 1", -- unit name (Name this something identifiable if you wish to remove it later)
-    
-    -- Copy and paste over this with the units information
-                                            ["livery_id"] = "VF-2 F-14B NK103",
-                                            ["category"] = "Planes",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 25.574397958365,
-                                                ["angle"] = 12.184219274949,
-                                                ["x"] = -140.22202233315,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "F-14B",
-    -- Copy and paste over this with the units information end
-    
-    -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-    
-    -- ********************************************************
-    -- Creats aircraft and techs on Patio on Nimitz Carriers.
-    
-    local staticObj = {
-        ["name"] = namePrefix .. "PatioR F-14 2", -- unit name (Name this something identifiable if you wish to remove it later)
-    
-    -- Copy and paste over this with the units information
-                                            ["livery_id"] = "VF-2 F-14B NK106",
-                                            ["category"] = "Planes",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 26.999894815472,
-                                                ["angle"] = 24.27935099127,
-                                                ["x"] = -126.3733451222,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "F-14B",
-    -- Copy and paste over this with the units information end
-    
-    -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-    
-    -- ********************************************************
-    -- Creats aircraft and techs on Patio on Nimitz Carriers.
-    
-    local staticObj = {
-        ["name"] = namePrefix .. "PatioR F-14 3", -- unit name (Name this something identifiable if you wish to remove it later)
-    
-    -- Copy and paste over this with the units information
-                                            ["livery_id"] = "VF-2 F-14B NK102",
-                                            ["category"] = "Planes",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 28.245066265035,
-                                                ["angle"] = 30.230923740571,
-                                                ["x"] = -115.09659159312,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "F-14B",
-    -- Copy and paste over this with the units information end
-    
-    -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-    
-    -- ********************************************************
-    -- Creats aircraft and techs on Patio on Nimitz Carriers.
-    
-    local staticObj = {
-        ["name"] = namePrefix .. "PatioR Tech-W 1", -- unit name (Name this something identifiable if you wish to remove it later)
-    
-    -- Copy and paste over this with the units information
-                                            ["livery_id"] = "white",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 25.273813754869,
-                                                ["angle"] = 3.701919110256,
-                                                ["x"] = -131.81665467857,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-    -- Copy and paste over this with the units information end
-    
-    -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-    
-    -- ********************************************************
-    -- Creats aircraft and techs on Patio on Nimitz Carriers.
-    
-    local staticObj = {
-        ["name"] = namePrefix .. "PatioR Tech-B 2", -- unit name (Name this something identifiable if you wish to remove it later)
-    
-    -- Copy and paste over this with the units information
-                                            ["livery_id"] = "brown",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 23.24388530906,
-                                                ["angle"] = 3.5448394775765,
-                                                ["x"] = -119.34764000727,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-    -- Copy and paste over this with the units information end
-    
-    -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-    
-    -- ********************************************************
-    -- Creats aircraft and techs on Patio on Nimitz Carriers.
-    
-    local staticObj = {
-        ["name"] = namePrefix .. "PatioR Tech-B 3", -- unit name (Name this something identifiable if you wish to remove it later)
-    
-    -- Copy and paste over this with the units information
-                                            ["livery_id"] = "brown",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 23.726752809735,
-                                                ["angle"] = 3.6146526476563,
-                                                ["x"] = -130.88525791424,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-    -- Copy and paste over this with the units information end
-    
-    -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-    
-    -- ********************************************************
-    -- Creats aircraft and techs on Patio on Nimitz Carriers.
-    
-    local staticObj = {
-        ["name"] = namePrefix .. "PatioR Tech-B 4", -- unit name (Name this something identifiable if you wish to remove it later)
-    
-    -- Copy and paste over this with the units information
-                                            ["livery_id"] = "brown",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 19.911959307137,
-                                                ["angle"] = 6.8435117638458,
-                                                ["x"] = -114.74868459558,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-    -- Copy and paste over this with the units information end
-    
-    -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-    
-    -- ********************************************************
-    -- Creats aircraft and techs on Patio on Nimitz Carriers.
-    
-    local staticObj = {
-        ["name"] = namePrefix .. "PatioR Tech-Y 5", -- unit name (Name this something identifiable if you wish to remove it later)
-    
-    -- Copy and paste over this with the units information
-                                            ["livery_id"] = "yellow",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 20.905678081278,
-                                                ["angle"] = 5.2727154370509,
-                                                ["x"] = -126.96371630654,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-    -- Copy and paste over this with the units information end
-    
-    -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-    
-    -- ********************************************************
-    -- Creats aircraft and techs on Patio on Nimitz Carriers.
-    
-    local staticObj = {
-        ["name"] = namePrefix .. "PatioR Tech-Y 6", -- unit name (Name this something identifiable if you wish to remove it later)
-    
-    -- Copy and paste over this with the units information
-                                            ["livery_id"] = "yellow",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 18.76100756934,
-                                                ["angle"] = 6.8435117638458,
-                                                ["x"] = -110.09545944759,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-    -- Copy and paste over this with the units information end
-    
-    -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-    
-
-	-- ********************************************************
-
-end
-
-function DYNDECK.forrestal_flex4c234(shipID, templateName)
-
-    local namePrefix = "dyndeck_" .. shipID .. templateName
-
-    -- Forrestal Full Deck 3 Cats 4 Spawns
-
-    local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-
-    -- Copy and paste over this with the units information
-                                            ["category"] = "ADEquipment",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 22.33673287998,
-                                                ["angle"] = 4.3982297150257,
-                                                ["x"] = -77.835629449983,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "CV_59_MD3",
-                                            ["unitId"] = 27,
-                                            ["rate"] = 1,
-                                            ["y"] = 469450.90816145,
-                                            ["x"] = -360934.97848659,
-                                            ["name"] = namePrefix .. "CV-59 MD-3 Mule 1",
-                                            ["heading"] = 4.3982297150257,
-    -- Copy and paste over this with the units information end
-
-    -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-
-    local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-
-    -- Copy and paste over this with the units information
-                                        ["livery_id"] = "vf-33 starfighters ab201 (1988)",
-                                            ["category"] = "Planes",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 29.972092159966,
-                                                ["angle"] = 4.6949356878647,
-                                                ["x"] = -70.971807360009,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "F-14A-135-GR",
-                                            ["unitId"] = 34,
-                                            ["rate"] = "50",
-                                            ["y"] = 469458.54352073,
-                                            ["x"] = -360928.1146645,
-                                            ["name"] = namePrefix .. "CV-59 F14A heck 1",
-                                            ["heading"] = 4.6949356878647,
-    -- Copy and paste over this with the units information end
-
-    -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-
-    local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-
-    -- Copy and paste over this with the units information
-                                            ["livery_id"] = "vf-33 starfighters ab201 (1988)",
-                                            ["category"] = "Planes",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 26.235489899991,
-                                                ["angle"] = 1.5882496193148,
-                                                ["x"] = -62.675864739984,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "F-14A-135-GR",
-                                            ["unitId"] = 35,
-                                            ["rate"] = "50",
-                                            ["y"] = 469454.80691847,
-                                            ["x"] = -360919.81872188,
-                                            ["name"] = namePrefix .. "CV-59 F14A heck 2",
-                                            ["heading"] = 1.5882496193148,
-    -- Copy and paste over this with the units information end
-
-    -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-
-    local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-
-                                            ["livery_id"] = "VF-21 Freelancers 200",
-                                            ["category"] = "Planes",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 10.262743929983,
-                                                ["angle"] = 3.7350045992679,
-                                                ["x"] = 171.91009173996,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "F-14A-135-GR",
-                                            ["unitId"] = 2,
-                                            ["rate"] = "50",
-                                            ["y"] = 469438.8341725,
-                                            ["x"] = -360685.2327654,
-                                            ["name"] = namePrefix .. "CV-59 F14A bug 1",
-                                            ["heading"] = 3.7350045992679,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-
-    local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            ["livery_id"] = "VF-21 Freelancers 200",
-                                            ["category"] = "Planes",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 10.134759989975,
-                                                ["angle"] = 3.7350045992679,
-                                                ["x"] = 157.95984155999,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "F-14A-135-GR",
-                                            ["unitId"] = 5,
-                                            ["rate"] = "50",
-                                            ["y"] = 469438.70618856,
-                                            ["x"] = -360699.18301558,
-                                            ["name"] = namePrefix .. "CV-59 F14A bug 2",
-                                            ["heading"] = 3.7350045992679,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "VF-21 Freelancers 200",
-                                            ["category"] = "Planes",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 10.817341029993,
-                                                ["angle"] = 3.7350045992679,
-                                                ["x"] = 143.58297822002,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "F-14A-135-GR",
-                                            ["unitId"] = 8,
-                                            ["rate"] = "50",
-                                            ["y"] = 469439.3887696,
-                                            ["x"] = -360713.55987892,
-                                            ["name"] = namePrefix .. "CV-59 F14A bug 3",
-                                            ["heading"] = 3.7350045992679,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "VF-21 Freelancers 200",
-                                            ["category"] = "Planes",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 11.457260769967,
-                                                ["angle"] = 3.7350045992679,
-                                                ["x"] = 128.35288858,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "F-14A-135-GR",
-                                            ["unitId"] = 9,
-                                            ["rate"] = "50",
-                                            ["y"] = 469440.02868934,
-                                            ["x"] = -360728.78996856,
-                                            ["name"] = namePrefix .. "CV-59 F14A bug 4",
-                                            ["heading"] = 3.7350045992679,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "USMC VMA-311 Tomcats",
-                                            ["category"] = "Planes",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 14.070305300003,
-                                                ["angle"] = 5.1312680008633,
-                                                ["x"] = -2.6952501999913,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "A-4E-C",
-                                            ["unitId"] = 23,
-                                            ["rate"] = 40,
-                                            ["y"] = 469442.64173387,
-                                            ["x"] = -360859.83810734,
-                                            ["name"] = namePrefix .. "CV-59 A4 mid 1",
-                                            ["heading"] = 5.1312680008633,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["category"] = "ADEquipment",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 28.15586408996,
-                                                ["angle"] = 4.7298422729046,
-                                                ["x"] = -41.413245120028,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "CV_59_NS60",
-                                            ["unitId"] = 26,
-                                            ["rate"] = 1,
-                                            ["y"] = 469456.72729266,
-                                            ["x"] = -360898.55610226,
-                                            ["name"] = namePrefix .. "CV-59 NS-60 Tilly 1",
-                                            ["heading"] = 4.7298422729046,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["category"] = "ADEquipment",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 22.33673287998,
-                                                ["angle"] = 4.3982297150257,
-                                                ["x"] = -77.835629449983,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "CV_59_MD3",
-                                            ["unitId"] = 27,
-                                            ["rate"] = 1,
-                                            ["y"] = 469450.90816145,
-                                            ["x"] = -360934.97848659,
-                                            ["name"] = namePrefix .. "CV-59 MD-3 Mule 1",
-                                            ["heading"] = 4.3982297150257,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["category"] = "ADEquipment",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 31.27796856995,
-                                                ["angle"] = 5.2883476335428,
-                                                ["x"] = -50.06724542001,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "CV_59_Large_Forklift",
-                                            ["unitId"] = 28,
-                                            ["rate"] = 1,
-                                            ["y"] = 469459.84939714,
-                                            ["x"] = -360907.21010256,
-                                            ["name"] = namePrefix .. "CV-59 Large Forklift 1",
-                                            ["heading"] = -0.9948376736368,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["category"] = "ADEquipment",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 15.971448700002,
-                                                ["angle"] = 0.2094395102393,
-                                                ["x"] = 84.003947869991,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "CV_59_H60",
-                                            ["unitId"] = 29,
-                                            ["rate"] = 1,
-                                            ["y"] = 469444.54287727,
-                                            ["x"] = -360773.13890927,
-                                            ["name"] = namePrefix .. "CV-59 Hyster 60 1",
-                                            ["heading"] = 0.2094395102393,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "VF-31 AE204 1988",
-                                            ["category"] = "Planes",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 11.447393599956,
-                                                ["angle"] = 3.7350045992679,
-                                                ["x"] = 113.54730550997,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "F-14A-135-GR",
-                                            ["unitId"] = 31,
-                                            ["rate"] = "50",
-                                            ["y"] = 469440.01882217,
-                                            ["x"] = -360743.59555163,
-                                            ["name"] = namePrefix .. "CV-59 F14A bug 5",
-                                            ["heading"] = 3.7350045992679,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "VF-31 AE200 1988",
-                                            ["category"] = "Planes",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 13.325865889958,
-                                                ["angle"] = 3.7350045992679,
-                                                ["x"] = 99.885688829992,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "F-14A-135-GR",
-                                            ["unitId"] = 32,
-                                            ["rate"] = "50",
-                                            ["y"] = 469441.89729446,
-                                            ["x"] = -360757.25716831,
-                                            ["name"] = namePrefix .. "CV-59 F14A bug 6",
-                                            ["heading"] = 3.7350045992679,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "vf-33 starfighters ab201 (1988)",
-                                            ["category"] = "Planes",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 29.972092159966,
-                                                ["angle"] = 4.6949356878647,
-                                                ["x"] = -70.971807360009,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "F-14A-135-GR",
-                                            ["unitId"] = 34,
-                                            ["rate"] = "50",
-                                            ["y"] = 469458.54352073,
-                                            ["x"] = -360928.1146645,
-                                            ["name"] = namePrefix .. "CV-59 F14A heck 1",
-                                            ["heading"] = 4.6949356878647,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "vf-33 starfighters ab201 (1988)",
-                                            ["category"] = "Planes",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 26.235489899991,
-                                                ["angle"] = 1.5882496193148,
-                                                ["x"] = -62.675864739984,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "F-14A-135-GR",
-                                            ["unitId"] = 35,
-                                            ["rate"] = "50",
-                                            ["y"] = 469454.80691847,
-                                            ["x"] = -360919.81872188,
-                                            ["name"] = namePrefix .. "CV-59 F14A heck 2",
-                                            ["heading"] = 1.5882496193148,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "USMC VMA-311 Tomcats",
-                                            ["category"] = "Planes",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 12.865749110002,
-                                                ["angle"] = 5.1312680008633,
-                                                ["x"] = 6.0377822199953,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "A-4E-C",
-                                            ["unitId"] = 36,
-                                            ["rate"] = 40,
-                                            ["y"] = 469441.43717768,
-                                            ["x"] = -360851.10507492,
-                                            ["name"] = namePrefix .. "CV-59 A4 mid 2",
-                                            ["heading"] = 5.1312680008633,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "USN VA-144 Roadrunners",
-                                            ["category"] = "Planes",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 13.123868289986,
-                                                ["angle"] = 5.1312680008633,
-                                                ["x"] = 14.899874229974,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "A-4E-C",
-                                            ["unitId"] = 37,
-                                            ["rate"] = 40,
-                                            ["y"] = 469441.69529686,
-                                            ["x"] = -360842.24298291,
-                                            ["name"] = namePrefix .. "CV-59 A4 mid 3",
-                                            ["heading"] = 5.1312680008633,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "USN VA-144 Roadrunners",
-                                            ["category"] = "Planes",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 12.263471009966,
-                                                ["angle"] = 5.1312680008633,
-                                                ["x"] = 24.837462849973,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "A-4E-C",
-                                            ["unitId"] = 38,
-                                            ["rate"] = 40,
-                                            ["y"] = 469440.83489958,
-                                            ["x"] = -360832.30539429,
-                                            ["name"] = namePrefix .. "CV-59 A4 mid 4",
-                                            ["heading"] = 5.1312680008633,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "VAW-124 BearAces",
-                                            ["category"] = "Planes",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 16.332032859966,
-                                                ["angle"] = 4.2062434973063,
-                                                ["x"] = 76.439462339971,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "E-2C",
-                                            ["unitId"] = 40,
-                                            ["rate"] = "100",
-                                            ["y"] = 469444.90346143,
-                                            ["x"] = -360780.7033948,
-                                            ["name"] = namePrefix .. "CV-59 E2D bug 1",
-                                            ["heading"] = 4.2062434973063,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["category"] = "ADEquipment",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 24.159426649974,
-                                                ["angle"] = 4.7298422729046,
-                                                ["x"] = 66.45111609,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "CV_59_NS60",
-                                            ["unitId"] = 41,
-                                            ["rate"] = 1,
-                                            ["y"] = 469452.73085522,
-                                            ["x"] = -360790.69174105,
-                                            ["name"] = namePrefix .. "CV-59 NS-60 Tilly 2",
-                                            ["heading"] = 4.7298422729046,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["mass"] = 1500,
-                                            ["category"] = "Cargos",
-                                            ["canCargo"] = false,
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 16.458585369983,
-                                                ["angle"] = 4.6425758103049,
-                                                ["x"] = 88.506038529973,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "ammo_box_cargo",
-                                            ["type"] = "ammo_cargo",
-                                            ["unitId"] = 43,
-                                            ["rate"] = 100,
-                                            ["y"] = 469445.03001394,
-                                            ["x"] = -360768.63681861,
-                                            ["name"] = namePrefix .. "CV-59 Ammo 1",
-                                            ["heading"] = -1.6406094968747,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["mass"] = 1500,
-                                            ["category"] = "Cargos",
-                                            ["canCargo"] = false,
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 16.453315379971,
-                                                ["angle"] = 4.6425758103049,
-                                                ["x"] = 89.827295569994,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "ammo_box_cargo",
-                                            ["type"] = "ammo_cargo",
-                                            ["unitId"] = 44,
-                                            ["rate"] = 100,
-                                            ["y"] = 469445.02474395,
-                                            ["x"] = -360767.31556157,
-                                            ["name"] = namePrefix .. "CV-59 Ammo 2",
-                                            ["heading"] = -1.6406094968747,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["mass"] = 1500,
-                                            ["category"] = "Cargos",
-                                            ["canCargo"] = false,
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 29.497724729998,
-                                                ["angle"] = 4.6425758103049,
-                                                ["x"] = 62.634507059993,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "ammo_box_cargo",
-                                            ["type"] = "ammo_cargo",
-                                            ["unitId"] = 45,
-                                            ["rate"] = 100,
-                                            ["y"] = 469458.0691533,
-                                            ["x"] = -360794.50835008,
-                                            ["name"] = namePrefix .. "CV-59 Ammo 3",
-                                            ["heading"] = -1.6406094968747,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["mass"] = 1500,
-                                            ["category"] = "Cargos",
-                                            ["canCargo"] = false,
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 30.737726669991,
-                                                ["angle"] = 4.8345620280243,
-                                                ["x"] = 61.212707380007,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "ammo_box_cargo",
-                                            ["type"] = "ammo_cargo",
-                                            ["unitId"] = 46,
-                                            ["rate"] = 100,
-                                            ["y"] = 469459.30915524,
-                                            ["x"] = -360795.93014976,
-                                            ["name"] = namePrefix .. "CV-59 Ammo 4",
-                                            ["heading"] = -1.4486232791553,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["mass"] = 1500,
-                                            ["category"] = "Cargos",
-                                            ["canCargo"] = false,
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 24.599187659973,
-                                                ["angle"] = 0.0174532925199,
-                                                ["x"] = -45.894397350028,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "ammo_box_cargo",
-                                            ["type"] = "ammo_cargo",
-                                            ["unitId"] = 47,
-                                            ["rate"] = 100,
-                                            ["y"] = 469453.17061623,
-                                            ["x"] = -360903.03725449,
-                                            ["name"] = namePrefix .. "CV-59 Ammo 5",
-                                            ["heading"] = 0.0174532925199,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["mass"] = 1500,
-                                            ["category"] = "Cargos",
-                                            ["canCargo"] = false,
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 23.251629469974,
-                                                ["angle"] = 0.0174532925199,
-                                                ["x"] = -45.874063010036,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "ammo_box_cargo",
-                                            ["type"] = "ammo_cargo",
-                                            ["unitId"] = 48,
-                                            ["rate"] = 100,
-                                            ["y"] = 469451.82305804,
-                                            ["x"] = -360903.01692015,
-                                            ["name"] = namePrefix .. "CV-59 Ammo 6",
-                                            ["heading"] = 0.0174532925199,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["mass"] = 840,
-                                            ["category"] = "Cargos",
-                                            ["canCargo"] = false,
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 24.196566589992,
-                                                ["angle"] = 1.4835298641951,
-                                                ["x"] = -48.328411909984,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "m117_cargo",
-                                            ["type"] = "m117_cargo",
-                                            ["unitId"] = 49,
-                                            ["rate"] = 100,
-                                            ["y"] = 469452.76799516,
-                                            ["x"] = -360905.47126905,
-                                            ["name"] = namePrefix .. "CV-59 Bombs 1",
-                                            ["heading"] = 1.4835298641951,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["mass"] = 840,
-                                            ["category"] = "Cargos",
-                                            ["canCargo"] = false,
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 16.106317459955,
-                                                ["angle"] = 4.6425758103049,
-                                                ["x"] = 91.922479700006,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "m117_cargo",
-                                            ["type"] = "m117_cargo",
-                                            ["unitId"] = 50,
-                                            ["rate"] = 100,
-                                            ["y"] = 469444.67774603,
-                                            ["x"] = -360765.22037744,
-                                            ["name"] = namePrefix .. "CV-59 Bombs 2",
-                                            ["heading"] = -1.6406094968747,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["mass"] = 840,
-                                            ["category"] = "Cargos",
-                                            ["canCargo"] = false,
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 16.031181099999,
-                                                ["angle"] = 4.6425758103049,
-                                                ["x"] = 93.406567899976,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "m117_cargo",
-                                            ["type"] = "m117_cargo",
-                                            ["unitId"] = 51,
-                                            ["rate"] = 100,
-                                            ["y"] = 469444.60260967,
-                                            ["x"] = -360763.73628924,
-                                            ["name"] = namePrefix .. "CV-59 Bombs 3",
-                                            ["heading"] = -1.6406094968747,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["mass"] = 840,
-                                            ["category"] = "Cargos",
-                                            ["canCargo"] = false,
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 15.933522039966,
-                                                ["angle"] = 4.6425758103049,
-                                                ["x"] = 94.803157570015,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "m117_cargo",
-                                            ["type"] = "m117_cargo",
-                                            ["unitId"] = 52,
-                                            ["rate"] = 100,
-                                            ["y"] = 469444.50495061,
-                                            ["x"] = -360762.33969957,
-                                            ["name"] = namePrefix .. "CV-59 Bombs 4",
-                                            ["heading"] = -1.6406094968747,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["mass"] = 840,
-                                            ["category"] = "Cargos",
-                                            ["canCargo"] = false,
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 21.045754369989,
-                                                ["angle"] = 4.7298422729046,
-                                                ["x"] = 62.761577569996,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "m117_cargo",
-                                            ["type"] = "m117_cargo",
-                                            ["unitId"] = 53,
-                                            ["rate"] = 100,
-                                            ["y"] = 469449.61718294,
-                                            ["x"] = -360794.38127957,
-                                            ["name"] = namePrefix .. "CV-59 Bombs 5",
-                                            ["heading"] = -1.553343034275,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["mass"] = 840,
-                                            ["category"] = "Cargos",
-                                            ["canCargo"] = false,
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 21.37175436999,
-                                                ["angle"] = 0,
-                                                ["x"] = 26.183162770001,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "m117_cargo",
-                                            ["type"] = "m117_cargo",
-                                            ["unitId"] = 54,
-                                            ["rate"] = 100,
-                                            ["y"] = 469449.94318294,
-                                            ["x"] = -360830.95969437,
-                                            ["name"] = namePrefix .. "CV-59 Bombs 6",
-                                            ["heading"] = 0,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["mass"] = 840,
-                                            ["category"] = "Cargos",
-                                            ["canCargo"] = false,
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 20.893985959992,
-                                                ["angle"] = 0,
-                                                ["x"] = 23.123464139993,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "m117_cargo",
-                                            ["type"] = "m117_cargo",
-                                            ["unitId"] = 56,
-                                            ["rate"] = 100,
-                                            ["y"] = 469449.46541453,
-                                            ["x"] = -360834.019393,
-                                            ["name"] = namePrefix .. "CV-59 Bombs 8",
-                                            ["heading"] = 0,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["mass"] = 840,
-                                            ["category"] = "Cargos",
-                                            ["canCargo"] = false,
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 19.439851770003,
-                                                ["angle"] = 0,
-                                                ["x"] = 23.309999260004,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "m117_cargo",
-                                            ["type"] = "m117_cargo",
-                                            ["unitId"] = 57,
-                                            ["rate"] = 100,
-                                            ["y"] = 469448.01128034,
-                                            ["x"] = -360833.83285788,
-                                            ["name"] = namePrefix .. "CV-59 Bombs 9",
-                                            ["heading"] = 0,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["mass"] = 1500,
-                                            ["category"] = "Cargos",
-                                            ["canCargo"] = false,
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 21.212431159976,
-                                                ["angle"] = 4.7298422729046,
-                                                ["x"] = 28.729959079996,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "ammo_box_cargo",
-                                            ["type"] = "ammo_cargo",
-                                            ["unitId"] = 58,
-                                            ["rate"] = 100,
-                                            ["y"] = 469449.78385973,
-                                            ["x"] = -360828.41289806,
-                                            ["name"] = namePrefix .. "CV-59 Ammo 7",
-                                            ["heading"] = -1.553343034275,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["category"] = "ADEquipment",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 26.728229369968,
-                                                ["angle"] = 1.2740903539558,
-                                                ["x"] = -54.847454730014,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "CV_59_MD3",
-                                            ["unitId"] = 59,
-                                            ["rate"] = 1,
-                                            ["y"] = 469455.29965794,
-                                            ["x"] = -360911.99031187,
-                                            ["name"] = namePrefix .. "CV-59 MD-3 Mule 2",
-                                            ["heading"] = 1.274090353955,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["category"] = "ADEquipment",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 11.97817606997,
-                                                ["angle"] = 2.8797932657906,
-                                                ["x"] = 90.446121620014,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "CV_59_MD3",
-                                            ["unitId"] = 60,
-                                            ["rate"] = 1,
-                                            ["y"] = 469440.54960464,
-                                            ["x"] = -360766.69673552,
-                                            ["name"] = namePrefix .. "CV-59 MD-3 Mule 3",
-                                            ["heading"] = 2.8797932657906,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "red",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 19.195021889987,
-                                                ["angle"] = 5.7246799465414,
-                                                ["x"] = 28.489813330001,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-                                            ["unitId"] = 65,
-                                            ["rate"] = 20,
-                                            ["y"] = 469447.76645046,
-                                            ["x"] = -360828.65304381,
-                                            ["name"] = namePrefix .. "CV-59 Technician 1",
-                                            ["heading"] = -0.5585053606382,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "red",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 17.918418669957,
-                                                ["angle"] = 6.1959188445799,
-                                                ["x"] = 28.31462095998,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-                                            ["unitId"] = 66,
-                                            ["rate"] = 20,
-                                            ["y"] = 469446.48984724,
-                                            ["x"] = -360828.82823618,
-                                            ["name"] = namePrefix .. "CV-59 Technician 2",
-                                            ["heading"] = -0.0872664625997,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                ["livery_id"] = "red",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 21.632032659953,
-                                                ["angle"] = 4.3633231299858,
-                                                ["x"] = 30.092285580002,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-                                            ["unitId"] = 67,
-                                            ["rate"] = 20,
-                                            ["y"] = 469450.20346123,
-                                            ["x"] = -360827.05057156,
-                                            ["name"] = namePrefix .. "CV-59 Technician 3",
-                                            ["heading"] = -1.9198621771938,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "red",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 31.081593789975,
-                                                ["angle"] = 4.3458698374659,
-                                                ["x"] = 62.348933589994,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-                                            ["unitId"] = 68,
-                                            ["rate"] = 20,
-                                            ["y"] = 469459.65302236,
-                                            ["x"] = -360794.79392355,
-                                            ["name"] = namePrefix .. "CV-59 Technician 4",
-                                            ["heading"] = -1.9373154697137,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "red",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 24.131282319955,
-                                                ["angle"] = 3.2463124087094,
-                                                ["x"] = -44.513802300033,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-                                            ["unitId"] = 69,
-                                            ["rate"] = 20,
-                                            ["y"] = 469452.70271089,
-                                            ["x"] = -360901.65665944,
-                                            ["name"] = namePrefix .. "CV-59 Technician 5",
-                                            ["heading"] = -3.0368728984702,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "red",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 25.487857559987,
-                                                ["angle"] = 4.1713369122664,
-                                                ["x"] = -47.165706939995,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-                                            ["unitId"] = 70,
-                                            ["rate"] = 20,
-                                            ["y"] = 469454.05928613,
-                                            ["x"] = -360904.30856408,
-                                            ["name"] = namePrefix .. "CV-59 Technician 6",
-                                            ["heading"] = -2.1118483949132,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "red",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 29.100804699992,
-                                                ["angle"] = 0.9424777960769,
-                                                ["x"] = 61.324876810017,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-                                            ["unitId"] = 71,
-                                            ["rate"] = 20,
-                                            ["y"] = 469457.67223327,
-                                            ["x"] = -360795.81798033,
-                                            ["name"] = namePrefix .. "CV-59 Technician 7",
-                                            ["heading"] = 0.9424777960769,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "red",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 27.730528499989,
-                                                ["angle"] = 1.3439035240356,
-                                                ["x"] = 62.48927043,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-                                            ["unitId"] = 72,
-                                            ["rate"] = 20,
-                                            ["y"] = 469456.30195707,
-                                            ["x"] = -360794.65358671,
-                                            ["name"] = namePrefix .. "CV-59 Technician 8",
-                                            ["heading"] = 1.3439035240356,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "red",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 11.66171458998,
-                                                ["angle"] = 2.9496064358704,
-                                                ["x"] = -5.2636686500045,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-                                            ["unitId"] = 73,
-                                            ["rate"] = 20,
-                                            ["y"] = 469440.23314316,
-                                            ["x"] = -360862.40652579,
-                                            ["name"] = namePrefix .. "CV-59 Technician 9",
-                                            ["heading"] = 2.9496064358704,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "red",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 14.806669440004,
-                                                ["angle"] = 4.7123889803847,
-                                                ["x"] = 88.081767519994,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-                                            ["unitId"] = 74,
-                                            ["rate"] = 20,
-                                            ["y"] = 469443.37809801,
-                                            ["x"] = -360769.06108962,
-                                            ["name"] = namePrefix .. "CV-59 Technician 10",
-                                            ["heading"] = -1.5707963267949,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "blue",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 6.6044085899484,
-                                                ["angle"] = 3.9444441095072,
-                                                ["x"] = 22.162760849984,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-                                            ["unitId"] = 75,
-                                            ["rate"] = 20,
-                                            ["y"] = 469435.17583716,
-                                            ["x"] = -360834.98009629,
-                                            ["name"] = namePrefix .. "CV-59 Technician 11",
-                                            ["heading"] = -2.3387411976724,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "white",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 5.6825801399536,
-                                                ["angle"] = 0.907571211037,
-                                                ["x"] = 21.009934830014,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-                                            ["unitId"] = 76,
-                                            ["rate"] = 20,
-                                            ["y"] = 469434.25400871,
-                                            ["x"] = -360836.13292231,
-                                            ["name"] = namePrefix .. "CV-59 Technician 12",
-                                            ["heading"] = 0.907571211037,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "blue",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 12.482483859989,
-                                                ["angle"] = 4.6425758103049,
-                                                ["x"] = -6.3519227600191,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-                                            ["unitId"] = 77,
-                                            ["rate"] = 20,
-                                            ["y"] = 469441.05391243,
-                                            ["x"] = -360863.4947799,
-                                            ["name"] = namePrefix .. "CV-59 Technician 13",
-                                            ["heading"] = -1.6406094968747,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "blue",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 9.8248471499537,
-                                                ["angle"] = 3.700098014228,
-                                                ["x"] = 76.027643800015,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-                                            ["unitId"] = 78,
-                                            ["rate"] = 20,
-                                            ["y"] = 469438.39627572,
-                                            ["x"] = -360781.11521334,
-                                            ["name"] = namePrefix .. "CV-59 Technician 14",
-                                            ["heading"] = -2.5830872929516,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "blue",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 8.5271150099579,
-                                                ["angle"] = 1.6057029118347,
-                                                ["x"] = 75.335432389984,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-                                            ["unitId"] = 79,
-                                            ["rate"] = 20,
-                                            ["y"] = 469437.09854358,
-                                            ["x"] = -360781.80742475,
-                                            ["name"] = namePrefix .. "CV-59 Technician 15",
-                                            ["heading"] = 1.6057029118347,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "brown",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 9.5831095199683,
-                                                ["angle"] = 5.7944931166212,
-                                                ["x"] = 74.820895490004,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-                                            ["unitId"] = 80,
-                                            ["rate"] = 20,
-                                            ["y"] = 469438.15453809,
-                                            ["x"] = -360782.32196165,
-                                            ["name"] = namePrefix .. "CV-59 Technician 16",
-                                            ["heading"] = -0.4886921905584,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "brown",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 9.395204159955,
-                                                ["angle"] = 5.235987755983,
-                                                ["x"] = 89.386125179997,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-                                            ["unitId"] = 81,
-                                            ["rate"] = 20,
-                                            ["y"] = 469437.96663273,
-                                            ["x"] = -360767.75673196,
-                                            ["name"] = namePrefix .. "CV-59 Technician 17",
-                                            ["heading"] = -1.0471975511966,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "brown",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 7.5748663699487,
-                                                ["angle"] = 4.6425758103049,
-                                                ["x"] = 20.888940159988,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-                                            ["unitId"] = 82,
-                                            ["rate"] = 20,
-                                            ["y"] = 469436.14629494,
-                                            ["x"] = -360836.25391698,
-                                            ["name"] = namePrefix .. "CV-59 Technician 18",
-                                            ["heading"] = -1.6406094968747,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "brown",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 13.475844899949,
-                                                ["angle"] = 1.3962634015954,
-                                                ["x"] = 28.803845649993,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-                                            ["unitId"] = 83,
-                                            ["rate"] = 20,
-                                            ["y"] = 469442.04727347,
-                                            ["x"] = -360828.33901149,
-                                            ["name"] = namePrefix .. "CV-59 Technician 19",
-                                            ["heading"] = 1.3962634015954,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "brown",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 9.4500615699799,
-                                                ["angle"] = 3.4382986264288,
-                                                ["x"] = 90.874154079997,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-                                            ["unitId"] = 84,
-                                            ["rate"] = 20,
-                                            ["y"] = 469438.02149014,
-                                            ["x"] = -360766.26870306,
-                                            ["name"] = namePrefix .. "CV-59 Technician 20",
-                                            ["heading"] = -2.8448866807508,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "purple",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 28.252880869957,
-                                                ["angle"] = 5.3930673886625,
-                                                ["x"] = 32.270201759995,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-                                            ["unitId"] = 85,
-                                            ["rate"] = 20,
-                                            ["y"] = 469456.82430944,
-                                            ["x"] = -360824.87265538,
-                                            ["name"] = namePrefix .. "CV-59 Technician 21",
-                                            ["heading"] = -0.8901179185171,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "purple",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 23.989666519978,
-                                                ["angle"] = 3.7699111843077,
-                                                ["x"] = -53.761342699989,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-                                            ["unitId"] = 86,
-                                            ["rate"] = 20,
-                                            ["y"] = 469452.56109509,
-                                            ["x"] = -360910.90419984,
-                                            ["name"] = namePrefix .. "CV-59 Technician 22",
-                                            ["heading"] = -2.5132741228719,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "purple",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 7.5537387600052,
-                                                ["angle"] = 5.7770398241012,
-                                                ["x"] = 19.452221489977,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-                                            ["unitId"] = 87,
-                                            ["rate"] = 20,
-                                            ["y"] = 469436.12516733,
-                                            ["x"] = -360837.69063565,
-                                            ["name"] = namePrefix .. "CV-59 Technician 24",
-                                            ["heading"] = -0.5061454830784,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "purple",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 11.661630999995,
-                                                ["angle"] = 4.7123889803847,
-                                                ["x"] = 87.133109899994,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_tech_USA",
-                                            ["type"] = "us carrier tech",
-                                            ["unitId"] = 88,
-                                            ["rate"] = 20,
-                                            ["y"] = 469440.23305957,
-                                            ["x"] = -360770.00974724,
-                                            ["name"] = namePrefix .. "CV-59 Technician 23",
-                                            ["heading"] = -1.5707963267949,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = -2.7689845300047,
-                                                ["angle"] = 3.8397243543875,
-                                                ["x"] = 98.852623810002,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_shooter",
-                                            ["type"] = "us carrier shooter",
-                                            ["unitId"] = 89,
-                                            ["rate"] = 20,
-                                            ["y"] = 469425.80244404,
-                                            ["x"] = -360758.29023333,
-                                            ["name"] = namePrefix .. "CV-59 Shooter 1",
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = -2.6633533000131,
-                                                ["angle"] = 4.904375198104,
-                                                ["x"] = 97.342026819999,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_shooter",
-                                            ["type"] = "us carrier shooter",
-                                            ["unitId"] = 90,
-                                            ["rate"] = 20,
-                                            ["y"] = 469425.90807527,
-                                            ["x"] = -360759.80083032,
-                                            ["name"] = namePrefix .. "CV-59 Shooter 2",
-                                            ["heading"] = -1.378810109075,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "green",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = -2.104307260015,
-                                                ["angle"] = 3.682644721708,
-                                                ["x"] = 88.38926252001,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_shooter",
-                                            ["type"] = "us carrier shooter",
-                                            ["unitId"] = 91,
-                                            ["rate"] = 20,
-                                            ["y"] = 469426.46712131,
-                                            ["x"] = -360768.75359462,
-                                            ["name"] = namePrefix .. "CV-59 Shooter 3",
-                                            ["heading"] = -2.6005405854716,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "white",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = -1.142018720042,
-                                                ["angle"] = 5.0440015382636,
-                                                ["x"] = 89.373070589965,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_shooter",
-                                            ["type"] = "us carrier shooter",
-                                            ["unitId"] = 92,
-                                            ["rate"] = 20,
-                                            ["y"] = 469427.42940985,
-                                            ["x"] = -360767.76978655,
-                                            ["name"] = namePrefix .. "CV-59 Shooter 5",
-                                            ["heading"] = -1.239183768916,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["mass"] = 840,
-                                            ["category"] = "Cargos",
-                                            ["canCargo"] = false,
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 24.73112368997,
-                                                ["angle"] = 4.7298422729046,
-                                                ["x"] = 62.647827629989,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "m117_cargo",
-                                            ["type"] = "m117_cargo",
-                                            ["unitId"] = 95,
-                                            ["rate"] = 100,
-                                            ["y"] = 469453.30255226,
-                                            ["x"] = -360794.49502951,
-                                            ["name"] = namePrefix .. "CV-59 Bombs 10",
-                                            ["heading"] = -1.553343034275,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["livery_id"] = "green",
-                                            ["category"] = "Personnel",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = -2.0484931700048,
-                                                ["angle"] = 3.8048177693476,
-                                                ["x"] = 90.597058320011,
-                                            }, -- end of ["offsets"]
-                                            ["shape_name"] = "carrier_shooter",
-                                            ["type"] = "us carrier shooter",
-                                            ["unitId"] = 93,
-                                            ["rate"] = 20,
-                                            ["y"] = 469426.5229354,
-                                            ["x"] = -360766.54579882,
-                                            ["name"] = namePrefix .. "CV-59 Shooter 4",
-                                            ["heading"] = -2.478367537832,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-                                            
-                                            local staticObj = {
-        ["name"] = namePrefix .. "dDeck_forrestal", -- unit name (Name this something identifiable if you wish to remove it later)
-                                            
-                                                                                    ["category"] = "ADEquipment",
-                                            ["offsets"] = 
-                                            {
-                                                ["y"] = 21.043987939949,
-                                                ["angle"] = 4.6949356878647,
-                                                ["x"] = -7.95861625002,
-                                            }, -- end of ["offsets"]
-                                            ["type"] = "CV_59_H60",
-                                            ["unitId"] = 94,
-                                            ["rate"] = 1,
-                                            ["y"] = 469449.61541651,
-                                            ["x"] = -360865.10147339,
-                                            ["name"] = namePrefix .. "CV-59 Hyster 60 3",
-                                            ["heading"] = -1.5882496193149,
-                                            
-                                            -- these can be left as is, but is required.
-        ["groupId"] = 1,		-- id's of the group/unit we're spawning (will auto increment if id taken?)
-        ["unitId"] = 1,
-        ["y"] = 0,			-- The initial location of the unit (required else unit will offset on origin of map)
-        ["x"] = 0,			
-        ["heading"] = 0,
-        ["linkUnit"] = shipID, -- This value must be set Via 'shipID = #' where # is the id of the ship you wish to spawn on
-        ["linkOffset"] = true,
-        ["dead"] = false,
-    }
-    coalition.addStaticObject(country.id.USA, staticObj) -- makes the object
-
-end
-
---- END Dynamic Deck Population
   
 --------------------------------[core\dynamic_deck_templates.lua]-------------------------------- 
  
@@ -32652,6 +34052,1218 @@ function DYNDECK.sc_point(shipID, templateName) -- template for deck template fu
 end
 
 --- END Dynamic Deck Templates  
+--------------------------------[missionsrs_data.lua]-------------------------------- 
+ 
+env.info( "[JTF-1] missionsrs_data" )
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--- MISSION TIMER SETTINGS FOR MIZ
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--
+-- This file MUST be loaded AFTER missionsrs.lua
+--
+-- These values are specific to the miz and will override the default values in MISSIONSRS.default
+--
+
+-- Error prevention. Create empty container if module core lua not loaded.
+if not MISSIONSRS then 
+	_msg = "[JTF-1 MISSIONSRS] CORE FILE NOT LOADED!"
+	BASE:E(_msg)
+	MISSIONSRS = {}
+end
+
+-- table of values for missionsrs to use this miz. Overrides default values.
+-- MISSIONSRS.srsPath = "C:/Program Files/DCS-SimpleRadio-Standalone" -- default path to SRS install directory if setting file is not avaialable "C:/Program Files/DCS-SimpleRadio-Standalone"
+-- MISSIONSRS.srsPort = 5002                                          -- default SRS port to use if settings file is not available
+-- MISSIONSRS.msg = "No Message Defined!"                             -- default message if text is nil
+MISSIONSRS.freqs = {243,251,3,30}                          -- transmit on guard, CTAF, NTTR TWR, NTTR BLACKJACK and 30FM as default frequencies
+-- MISSIONSRS.modulations = {AM,AM,AM,AM,FM}                          -- default modulation (count *must* match qty of freqs)
+-- MISSIONSRS.vol = "1.0"                                             -- default to full volume
+-- MISSIONSRS.name = "Server"                                         -- default to server as sender
+-- MISSIONSRS.coalition = 0                                           -- default to spectators
+-- MISSIONSRS.vec3 = nil                                              -- point from which transmission originates
+-- MISSIONSRS.speed = 2                                               -- speed at which message should be played
+-- MISSIONSRS.gender = "female"                                       -- default gender of sender
+-- MISSIONSRS.culture = "en-US"                                       -- default culture of sender
+-- MISSIONSRS.voice = ""                                              -- default voice to use
+
+if MISSIONSRS.Start then
+	MISSIONSRS:Start()
+end  
+--------------------------------[adminmenu_data.lua]-------------------------------- 
+ 
+env.info( "[JTF-1] adminmenu_data" )
+
+--- MISSION ADMIN MENU SETTINGS FOR MIZ
+--
+-- This file MUST be loaded AFTER adminmenu.lua
+--
+-- These values are specific to the miz and will override the default values in ADMIN
+--
+
+-- Error prevention. Create empty container if module core lua not loaded.
+if not ADMIN then 
+	ADMIN = {}
+	ADMIN.traceTitle = "[JTF-1 ADMIN] "
+	_msg = ADMIN.traceTitle .. "CORE FILE NOT LOADED!"
+	BASE:E(_msg)
+end
+
+-- table of values to override default ADMIN values for this miz
+ADMIN.menuAllSlots = false
+ADMIN.jtfmenu = false
+
+-- start the mission timer
+if ADMIN.Start then
+	_msg = ADMIN.traceTitle .. "Call Start()"
+	BASE:T(_msg)
+	ADMIN:Start()  
+end
+  
+--------------------------------[missiontimer_data.lua]-------------------------------- 
+ 
+env.info( "[JTF-1] missiontimer_data" )
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--- MISSION TIMER SETTINGS FOR MIZ
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--
+-- This file MUST be loaded AFTER missiontimer.lua
+--
+-- These values are specific to the miz and will override the default values in MISSIONTIMER.default
+--
+
+-- Error prevention. Create empty container if module core lua not loaded.
+if not MISSIONTIMER then 
+	MISSIONTIMER = {}
+	MISSIONTIMER.traceTitle = "[JTF-1 MISSIONTIMER] "
+	_msg = MISSIONTIMER.traceTitle .. "CORE FILE NOT LOADED!"
+	BASE:E(_msg)
+end
+
+-- table of values for timer shedule in this miz
+MISSIONTIMER.durationHrs = 11 -- Mission run time in HOURS
+-- MISSIONTIMER.msgSchedule = {60, 30, 10, 5} -- Schedule for mission restart warning messages prior to the mission restart. Time in minutes.
+-- MISSIONTIMER.restartDelay =  4 -- time in minutes to delay restart if active clients are present.
+-- MISSIONTIMER.useSRS = false -- set to false to disable use of SRS for this module in this miz
+
+-- start the mission timer
+if MISSIONTIMER.Start then
+	_msg = MISSIONTIMER.traceTitle .. "Call Start()"
+	BASE:T(_msg)
+	MISSIONTIMER:Start()  
+end
+  
+--------------------------------[supportaircraft_data.lua]-------------------------------- 
+ 
+--------------------------------------------
+--- Support Aircraft Defined in this file
+--------------------------------------------
+
+-- **NOTE**: SUPPORTAIRCRAFT.LUA MUST BE LOADED BEFORE THIS FILE IS LOADED!
+
+-- This file contains the config data specific to the miz in which it will be used.
+-- All functions and key values are in SUPPORTAIRCRAFT.LUA, which should be loaded first
+-- supportaircraft_data.lua 
+
+-- Error prevention. Create empty container if SUPPORTAIRCRAFT.LUA is not loaded or has failed.
+if not SUPPORTAC then 
+    SUPPORTAC = {}
+end
+
+-- Support aircraft missions. Each mission block defines a support aircraft mission. Each block is processed
+-- and an aircraft will be spawned for the mission. When the mission is cancelled, eg after RTB or if it is destroyed,
+-- a new aircraft will be spawned and a fresh AUFTRAG created.
+SUPPORTAC.mission = {
+    -- {
+    --   name = "ARWK", -- text name for this support mission. Combined with this block's index and the mission type to define the group name on F10 map
+    --   category = SUPPORTAC.category.tanker, -- support mission category. Used to determine the auftrag type. Options are listed in SUPPORTAC.category
+    --   type = SUPPORTAC.type.tankerBoom, -- type defines the spawn template that will be used
+    --   zone = "ARWK", -- ME zone that defines the start waypoint for the spawned aircraft
+    --   callsign = CALLSIGN.Tanker.Arco, -- callsign under which the aircraft will operate
+    --   callsignNumber = 1, -- primary callsign number that will be used for the aircraft
+    --   tacan = 35, -- TACAN channel the ac will use
+    --   tacanid = "ARC", -- TACAN ID the ac will use. Also used for the morse ID
+    --   radio = 276.5, -- freq the ac will use when on mission
+    --   flightLevel = 160, -- flight level at which to spwqan aircraft and at which track will be flown
+    --   speed = 315, -- IAS when on mission
+    --   heading = 94, -- mission outbound leg in degrees
+    --   leg = 40, -- mission leg length in NM
+    --   fuelLowThreshold = 30, -- lowest fuel threshold at which RTB is triggered
+    --   activateDelay = 5, -- delay, after this aircraft has been despawned, before new aircraft is spawned
+    --   despawnDelay = 10, -- delay before this aircraft is despawned
+    -- },
+    {
+      name = "ARWK", -- TANKER
+      category = SUPPORTAC.category.tanker,
+      type = SUPPORTAC.type.tankerProbe,
+      zone = "ARWK",
+      callsign = CALLSIGN.Tanker.Shell,
+      callsignNumber = 1,
+      tacan = 115,
+      tacanid = "SHL",
+      radio = 317.5,
+      flightLevel = 215,
+      speed = 315,
+      heading = 94,
+      leg = 40,
+    },
+    {
+      name = "ARWK", -- TANKER
+      category = SUPPORTAC.category.tanker,
+      type = SUPPORTAC.type.tankerBoom,
+      zone = "ARWK",
+      callsign = CALLSIGN.Tanker.Texaco,
+      callsignNumber = 1,
+      tacan = 105,
+      tacanid = "TEX",
+      radio = 317.55,
+      flightLevel = 240,
+      speed = 315,
+      heading = 94,
+      leg = 40,
+    },
+    {
+      name = "ARXJYJ", -- TANKER
+      category = SUPPORTAC.category.tanker,
+      type = SUPPORTAC.type.tankerProbe,
+      zone = "ARXJYJ",
+      callsign = CALLSIGN.Tanker.Shell,
+      callsignNumber = 4,
+      tacan = 119,
+      tacanid = "SHL",
+      radio = 317.9,
+      flightLevel = 215,
+      speed = 315,
+      heading = 94,
+      leg = 40,
+    },
+    {
+      name = "ARXJYJ", -- TANKER
+      category = SUPPORTAC.category.tanker,
+      type = SUPPORTAC.type.tankerBoom,
+      zone = "ARXJYJ",
+      callsign = CALLSIGN.Tanker.Texaco,
+      callsignNumber = 4,
+      tacan = 120,
+      tacanid = "TEX",
+      radio = 317.95,
+      flightLevel = 240,
+      speed = 315,
+      heading = 94,
+      leg = 40,
+    },
+    {
+      name = "ARYHBN", -- TANKER
+      category = SUPPORTAC.category.tanker,
+      type = SUPPORTAC.type.tankerProbe,
+      zone = "ARYHBN",
+      callsign = CALLSIGN.Tanker.Shell,
+      callsignNumber = 2,
+      tacan = 116,
+      tacanid = "SHL",
+      radio = 317.6,
+      flightLevel = 215,
+      speed = 315,
+      heading = 94 ,
+      leg = 40,
+    },
+    {
+      name = "ARYHBN", -- TANKER
+      category = SUPPORTAC.category.tanker,
+      type = SUPPORTAC.type.tankerBoom,
+      zone = "ARYHBN",
+      callsign = CALLSIGN.Tanker.Texaco,
+      callsignNumber = 2,
+      tacan = 106,
+      tacanid = "TEX",
+      radio = 317.65,
+      flightLevel = 240,
+      speed = 315,
+      heading = 94,
+      leg = 40,
+    },
+    {
+      name = "ARDP", -- TANKER
+      category = SUPPORTAC.category.tanker,
+      type = SUPPORTAC.type.tankerProbe,
+      zone = "ARDP",
+      callsign = CALLSIGN.Tanker.Shell,
+      callsignNumber = 3,
+      tacan = 117,
+      tacanid = "SHL",
+      radio = 317.7,
+      flightLevel = 215,
+      speed = 315,
+      heading = 324,
+      leg = 40,
+    },
+    {
+      name = "ARDP", -- TANKER
+      category = SUPPORTAC.category.tanker,
+      type = SUPPORTAC.type.tankerProbe,
+      zone = "ARDP",
+      callsign = CALLSIGN.Tanker.Texaco,
+      callsignNumber = 3,
+      tacan = 107,
+      tacanid = "TEX",
+      radio = 317.75,
+      flightLevel = 240,
+      speed = 315,
+      heading = 324,
+      leg = 40,
+    },
+    {
+      name = "AWACSWKYJ", -- AWACS
+      category = SUPPORTAC.category.awacs,
+      type = SUPPORTAC.type.awacsE3a,
+      zone = "AWACSWKYJ",
+      callsign = CALLSIGN.AWACS.Magic,
+      callsignNumber = 1,
+      tacan = nil,
+      tacanid = nil,
+      radio = 282.025,
+      flightLevel = 300,
+      speed = 400,
+      heading = 123,
+      leg = 70,
+      activateDelay = 5,
+      despawnDelay = 10,
+      fuelLowThreshold = 15,
+    },
+}
+
+-- call the function that initialises the SUPPORTAC module
+if SUPPORTAC.Start ~= nil then
+  _msg = "[SUPPORTAC] SUPPORTAIRCRAFT_DATA - call SUPPORTAC:Start()."
+  BASE:I(_msg)
+  SUPPORTAC:Start()
+else
+  _msg = "[SUPPORTAC] function SUPPORTAC.Start() is missing!"
+  BASE:E(_msg)
+end
+  
+--------------------------------[staticranges_data.lua]-------------------------------- 
+ 
+env.info( "[JTF-1] staticranges_data" )
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--- STATIC RANGES SETTINGS FOR MIZ
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--
+-- This file MUST be loaded AFTER staticranges.lua
+--
+-- These values are specific to the miz and will override the default values in STATICRANGES.default
+--
+
+-- Error prevention. Create empty container if module core lua not loaded.
+if not STATICRANGES then 
+	STATICRANGES = {}
+	STATICRANGES.traceTitle = "[JTF-1 STATICRANGES] "
+	_msg = self.traceTitle .. "CORE FILE NOT LOADED!"
+	BASE:E(_msg)
+	end
+
+-- These values will overrides the default values in staticranges.lua
+STATICRANGES.strafeMaxAlt             = 1530 -- [5000ft] in metres. Height of strafe box.
+STATICRANGES.strafeBoxLength          = 3000 -- [10000ft] in metres. Length of strafe box.
+STATICRANGES.strafeBoxWidth           = 300 -- [1000ft] in metres. Width of Strafe pit box (from 1st listed lane).
+STATICRANGES.strafeFoullineDistance   = 610 -- [2000ft] in metres. Min distance for from target for rounds to be counted.
+STATICRANGES.strafeGoodPass           = 20 -- Min hits for a good pass.
+
+-- Range targets table
+STATICRANGES.Ranges = {
+	{ --YG77
+		rangeId               = "YG77",
+		rangeName             = "Range YG77",
+		rangeZone             = "ZONE_YG77",
+		rangeControlFrequency = 250.1,
+		groups = {
+		},
+		units = {
+			"RANGE_YG77_EAST_bombing", 
+			"RANGE_YG77_WEST_bombing",
+			"RANGE_YG77_TAC_01",
+			"RANGE_YG77_TAC_02",
+			"RANGE_YG77_TAC_03",
+			"RANGE_YG77_TAC_04",
+			"RANGE_YG77_TAC_05",
+			"RANGE_YG77_TAC_06",
+			"RANGE_YG77_TAC_07",
+			"RANGE_YG77_TAC_08",
+			"RANGE_YG77_TAC_09",
+			"RANGE_YG77_TAC_10"
+		},
+		strafepits = {
+			{ 	-- WEST
+				"RANGE_YG77_strafepit_A",
+				"RANGE_YG77_strafepit_B"
+			},
+			{ 	-- EAST
+				"RANGE_YG77_strafepit_C",
+				"RANGE_YG77_strafepit_D"
+			},
+		},
+	},--YG77 END
+	{ --BM22
+		rangeId               = "BM22",
+		rangeName             = "Range BM22",
+		rangeZone             = "ZONE_BM22",
+		rangeControlFrequency = 250.2,
+		groups = {
+		},
+		units = {
+			"RANGE_BM64_bombing_01", 
+			"RANGE_BM64_bombing_02",
+			"RANGE_BM64_bombing_03",
+			"RANGE_BM64_bombing_04",
+			"RANGE_BM64_TAC_01",
+			"RANGE_BM64_TAC_02",
+			"RANGE_BM64_TAC_03",
+			"RANGE_BM64_TAC_04",
+			"RANGE_BM64_TAC_05",
+			"RANGE_BM64_TAC_06",
+			"RANGE_BM64_TAC_07",
+			"RANGE_BM64_TAC_08",
+			"RANGE_BM64_TAC_09",
+			"RANGE_BM64_TAC_10",
+			"RANGE_BM64_TAC_11",
+			"RANGE_BM64_TAC_12",
+			"RANGE_BM64_TAC_13",
+			"RANGE_BM64_TAC_14",
+			"RANGE_BM64_TAC_15"
+		},
+		strafepits = {
+			{
+				"RANGE_BM64_Strafepit_A",
+				"RANGE_BM64_Strafepit_B"
+	    	},
+		},
+	},--BM22 END
+	{ --BM52
+		rangeId               = "BM52",
+		rangeName             = "Range BM52",
+		rangeZone             = "ZONE_BM52",
+		rangeControlFrequency = 250.3,
+		groups = {
+		},
+		units = {
+			"RANGE_BM52_WEST_bombing", 
+			"RANGE_BM52_EAST_bombing",
+		},
+		strafepits = {
+			{
+				"RANGE_BM52_strafepit_A",
+				"RANGE_BM52_strafepit_B",
+	    	},
+			{
+				"RANGE_BM52_strafepit_C",
+				"RANGE_BM52_strafepit_D",
+	    	},
+		},
+	},--BM52 END
+	{ --CR94
+		rangeId               = "CR94",
+		rangeName             = "Range CR94",
+		rangeZone             = "ZONE_CR94",
+		rangeControlFrequency = 250.4,
+		groups = {
+		},
+		units = {
+			"RANGE_CR94_WEST_bombing", 
+			"RANGE_CR94_EAST_bombing",
+		},
+		strafepits = {
+			{
+				"RANGE_CR94_strafepit_A",
+				"RANGE_CR94_strafepit_B",
+	    	},
+		},
+	},--CR94 END
+}
+  
+-- Start the STATICRANGES module
+if STATICRANGES.Start then
+	_msg = STATICRANGES.traceTitle .. "Call Start()"
+	BASE:T(_msg)
+
+	STATICRANGES:Start()
+end  
+--------------------------------[missionstrike_data.lua]-------------------------------- 
+ 
+env.info( "[JTF-1] staticranges_data" )
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--- STRIKE MISSION SETTINGS FOR MIZ
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--
+-- This file MUST be loaded AFTER missionstrike.lua
+--
+-- These values are specific to the miz and will override the default values in MISSIONSTRIKE.default
+--
+
+-- Error prevention. Create empty container if module core lua not loaded.
+if not MISSIONSTRIKE then 
+	MISSIONSTRIKE = {}
+	MISSIONSTRIKE.traceTitle = "[JTF-1 MISSIONSTRIKE] "
+	_msg = self.traceTitle .. "CORE FILE NOT LOADED!"
+	BASE:E(_msg)
+	-- EXIT MODULE DATA
+	return
+end
+
+----------------------------------
+--- Strike Attack Mission Data ---
+----------------------------------
+
+--MISSIONSTRIKE.drawZones = true -- If true, draw mission zones. default is false
+
+MISSIONSTRIKE.enums.region.qeshm = "Qeshm Island"
+
+--- MISSIONSTRIKE.mission table 
+-- @type MISSIONSTRIKE.mission
+-- @field #string striketype type of strike; Airfield, Factory, Bridge, Communications, C2
+-- @field #string strikeregion Region in which mission is located (East, Central, West)
+-- @field #string strikename Friendly name for the location used in briefings, menus etc. Currently the same as the key, but will probably change
+-- @field #string strikeivo "in the vacinity of" ("AFB" if airfield, "[TOWN/CITY]" other targets)
+-- @field #string strikecoords LatLong
+-- @field #string strikemission mission description
+-- @field #string strikethreats threats description
+-- @field #string ME zone at center of strike location
+-- @field #table striketargets static objects to be respawned for object point strikes (Factory, refinery etc)
+-- @field #table medzones ME zones in which medium assets will be spawned. (AAA batteries, vehicle groups, infantry groups etc)
+-- @field #string loc ME defence zone at location
+-- @field #boolean is_open tracks whether defence zone is occupied
+-- @field #table ME zones in which small assets will be spawned
+-- @field #string loc ME defence zone at location
+-- @field #boolean is_open tracks whether defence zone is occupied
+-- @field #table defassets max number of each defence asset. sum of zone types used must not exceed number of zone type available
+-- @field #number sam uses medzones
+-- @field #number aaa uses smallzones
+-- @field #number manpads uses smallzones
+-- @field #number armour uses medzones
+-- @field #table spawnobjects table holding names of the spawned objects relating the mission
+-- @field #boolean is_open mission status. true if mission is avilable for spawning. false if it is in-progress
+
+-- XXX: MISSIONSTRIKE.mission
+
+
+MISSIONSTRIKE.missions = { -- TableStrikeAttack
+
+	------------ AIRFIELD ALPHA ------------
+	{ -- Fujairah Intl Airfield-Alpha
+		striketype = MISSIONSTRIKE.enums.striketype.airfield,
+        strikeregion = MISSIONSTRIKE.enums.region.alpha,
+		strikename = "Fujairah",
+		strikeivo = "AFB",
+		strikemission = MISSIONSTRIKE.enums.strikemission.airfield, -- text mission description
+		strikezone = "ZONE_FujairahStrike",
+		striketargetprefix = "TARGET_FUJAIRAH",
+		zoneprefix = {
+			{class = "small", prefix = "ZONE_FujairahSmall"},
+			{class = "medium", prefix = "ZONE_FujairahMed"},
+		},
+		defassets = {
+			sam = 2,
+			aaa = 4,
+			manpad = 2,
+			armour = 3,
+		},
+		spawnobjects = {},
+		is_open = true,
+	},-- End Fujairah
+
+	------------ AIRFIELD QESHM ISLAND ------------
+	{ -- Qeshm Airfield
+		striketype = MISSIONSTRIKE.enums.striketype.airfield,
+		strikeregion = MISSIONSTRIKE.enums.region.qeshm,
+		strikename = "Qeshm",
+		strikeivo = "AFB",
+		strikemission = MISSIONSTRIKE.enums.strikemission.airfield, -- text mission description
+		strikezone = "ZONE_QeshmStrike",
+		striketargetprefix = "TARGET_QESHM",
+		zoneprefix = {
+			{class = "small", prefix = "ZONE_QeshmSmall"},
+			{class = "medium", prefix = "ZONE_QeshmMed"},
+		},
+		defassets = {
+			sam = 2,
+			aaa = 4,
+			manpad = 2,
+			armour = 3,
+		},
+		spawnobjects = {},
+		is_open = true,
+	},-- End Qeshm
+
+	------------ AIRFIELD EAST ------------
+	{ -- Bandar-e-Jask Airfield-East
+		striketype = MISSIONSTRIKE.enums.striketype.airfield,
+        strikeregion = MISSIONSTRIKE.enums.region.east,
+		strikename = "Bandar-e-Jask",
+		strikeivo = "AFB",
+		strikemission = MISSIONSTRIKE.enums.strikemission.airfield, -- text mission description
+		strikezone = "ZONE_BandareJaskStrike",
+		striketargetprefix = "TARGET_BandareJask",
+		zoneprefix = {
+			{class = "small", prefix = "ZONE_BandareJaskSmall"},
+			{class = "medium", prefix = "ZONE_BandareJaskMed"},
+		},
+		defassets = {
+			sam = 2,
+			aaa = 4,
+			manpad = 2,
+			armour = 3,
+		},
+		spawnobjects = {},
+		is_open = true,
+	},-- End Bandar-e-Jask Airfield-East
+
+	------------ AIRFIELD CENTRAL ------------
+	{ -- Bandar Abbas Intl Airfield
+		striketype = MISSIONSTRIKE.enums.striketype.airfield,
+        strikeregion = MISSIONSTRIKE.enums.region.central,
+		strikename = "Bandar Abbas Intl",
+		strikeivo = "AFB",
+		strikemission = MISSIONSTRIKE.enums.strikemission.airfield, -- text mission description
+		strikezone = "ZONE_BandarAbbasStrike",
+		striketargetprefix = "TARGET_BANDARABBAS",
+		zoneprefix = {
+			{class = "small", prefix = "ZONE_BandarAbbasSmall"},
+			{class = "medium", prefix = "ZONE_BandarAbbasMed"},
+		},
+		defassets = {
+			sam = 2,
+			aaa = 4,
+			manpad = 2,
+			armour = 3,
+		},
+		spawnobjects = {},
+		is_open = true,
+	},-- End Bandar Abbas
+	{ -- Havadarya Airfield
+		striketype = MISSIONSTRIKE.enums.striketype.airfield,
+        strikeregion = MISSIONSTRIKE.enums.region.central,
+		strikename = "Havadarya",
+		strikeivo = "AFB",
+		strikemission = MISSIONSTRIKE.enums.strikemission.airfield, -- text mission description
+		strikezone = "ZONE_HavadaryaStrike",
+		striketargetprefix = "TARGET_HAVADARYA",
+		zoneprefix = {
+			{class = "small", prefix = "ZONE_HavadaryaSmall"},
+			{class = "medium", prefix = "ZONE_HavadaryaMed"},
+		},
+		defassets = {
+			sam = 2,
+			aaa = 4,
+			manpad = 2,
+			armour = 3,
+		},
+		spawnobjects = {},
+		is_open = true,
+	},-- End Havadarya
+	{ -- Lar Airfield
+		striketype = MISSIONSTRIKE.enums.striketype.airfield,
+        strikeregion = MISSIONSTRIKE.enums.region.central,
+		strikename = "Lar",
+		strikeivo = "AFB",
+		strikemission = MISSIONSTRIKE.enums.strikemission.airfield, -- text mission description
+		strikezone = "ZONE_LarStrike",
+		striketargetprefix = "TARGET_LAR",
+		zoneprefix = {
+			{class = "small", prefix = "ZONE_LarSmall"},
+			{class = "medium", prefix = "ZONE_LarMed"},
+		},
+		defassets = {
+			sam = 2,
+			aaa = 4,
+			manpad = 2,
+			armour = 3,
+		},
+		spawnobjects = {},
+		is_open = true,
+	},-- End Lar
+
+	------------ AIRFIELD NORTH WEST ------------
+	{ -- Shiraz Intl Airfield
+		striketype = MISSIONSTRIKE.enums.striketype.airfield,
+        strikeregion = MISSIONSTRIKE.enums.region.northwest,
+		strikename = "Shiraz Intl",
+		strikeivo = "AFB",
+		strikemission = MISSIONSTRIKE.enums.strikemission.airfield, -- text mission description
+		strikezone = "ZONE_ShirazStrike",
+		striketargetprefix = "TARGET_SHIRAZ",
+		zoneprefix = {
+			{class = "small", prefix = "ZONE_ShirazSmall"},
+			{class = "medium", prefix = "ZONE_ShirazMed"},
+		},
+		defassets = {
+			sam = 4,
+			aaa = 5,
+			manpad = 3,
+			armour = 4,
+		},
+		spawnobjects = {},
+		is_open = true,
+	},-- End Shiraz
+
+	------------ FACTORY CENTRAL ------------
+	{ -- DR30 Factory
+		striketype = MISSIONSTRIKE.enums.striketype.factory,
+        strikeregion = MISSIONSTRIKE.enums.region.central,                            
+		strikename = "DR30",
+		strikeivo = "Bandar Abbas",
+		strikemission = MISSIONSTRIKE.enums.strikemission.factory.chemical, -- text mission description
+		--strikethreats = "RADAR SAM, I/R SAM, AAA, LIGHT ARMOUR",
+		strikezone = "ZONE_DR30Strike",
+		striketargetprefix = "TARGET_DR30",
+		zoneprefix = {
+			{class = "small", prefix = "ZONE_DR30Small"},
+			{class = "medium", prefix = "ZONE_DR30Med"},
+		},
+		defassets = { 
+			sam = 3, 
+			aaa = 3, 
+			manpad = 2, 
+			armour = 3, 
+		},
+		spawnobjects = {},
+		is_open = true,
+	},-- End DR30
+	{ -- BR61 Factory
+		striketype = MISSIONSTRIKE.enums.striketype.factory,
+        strikeregion = MISSIONSTRIKE.enums.region.central,                            
+		strikename = "BR61",
+		strikeivo = "Chah Banard",
+		strikemission = MISSIONSTRIKE.enums.strikemission.factory.chemical, -- text mission description
+		--strikethreats = "RADAR SAM, I/R SAM, AAA, LIGHT ARMOUR",
+		strikezone = "ZONE_BR61Strike",
+		striketargetprefix = "TARGET_BR61",
+		zoneprefix = {
+			{class = "small", prefix = "ZONE_BR61Small"},
+			{class = "medium", prefix = "ZONE_BR61Med"},
+		},
+		defassets = { 
+			sam = 3, 
+			aaa = 3, 
+			manpad = 2, 
+			armour = 3, 
+		},
+		spawnobjects = {},
+		is_open = true,
+	},-- End BR61
+
+	------------ PORT ------------
+--[[ 	{ -- DK05 Port-North
+		striketype = MISSIONSTRIKE.enums.striketype.port,
+        strikeregion = MISSIONSTRIKE.enums.region.north,                            
+		strikename = "DK05",
+		strikeivo = "Novorossiysk",
+		strikemission = MISSIONSTRIKE.enums.strikemission.port.docks, -- text mission description
+		--strikethreats = "RADAR SAM, I/R SAM, AAA, LIGHT ARMOUR",
+		strikezone = "ZONE_DK05Strike",
+		striketargetprefix = "TARGET_DK05",
+		zoneprefix = {
+			{class = "small", prefix = "ZONE_DK05Small"},
+			{class = "medium", prefix = "ZONE_DK05Med"},
+		},
+		defassets = { 
+			sam = 2, 
+			aaa = 4, 
+			manpad = 2, 
+			armour = 2, 
+		},
+		spawnobjects = {},
+		is_open = true,
+	},-- End DK05 ]]
+
+	------------ BRIDGE ------------
+--[[ 	{ -- EJ19 Bridge-North
+		striketype = MISSIONSTRIKE.enums.striketype.bridge,
+        strikeregion = MISSIONSTRIKE.enums.region.north,                            
+		strikename = "EJ19",
+		strikeivo = "Krivenkovskoe",
+		strikemission = MISSIONSTRIKE.enums.strikemission.bridge.rail, -- text mission description
+		--strikethreats = "RADAR SAM, I/R SAM, AAA, LIGHT ARMOUR",
+		strikezone = "ZONE_EJ19Strike",
+		striketargetprefix = "TARGET_EJ19",
+		zoneprefix = {
+			{class = "small", prefix = "ZONE_EJ19Small"},
+			{class = "medium", prefix = "ZONE_EJ19Med"},
+		},
+		defassets = { 
+			sam = 2, 
+			aaa = 4, 
+			manpad = 1, 
+			armour = 2, 
+		},
+		spawnobjects = {},
+		is_open = true,
+	},-- End EJ19 ]]
+
+	------------ CAMP ------------
+	{ -- CAMP REGION ALPHA
+		striketype = MISSIONSTRIKE.enums.striketype.camp,
+        strikeregion = MISSIONSTRIKE.enums.region.alpha,                            
+		strikename = "Add",
+		strikeivo = "Mission",
+		strikemission = MISSIONSTRIKE.enums.strikemission.camp, -- text mission description
+		striketargets = {
+			{ 
+				strikezone = "ZONE_camp_a-1",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_a-2",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_a-3",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_a-4",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_a-5",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_a-6",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_a-7",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_a-8",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_a-9",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_a-10",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_a-11",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_a-12",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_a-13",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_a-14",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_a-15",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_a-16",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_a-17",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_a-18",
+				is_open = true 
+			},
+		},
+	},-- End CAMP REGION ALPHA
+	{ -- CAMP REGION BRAVO
+		striketype = MISSIONSTRIKE.enums.striketype.camp,
+        strikeregion = MISSIONSTRIKE.enums.region.bravo,                            
+		strikename = "Add",
+		strikeivo = "Mission",
+		strikemission = MISSIONSTRIKE.enums.strikemission.camp, -- text mission description
+		striketargets = {
+			{ 
+				strikezone = "ZONE_camp_b-1",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_b-2",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_b-3",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_b-4",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_b-5",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_b-6",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_b-7",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_b-8",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_b-9",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_b-10",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_b-11",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_b-12",
+				is_open = true 
+			},
+			{ 
+				strikezone = "ZONE_camp_b-13",
+				is_open = true 
+			},
+		},
+	},-- End CAMP REGION BRAVO
+
+	------------ CONVOY ------------
+	{ -- Convoy-ALPHA
+		striketype = MISSIONSTRIKE.enums.striketype.convoy,
+        strikeregion = MISSIONSTRIKE.enums.region.alpha,                            
+		strikename = "Add",
+		strikeivo = "Convoy Mission",
+		strikemission = MISSIONSTRIKE.enums.strikemission.convoy, -- text mission description
+		striketargets = {
+			{ 
+				strikezone = "ZONE_Convoy_Start_a-1",
+				endzone = "ZONE_Convoy_End_a-1",
+				destname = "DP1717",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_a-2",
+				endzone = "ZONE_Convoy_End_a-2",
+				destname = "DP3426 Rul Dadna",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_a-3",
+				endzone = "ZONE_Convoy_End_a-3",
+				destname = "DN3377 Fujairah Intl",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_a-4",
+				endzone = "ZONE_Convoy_End_a-3",
+				destname = "DN3377 Fujairah Intl",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_a-5",
+				endzone = "ZONE_Convoy_End_a-3",
+				destname = "DN3377 Fujairah Intl",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_a-6",
+				endzone = "ZONE_Convoy_End_a-5",
+				destname = "DP2733 Dibba Al-Hisn",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_a-7",
+				endzone = "ZONE_Convoy_End_a-5",
+				destname = "DP2733 Dibba Al-Hisn",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_a-8",
+				endzone = "ZONE_Convoy_End_a-3",
+				destname = "DN3377 Fujairah Intl",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_a-9",
+				endzone = "ZONE_Convoy_End_a-3",
+				destname = "DN3377 Fujairah Intl",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_a-10",
+				endzone = "ZONE_Convoy_End_a-3",
+				destname = "DN3377 Fujairah Intl",
+				is_open = true
+			},
+		},
+		options = {
+			MISSIONSTRIKE.enums.convoy.supply,
+			MISSIONSTRIKE.enums.convoy.armoured,
+		},
+	},-- End Convoy-ALPHA
+	{ -- Convoy-BRAVO
+		striketype = MISSIONSTRIKE.enums.striketype.convoy,
+        strikeregion = MISSIONSTRIKE.enums.region.bravo,                            
+		strikename = "Add",
+		strikeivo = "Convoy Mission",
+		strikemission = MISSIONSTRIKE.enums.strikemission.convoy, -- text mission description
+		striketargets = {
+			{ 
+				strikezone = "ZONE_Convoy_Start_b-1",
+				endzone = "ZONE_Convoy_End_b-1",
+				destname = "DP2184 Al Jowar",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_b-2",
+				endzone = "ZONE_Convoy_End_b-2",
+				destname = "DP2489 Al Haqt",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_b-3",
+				endzone = "ZONE_Convoy_End_b-1",
+				destname = "DP2184 Al Jowar",
+				is_open = true
+			},
+		},
+		options = {
+			MISSIONSTRIKE.enums.convoy.supply,
+			MISSIONSTRIKE.enums.convoy.armoured,
+		},
+	},-- End Convoy-BRAVO
+	{ -- Convoy-Qeshm
+		striketype = MISSIONSTRIKE.enums.striketype.convoy,
+        strikeregion = MISSIONSTRIKE.enums.region.qeshm,                            
+		strikename = "Add",
+		strikeivo = "Convoy Mission",
+		strikemission = MISSIONSTRIKE.enums.strikemission.convoy, -- text mission description
+		striketargets = {
+			{ 
+				strikezone = "ZONE_Convoy_Start_q-1",
+				endzone = "ZONE_Convoy_End_q-1",
+				destname = "DQ2873 Qeshm",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_q-2",
+				endzone = "ZONE_Convoy_End_q-2",
+				destname = "DQ0883 Dargahan",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_q-2",
+				endzone = "ZONE_Convoy_End_q-5",
+				destname = "CQ7861",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_q-3",
+				endzone = "ZONE_Convoy_End_q-3",
+				destname = "DQ0672 Suza",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_q-3",
+				endzone = "ZONE_Convoy_End_q-1",
+				destname = "DQ2873 Qeshm",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_q-4",
+				endzone = "ZONE_Convoy_End_q-4",
+				destname = "CQ2479 Basa Idu",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_q-4",
+				endzone = "ZONE_Convoy_End_q-1",
+				destname = "DQ2873 Qeshm",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_q-5",
+				endzone = "ZONE_Convoy_End_q-5",
+				destname = "CQ7861",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_q-5",
+				endzone = "ZONE_Convoy_End_q-2",
+				destname = "DQ0883 Dargahan",
+				is_open = true
+			},
+		},
+		options = {
+			MISSIONSTRIKE.enums.convoy.supply,
+			MISSIONSTRIKE.enums.convoy.armoured,
+		},
+	},-- End Convoy-EAST
+	{ -- Convoy-EAST
+		striketype = MISSIONSTRIKE.enums.striketype.convoy,
+        strikeregion = MISSIONSTRIKE.enums.region.east,                            
+		strikename = "Add",
+		strikeivo = "Convoy Mission",
+		strikemission = MISSIONSTRIKE.enums.strikemission.convoy, -- text mission description
+		striketargets = {
+			{ 
+				strikezone = "ZONE_Convoy_Start_e-1",
+				endzone = "ZONE_Convoy_End_e-1",
+				destname = "EP3614 Miski",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_e-2",
+				endzone = "ZONE_Convoy_End_e-2",
+				destname = "DQ8979 Teyab",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_e-2",
+				endzone = "ZONE_Convoy_End_e-1",
+				destname = "EP3614 Miski",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_e-3",
+				endzone = "ZONE_Convoy_End_e-3",
+				destname = "EQ5467 Dar Pahn",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_e-3",
+				endzone = "ZONE_Convoy_End_e-2",
+				destname = "DQ8979 Teyab",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_e-3",
+				endzone = "ZONE_Convoy_End_e-4",
+				destname = "ER1396 Dehbarez",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_e-4",
+				endzone = "ZONE_Convoy_End_e-4",
+				destname = "ER1396 Dehbarez",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_e-4",
+				endzone = "ZONE_Convoy_End_e-3",
+				destname = "EQ5467 Dar Pahn",
+				is_open = true
+			},
+		},
+		options = {
+			MISSIONSTRIKE.enums.convoy.supply,
+			MISSIONSTRIKE.enums.convoy.armoured,
+		},
+	},-- End Convoy-EAST
+}
+
+-- Start Strike Attack Module
+if MISSIONSTRIKE.Start then
+	_msg = MISSIONSTRIKE.traceTitle .. "Call Start() from missionstrike_data."
+	BASE:T(_msg)
+	MISSIONSTRIKE:Start()
+end
+
+-- END STRIKE ATTACK DATA  
+--------------------------------[cvncontrol_data.lua]-------------------------------- 
+ 
+env.info( "[JTF-1] cvncontrol_data" )
+
+--- MISSION JTF1 MENU SETTINGS FOR MIZ
+--
+-- This file MUST be loaded AFTER JTF1menu.lua
+--
+-- These values are specific to the miz and will override the default values in JTF1
+--
+
+-- Error prevention. Create empty container if module core lua not loaded.
+if not CVNCONTROL then 
+	CVNCONTROL = {}
+	CVNCONTROL.traceTitle = "[JTF-1 CVNCONTROL] "
+	_msg = CVNCONTROL.traceTitle .. "CORE FILE NOT LOADED!"
+	BASE:E(_msg)
+end
+
+--CVNCONTROL.markWaypoints = true -- if true, mark waypoints in F10 map. Dfault is false.
+
+-- table of Carriers
+CVNCONTROL.cvn = {
+	{
+		name = "CVN72", -- identifier for this CVN
+		group = "JTF-1_CVN72", -- name of the GROUP in the ME
+		unit = "JTF-1_CVN72", -- name of the carrier unit in the GROUP
+		menutext = "CVN-72 Lincoln",-- text used for the carrier's control menu
+		deckoffset = -4, -- deck offset from boat heading
+        uturn = false, -- whether boat should return to the position it was in prior to the recover/launch request
+		recoveryspeed = 30, -- wind speed over the deck dunring recovery
+		tacan = 72, -- boat TACAN channel
+		tacanid = "ABE", -- TACAN morse ID
+		icls = 4,-- ICLS channel
+		iclsid = "ABE", -- ICLS morse ID
+		radio = 274.075, -- AI ATC freq
+		radiomodulation = radio.modulation.AM, -- AI ATC freq modulation [radio.modulation.AM/FM]
+		cruise = 11, -- speed at which boat should steam when not on launch/recovery
+		tanker = true, -- if a Hawk tanker should be spawned
+		tankertemplate = nil, -- name of GROUP template to be used. If nil, use the built-in template (default nil)
+		tankercallsign = CALLSIGN.Tanker.Texaco, -- Hawk tanker callsign [CALLSIGN.Tanker.Texaco/Shell/Arco]
+		tankercallsignnumber = 6, -- hawk tanker callsign number
+		tankertacan = 38, -- hawk tanker TACAN channel
+		tankertacanid = "TEX", -- hawk tanker TACAN morse ID
+		tankerradio = 317.775, -- hawk tanker radio freq
+		flagsetlights = 6672, -- mission trigger flag for setting carrier light mode
+	},
+	{
+		name = "LHA1", -- identifier for this CVN
+		group = "CSG_CarrierGrp_Tarawa", -- name of the GROUP in the ME
+		unit = "CSG_CarrierGrp_Tarawa", -- name of the carrier unit in the GROUP
+		menutext = "LHA-1 Tarawa",-- text used for the carrier's control menu
+		deckoffset = 0, -- deck offset from boat heading
+        uturn = false, -- whether boat should return to the position it was in prior to the recover/launch request
+		recoveryspeed = 20, -- wind speed over the deck dunring recovery
+		tacan = 1, -- boat TACAN channel
+		tacanid = "TAR", -- TACAN morse ID
+		icls = 1,-- ICLS channel
+		iclsid = "TAR", -- ICLS morse ID
+		radio = 255.725, -- AI ATC freq
+		radiomodulation = radio.modulation.AM, -- AI ATC freq modulation [radio.modulation.AM/FM]
+		cruise = 11, -- speed at which boat should steam when not on launch/recovery
+		tanker = true, -- if a Hawk tanker should be spawned
+		tankertemplate = nil, -- name of GROUP template to be used. If nil, use the built-in template (default nil)
+		tankercallsign = CALLSIGN.Tanker.Arco, -- Hawk tanker callsign [CALLSIGN.Tanker.Texaco/Shell/Arco]
+		tankercallsignnumber = 2, -- hawk tanker callsign number
+		tankertacan = 39, -- hawk tanker TACAN channel
+		tankertacanid = "ARC", -- hawk tanker TACAN morse ID
+		tankerradio = 278.325, -- hawk tanker radio freq
+		flagsetlights = 6601, -- mission trigger flag for setting carrier light mode
+	},
+}
+
+-- start the mission timer
+if CVNCONTROL.Start then
+	_msg = CVNCONTROL.traceTitle .. "Call Start()"
+	BASE:T(_msg)
+	CVNCONTROL:Start()
+end
+  
 --------------------------------[dynamic_deck_data.lua]-------------------------------- 
  
 env.info( "[JTF-1] dynamic_deck_templates" )
@@ -32943,1735 +35555,6 @@ if DYNDECK.Start then
     DYNDECK:Start()
 end
   
---------------------------------[core\markspawn.lua]-------------------------------- 
- 
-env.info( "[JTF-1] markspawn" )
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
---- BEGIN MARK SPAWN
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
---
--- Sourced from Virtual 57th and refactored for JTF-1
---
---
--- **NOTE**: MARKSPAWN_TEMPLATES.LUA MUST BE LOADED AFTER THIS FILE IS LOADED!
---
--- This file contains functions and key values and should be loaded first.
--- The file markspawn_templates.lua contains the built-in templates used for spawning assets.
---
--- If MARKSPAWN_DATA.LUA is used it should be loaded after MARKSPAWN.LUA and 
--- MARKSPAWN_TEMPLATES.LUA and the call to MARKSPAWN:Start() at the end of the templates
--- file should be commented out.
---
--- Load order in miz MUST be;
---     1. markspawn.lua
---     2. markspawn_templates.lua
---     3. [OPTIONAL] markspawn_data.lua
---
--- Use F10 map marks to spawn BVR opponents or ground threats anywhere on the map. 
--- Add mark to map then type the CMD syntax below in the map mark text field. 
--- The command will execute on mouse-clicking out of the text box.
---
--- COMMANDS
--- ========
--- 
--- - ASPAWN: = Spawn Air Group
--- - GSPAWN: = Spawn Ground Group
--- - NSPAWN: = Spawn Navy Group
--- - WXREPORT: = display message with weather conditions
--- - DELETE: = Delete one, or more, Group(s)
--- 
--- Airspawn syntax
--- ---------------
--- 
--- CMD ASPAWN: [type][, [option]: [value]][...]
--- 
--- 
--- Airspawn Types
--- --------------
--- 
--- - F4
--- - SU25
--- - SU27
--- - MIG29
--- - SU25
--- - MIG23
--- - F16
--- - F18
--- - F16SEAD
--- - F18SEAD
--- - OPTIONS	(will list the types available for this command)
--- 
--- 
--- Airspawn Options
--- ----------------
--- 
--- - HDG: [degrees] - default 000
--- - ALT: [flight level] - default 280 (28,000ft)
--- - DIST:[nm] - default 0 (spawn on mark point)
--- - NUM: [1-4] - default 1
--- - SPD: [knots] - default 425
--- - SKILL: [AVERAGE, GOOD, HIGH, EXCELLENT, RANDOM] - default AVERAGE
--- - TASK: [CAP] - default NOTHING
--- - SIDE: [RED, BLUE, NEUTRAL] - default RED (Russia)
--- 
--- 
--- Example
--- -------
--- 
--- CMD ASPAWN: MIG29, NUM: 2, HDG: 180, SKILL: GOOD
--- 
--- Will spawn 2x MiG29 at the default speed of 425 knots, with heading 180 and skill level GOOD.
--- 
--- 
--- Groundspawn Syntax
--- ------------------
--- 
--- CMD GSPAWN: [groundspawn type][, [option]: [value]][...]
--- 
--- 
--- Groundspawn Types
--- -----------------
--- 
--- - SA2		(battery)
--- - SA3		{battery)
--- - SA6		(battery)
--- - SA8		(single)
--- - SA10		(battery)
--- - SA11		(battery)
--- - SA15		(single)
--- - SA19		(single)
--- - ZSU23		(ZSU23 Shilka)
--- - ZU23EMP	(ZU23 fixed emplacement)
--- - ZU23URAL	(ZU23 mounted on Ural)
--- - CONLIGHT      (Supply convoy)
--- - CONHEAVY	(Armoured convoy) 
--- - OPTIONS	(will list the types available for this command)
--- 
--- 
--- Groundspawn Options
--- ----------------
--- 
--- - ALERT: [GREEN, AUTO, RED] - default RED 
--- - SKILL: [AVERAGE, GOOD, HIGH, EXCELLENT, RANDOM] - default AVERAGE
--- 
--- 
--- Example
--- -------
--- 
--- CMD GSPAWN: SA6, ALERT: GREEN, SKILL: HIGH
--- 
--- Will spawn an SA6 Battery on the location of the map mark, in alert state GREEN and with skill level HIGH.
--- 
--- 
--- Weather Report Syntax
--- ---------------------
--- 
--- CMD WXREPORT: [QFE, METRIC]
--- 
--- 
--- Weather Report Options
--- ----------------------
--- 
--- - QFE   (Pressure displayed as QFE) - default QNH
--- - METRIC  (Produces the report in Metric format (mp/s, hPa) - default Imperial
--- 
--- 
--- Example
--- -------
--- 
--- CMD WXREPORT:
--- 
--- Will report Wind in knots, QNH in inHg, temperature in centigrade at the mark's position
--- 
--- CMD WXREPORT: QFE
--- 
--- Will report wind in knots, QFE in inHg, temperature in centigrade at the mark's position
--- 
--- 
--- Delete Spawn Syntax
--- -------------------
--- 
--- CMD DELETE: [object] [object option[s]]
--- 
--- 
--- Delete Spawn Objects
--- --------------------
--- 
--- - GROUP [requires name of Command Spawned Group in F10 map]
--- - KIND [requires option CAT and/or TYPE and/or ROLE] [SIDE]
--- - AREA  [Zone radius defined by RAD option] [CAT, TYPE, ROLE, SIDE]
--- - NEAREST [CAT, TYPE, ROLE, SIDE]
--- - ALL
--- 
--- 
--- Delete Spawn Options
--- --------------------
--- 
--- - CAT: [AIR, GROUND] - default ALL
--- - TYPE: [the spawned object Type] - default ALL
--- - ROLE: [CAS, SEAD, SAM, AAA, CVY] - default ALL
--- - SIDE: [RED, BLUE, NEUTRAL, ALL] - default RED
--- - RAD: [radius from mark in NM] - default 5NM
--- 
--- 
--- Example
--- -------
--- 
--- CMD DELETE: GROUP MIG29#001 
--- 
--- - Will remove the spawned group named MIG29#001
--- 
--- CMD DELETE: KIND TYPE: SA15
--- 
--- - will remove all SA15 groups
--- 
--- CMD DELETE: KIND ROLE: SAM
--- 
--- - will remove all groups with the SAM role
--- 
--- CMD DELETE: AREA TYPE: SA8
--- 
--- - will remove all SA8 groups within 5NM of mark
--- 
--- CMD DELETE: AREA RAD: 1 ROLE: SAM SIDE: ALL
--- 
--- - will remove all groups within 5NM of the mark, with the SAM role, on Red, Blue and Neutral sides 
--- 
--- 
--- Cut-n-Paste Command Examples
--- ----------------------------
--- 
--- CMD GSPAWN: SA8, ALERT: RED, SKILL: HIGH
--- 
--- CMD GSPAWN: SA15, ALERT: RED, SKILL: HIGH
--- 
--- CMD ASPAWN: MIG29, NUM: 2, HDG: 90, SKILL: GOOD, ALT: 280, TASK: CAP, SIDE: RED
---
--- CMD DELETE: GROUP MIG29A#001
---
--- TASK TYPES
--- ----------
--- CAP, REFUELING, CAS, SEAD, TASMO, AWACS, AFAC
---
-
-
-MARKSPAWN = {}
--- inherit methods,  properties etc from BASE for event handler, trace etc
-MARKSPAWN = BASE:Inherit( MARKSPAWN, BASE:New() )
-
-MARKSPAWN.traceTitle = "[JTF-1] "
-MARKSPAWN.version = "1.0"
-MARKSPAWN.ClassName = "MARKSPAWN"
-
---MARKSPAWN.MLTgtArray = {}
-MARKSPAWN.radioPresets = {}
-MARKSPAWN.MLSpawnedGroups = {}
---MARKSPAWN.templates = {}
-
-MARKSPAWN.default = {
-	-- DEFAULT VALUES
-	DEFAULT_BLUE_COUNTRY = 2, -- USA
-	DEFAULT_RED_COUNTRY = 0, -- RUSSIA
-	DEFAULT_NEUTRAL_COUNTRY = 7, -- USAF AGRRESSORS
-	MLDefaultAirAlt = 200, -- altitude Flight Level
-	MLDefaultHdg = 000,
-	MLDefaultSkill = "AVERAGE",
-	MLDefaultDistance = 0,
-	MLDefaultGroundDistance = 0,
-	MLDefaultROE = "FREE",
-	MLDefaultROT = "EVADE",
-	MLDefaultFreq = 251,
-	MLDefaultNum = 1,
-	MLDefaultAirSpeed = 425,
-	MLDefaultGroundSpeed = 21,
-	MLDefaultAlert = "RED",
-	MLDefaultGroundTask = "NOTHING",
-}
-
--- SPAWNABLE GROUP TYPES
-MARKSPAWN.spawnTypes = { -- types available for spawning
-	------------------------ BVR ------------------------
-    { template = "BVR_MIG23",  	msType = "MIG23",   	category = "air",     role = "CAP"},
-    { template = "BVR_SU25",   	msType = "SU25",    	category = "air",     role = "CAP"},
-    { template = "BVR_MIG29A", 	msType = "MIG29",   	category = "air",     role = "CAP"},
-    { template = "BVR_SU27",   	msType = "SU27",    	category = "air",     role = "CAP"},
-    { template = "BVR_F4",     	msType = "F4",      	category = "air",     role = "CAP"},
-    { template = "BVR_F16",    	msType = "F16",     	category = "air",     role = "CAP"},
-    { template = "BVR_F18",    	msType = "F18",     	category = "air",     role = "CAP"},
-    ------------------------ CAS ------------------------
-    { template = "CAS_MQ9",    	msType = "MQ9",     	category = "air",     role = "CAS"},
-    { template = "CAS_WINGLOON",msType = "WINGLOON",    category = "air",     role = "CAS"},
-    ------------------------ SEAD ------------------------
-	{ template = "SEAD_F16",    msType = "F16SEAD",	category = "air",     role = "SEAD"},
-	{ template = "SEAD_F18",    msType = "F18SEAD",	category = "air",     role = "SEAD"},
-	------------------------ SAM ------------------------
-    { template = "SA2",    		msType = "SA2",	  		category = "ground",  role = "SAM"},
-    { template = "SA3",    		msType = "SA3",	  		category = "ground",  role = "SAM"},
-    { template = "SA6",    		msType = "SA6",	  		category = "ground",  role = "SAM"},
-    { template = "SA8",    		msType = "SA8", 		category = "ground",  role = "SAM"},
-    { template = "SA10",   		msType = "SA10", 		category = "ground",  role = "SAM"},
-    { template = "SA11",   		msType = "SA11", 		category = "ground",  role = "SAM"},
-    { template = "SA15",   		msType = "SA15", 		category = "ground",  role = "SAM"},
-    { template = "SA19",   		msType = "SA19", 		category = "ground",  role = "SAM"},
-	------------------------ AAA ------------------------
-    { template = "ZSU23_Shilka",msType = "ZSU23",		category = "ground",  role = "AAA"},
-    { template = "ZU23_Emp",	msType = "ZU23EMP",		category = "ground",  role = "AAA"},
-    { template = "ZU23_Ural",	msType = "ZU23URAL",	category = "ground",  role = "AAA"},
-    { template = "ZU23_Closed",	msType = "ZU23CLOSED",	category = "ground",  role = "AAA"},
-	------------------------ CONVOY ------------------------
-    { template = "CON_light",	msType = "CONLIGHT",	category = "ground",  role = "CON"},
-    { template = "CON_heavy",	msType = "CONHEAVY",	category = "ground",  role = "CON"},
-	------------------------ ARTILLERY ------------------------
-	------------------------ INFANTRY ------------------------
-	------------------------ SHIP ------------------------
-}
-
------------------
--- START MARKSPAWN
------------------
-
-function MARKSPAWN:Start()
-	_msg = string.format("%sVERSION %s", self.traceTitle, self.version)
-	self:T(_msg)
-
-	-----------------
-	-- ADD SPAWNS
-	-----------------
-
-	-- Add SPAWN objects to each template
-	-- Spawn Late Activated groups using built-in templates if the template group is not
-	-- being sourrced from in the mission itself
-
-	for index, spawnType in ipairs(self.spawnTypes) do
-		local templateName = spawnType.template
-		local spawnAlias = "MS_" .. templateName
-
-		-- if a late activated group is present in the mission, use that as a spawn template
-		if GROUP:FindByName(templateName) then
-			_msg = string.format("%sSpawn Template %s found in mission.",
-				self.traceTitle,
-				templateName
-			)
-			self:T(_msg)
-
-			spawnType.spawn = SPAWN:NewWithAlias(templateName, spawnAlias)
-
-		-- if a late activated group is NOT found in the mission, look for a built-in template
-		else 
-
-			local spawnTemplate
-	
-			-- look in MARKSPAWN templates
-			if SPAWNTEMPLATES.templates[templateName] then
-				_msg = string.format("%sUse spawn template from SPAWNTEMPLATES.templates for %s.",
-					self.traceTitle,
-					templateName
-				)
-				self:T(_msg)
-
-				spawnTemplate = SPAWNTEMPLATES.templates[templateName]
-			end
-
-			-- If we have a template, generate the SPAWN object
-			if spawnTemplate ~= nil then
-				_msg = string.format("%sSpawn Group and use as SPAWN for type %s.",
-					self.traceTitle,
-					templateName
-				)
-				self:T(_msg)
-
-				local spawnCategory =  spawnTemplate.category
-				local spawnCoordinate = COORDINATE:New(0,0,0)
-				local spawnCountryid = self.default.DEFAULT_RED_COUNTRY
-				local spawnCoalition = coalition.side.RED
-
-				-- add a late activated group to be used as the spawn template
-				local spawn = SPAWN:NewFromTemplate(spawnTemplate, templateName, spawnAlias, true)
-					:InitCountry(spawnCountryid)
-					:InitCoalition(spawnCoalition)
-					:InitCategory(spawnCategory)
-					--:InitPositionCoordinate(spawnCoordinate)
-					:InitLateActivated()
-				
-				spawn:OnSpawnGroup(
-					function(spawngroup)
-						local groupName = spawngroup:GetName()
-						spawnType.spawn = SPAWN:New(groupName)
-					end
-					,spawnType
-				)
-				spawn:Spawn()
-			
-			-- Template cannot be found in miz or SPAWNTEMPLATES.templates
-			else
-				_msg = string.format("%sError! Could not find template %s.",
-					self.traceTitle,
-					templateName
-				)
-				self:E(_msg)
-			end
-		end
-	end
-
-	-----------------
-	-- MARK POINT EVENT HANDLER
-	-----------------
-	self:HandleEvent(EVENTS.MarkChange)
-	
-	-- IF MARK IS A "CMD", SEND MARK DATA TO PARSER
-	function self:OnEventMarkChange( EventData )
-		_msg = string.format("%sMARK CHANGE EVENT", self.traceTitle)
-		self:T(_msg)
-		local text = EventData.text
-		local x, _ = string.find(text, "CMD")
-		if(x ~= nil) then
-			self:parseMark(EventData)
-			self:MLRemoveMark(EventData.idx)
-		else
-			return
-		end
-	end
-	
-end
-
------------------
--- CMD PARSER
------------------
-
-function MARKSPAWN:parseMark(mark)
-
-	_msg = self.traceTitle
-	self:T({_msg, text = mark.text, pos = mark.pos})
-
-	local cmdOption = false
-	local text = mark.text
-	local pos = mark.pos
-
-	-- Command Search patterns
-	local cmdASPAWN = "ASPAWN:%s*(%w+)"
-	local cmdGSPAWN = "GSPAWN:%s*(%w+)"
-	local cmdNSPAWN = "NSPAWN:%s*(%w+)"
-	local cmdRADIO = "RADIO:%s*(%w+)"
-	local cmdWX = "WXREPORT:%s*(.*)"
-	local cmdDELETE = "DELETE:%s*(%w+)"
-	-- Option search patterns
-	local optionOpt = "OPTIONS"
-	local optionHdg = "HDG:%s*(%d+)"
-	local optionAlt = "ALT:%s*(%d+)"
-	local optionTask = "TASK:%s*(%w+)"
-	local optionSkill = "SKILL:%s*(%w+)"
-	local optionDist = "DIST:%s*(%d+)"
-	local optionROE = "ROE:%s*(%w+)"
-	local optionWPS = "WPS:%s*{(.*)}"
-	local optionFreq = "FREQ:%s*(%d[%d.]+)"
-	local optionBand = "BAND:%s*(%w+)"
-	local optionPwr = "PWR:%s*(%d+)"
-	local optionNum = "NUM:%s*(%d+)"
-	local optionSpd = "SPD:%s*(%d+)"
-	local optionSide = "SIDE:%s*(%w+)"
-	local optionForm = "FORM:%s*(%w+)"
-	local optionBase = "BASE:%s*(%w+)"
-	local optionName = "NAME:%s*(%w+)"
-	local optionROT = "ROT:%s*(%w+)"
-	local optionAlert = "ALERT:%s*(%w+)"
-	local optionTGT = "TGT:%s*(%w+)"
-	-- Delete Class patterns
-	local optionDelGrp = "GROUP%s*(.+)"
-	-- Delete Option patterns
-	local optionDelCat = "CAT:%s*(%w+)"
-	local optionDelSide = "SIDE:%s*(%w+)"
-	local optionDelRad = "RAD:%s*(%d+)"
-	local optionDelType = "TYPE:%s*(%w+)"
-	local optionDelRole = "ROLE:%s*(%w+)"
-
-	-----------------
-	-- CMD AIR GROUP
-	-----------------
-
-	local i, _, spawnValue = string.find(text, cmdASPAWN)
-	if(i ~= nil) then
-		cmdOption = true
-		if(spawnValue:upper() == optionOpt) then
-			self:MLListSpawnOptions("air", mark)
-		else
-			local _, _, heading = string.find(text, optionHdg)
-			local _, _, altitude = string.find(text, optionAlt)
-			local _, _, task = string.find(text,optionTask)
-			local _, _, skill = string.find(text,optionSkill)
-			local _, _, distance = string.find(text,optionDist)
-			local _, _, ROE = string.find(text, optionROE)
-			local _, _, WPS = string.find(text, optionWPS)
-			local _, _, freq = string.find(text, optionFreq)
-			local _, _, num = string.find(text, optionNum)
-			local _, _, speed = string.find(text, optionSpd)
-			local _, _, side = string.find(text, optionSide)
-			local _, _, formation = string.find(text, optionForm)
-			local _, _, base = string.find(text, optionBase)
-			local _, _, groupName = string.find(text, optionName)
-			local _, _, ROT = string.find(text, optionROT)
-
-			local spawnTable = {
-				msType = spawnValue,
-				heading = heading,
-				altitude = altitude,
-				task = task, 
-				skill = skill, 
-				distance = distance, 
-				roe = ROE, 
-				WP = WPS, 
-				pos = pos, 
-				freq = freq, 
-				num = num, 
-				speed = speed,
-				side = side, 
-				formation = formation,
-				base = base,
-				groupName = groupName,
-				rot = ROT,
-			}
-
-			self:MLAirSpawn(spawnTable)
-		end
-	end
-	
-	-----------------
-	-- CMD GROUND GROUP
-	-----------------
-
-	local j, _, spawnValue = string.find(text, cmdGSPAWN)
-	if(j ~= nil) then
-		cmdOption = true
-		if(spawnValue:upper() == optionOpt) then
-			self:MLListSpawnOptions("ground", mark)
-		else
-			local _, _, heading = string.find(text, optionHdg)
-			local _, _, skill = string.find(text,optionSkill)
-			local _, _, distance = string.find(text,optionDist)
-			local _, _, ROE = string.find(text, optionROE)
-			local _, _, WP = string.find(text, optionWPS)
-			local _, _, alert = string.find(text, optionAlert)
-			local _, _, speed = string.find(text, optionSpd)
-			local _, _, side = string.find(text, optionSide)
-			local _, _, formation = string.find(text, optionForm)  
-			local _, _, groupName = string.find(text, optionName)
-			local _, _, tgtName = string.find(text, optionTGT)
-
-			local spawnTable = {
-				msType = spawnValue,
-				heading = heading,
-				skill = skill, 
-				distance = distance, 
-				roe = ROE, 
-				WP = WP, 
-				pos = pos,
-				speed = speed,
-				coalition = side,
-				formation = formation,
-				alert = alert,
-				side = side,
-				groupName = groupName,
-				tgt = tgtName
-			}
-
-			self:MLGroundSpawn(spawnTable)
-		end
-	end
-		
-	-----------------
-	-- CMD RADIO
-	-----------------
-
-	local k, _, spawnValue = string.find(text, cmdRADIO)
-	if(k ~= nil) then
-		cmdOption = true
-		self:T("[JTF-1] SpawnValue: " .. spawnValue)
-		self:T("[JTF-1] Other Text: " .. k)
-		local _, _, freq = string.find(text, optionFreq)
-		local _, _, band = string.find(text,optionBand)
-		local _, _, power = string.find(text,optionPwr)
-		
-		local spawnTable = {
-			song = spawnValue,
-			freq = freq,
-			band = band, 
-			power = power, 
-		}
-
-		_msg = string.format("%sRADIO: ", self.traceTitle)
-		self:T({"[JTF-1] RADIO: ", spawnTable})
-		--self:MLRadioSpawn(spawnTable)
-	end
-	
-	-----------------
-	-- CMD NAVY GROUP
-	-----------------
-
-	--spawn a naval group
-	local l, _, spawnValue = string.find(text, cmdNSPAWN)
-	if(l ~= nil) then
-		cmdOption = true
-		if(spawnValue:upper() == optionOpt) then
-		self:MLListSpawnOptions("naval", mark)
-		else
-		local _, _, heading = string.find(text, optionHdg)
-		local _, _, skill = string.find(text,optionSkill)
-		local _, _, distance = string.find(text,optionDist)
-		local _, _, ROE = string.find(text, optionROE)
-		local _, _, WP = string.find(text, optionWPS)
-		local _, _, alert = string.find(text, optionAlert)
-		local _, _, speed = string.find(text, optionSpd)
-		local _, _, side = string.find(text, optionSide)
-		local _, _, formation = string.find(text, optionForm)  
-		local _, _, groupName = string.find(text, optionName)
-		local _, _, tgtName = string.find(text, optionTGT)
-		
-		local spawnTable = {
-			msType = spawnValue,
-			heading = heading,
-			skill = skill, 
-			distance = distance, 
-			roe = ROE, 
-			WP = WP, 
-			pos = pos,
-			speed = speed,
-			coalition = side,
-			formation = formation,
-			alert = alert,
-			side = side,
-			groupName = groupName,
-			tgt = tgtName
-		}
-
-		self:T({"[JTF-1] NSPAWN: ", spawnTable})
-		self:MLNavalSpawn(spawnTable)
-		end
-	end
-	
-	-----------------
-	-- CMD DELETE GROUP
-	-----------------
-
-	--Delete one or more groups
-	local l, _, deleteCMD = string.find(text, cmdDELETE)
-	if(l ~= nil) then
-		cmdOption = true
-		local _, _, category = string.find(text, optionDelCat) -- "CAT (%w+)"
-		local _, _, side = string.find(text,optionDelSide) -- "SIDE (%w+)"
-		local _, _, radius = string.find(text,optionDelRad) -- "RAD (%d+)"
-		local _, _, msType = string.find(text,optionDelType) -- "TYPE (%w+)"
-		-- local _, _, template = string.find(text,optionDelType) -- "TYPE (%w+)"
-		local _, _, groupName = string.find(text, optionDelGrp) -- "GROUP%s*(.+)"
-		local _, _, role = string.find(text, optionDelRole) -- "ROLE (.+)"
-		
-		local spawnTable = {
-			cmd = deleteCMD,
-			category = category,
-			side = side,
-			radius = radius,
-			msType = msType,
-			groupName = groupName,
-			role = role
-		}
-
-		self:MLDeleteGroup(spawnTable, mark)
-	end
-
-	-----------------
-	-- CMD WX REPORT
-	-----------------
-
-	local m, _, repoString = string.find(text, cmdWX)
-	if(m ~= nil) then
-		cmdOption = true
-		self:MLWxReport(repoString, mark)
-	end
-
-	if not cmdOption then
-		self:E("[JTF-1] ERROR! CMD not found.")
-	end
-
-end
-  
------------------
--- SPAWN AIR GROUP(S)
------------------
-
-function MARKSPAWN:MLAirSpawn(SpawnTable)
-
-	local msType = SpawnTable.msType
-	local heading = tonumber(SpawnTable.heading) or self.default.MLDefaultHdg
-	local altitude = tonumber(SpawnTable.altitude) or self.default.MLDefaultAirAlt
-	altitude = UTILS.FeetToMeters(altitude * 100)
-	local task = SpawnTable.task or "C"
-	local skill = self:MLSkillCheck(SpawnTable.skill) or self.default.MLDefaultSkill
-	local distance = tonumber(SpawnTable.distance) or self.default.MLDefaultDistance
-	local ROE = SpawnTable.roe or self.default.MLDefaultROE
-	local ROT = SpawnTable.rot or self.default.MLDefaultROT
-	local freq = tonumber(SpawnTable.freq) or self.default.MLDefaultFreq
-	local num = tonumber(SpawnTable.num) or self.default.MLDefaultNum
-	local speed = tonumber(SpawnTable.speed) or self.default.MLDefaultAirSpeed
-	local form = SpawnTable.formation or nil
-	local base = SpawnTable.base or nil
-	local spawnCoord = COORDINATE:NewFromVec3(SpawnTable.pos):SetAltitude(altitude,true)
-	local spawner = self:comparator(msType)
-	local category = self:GetProperty(msType, "category")
-	local role = self:GetProperty(msType, "role")
-
-	if(spawner == nil) then
-		return
-	end
-
-	local template = GROUP:FindByName( spawner.SpawnTemplatePrefix )
-	local waypointNameString = SpawnTable.WP or nil
-	
-	-- switch country/coalition if desired
-	local coal, country
-	if(SpawnTable.side) then
-		coal, country = self:MLSideComparator(SpawnTable.side, template)
-	else
-		coal = template:GetCoalition()
-		country = template:GetCountry()
-	end
-	local group
-	
-	-- spawn the group
-	if(base) then
-		local airbase
-		if(base == "NEAREST") then 
-			self:T("[JTF-1] learn 2 spell, scrub")
-			local theater = env.mission.theatre
-			local distance = 0
-		else
-			airbase = AIRBASE:FindByName(base)
-			if(airbase == nil) then 
-				airbase = AIRBASE:GetAllAirbases()[1]
-			end
-		end
-		group = spawner:InitGrouping(num):InitSkill(skill):InitCoalition(coal):InitCountry(country):InitHeading(heading):SpawnAtAirbase(airbase,SPAWN.Takeoff.Cold,nil)
-	else
-		self:T("[JTF-1] ASPAWN: " .. coal .. " " .. country)
-		group = spawner:InitGrouping(num):InitSkill(skill):InitCoalition(coal):InitCountry(country):InitHeading(heading):SpawnFromVec3(spawnCoord:GetVec3())
-		_groupName = group.GroupName
-		self:T("[JTF-1] ASPAWN: " .. _groupName)
-	end
-	
-	self.MLSpawnedGroups[#self.MLSpawnedGroups + 1] = {group = group, side = coal, msType = msType, category = category, role = role}
-	-- set ROE
-	self:MLSetROE(ROE,group)
-	-- set ROT
-	self:MLSetROT(ROT,group)
-	--if no distance, then we orbit
-	if(waypointNameString) then
-		local waypointCoords = self:MLFindWaypoints(waypointNameString)
-		if(#waypointCoords > 0) then
-			self:T('[JTF-1] MORE WAYPOINTS')
-			local route = {}
-			route[#route + 1] = spawnCoord:WaypointAir(POINT_VEC3.RoutePointAltType.BARO,POINT_VEC3.RoutePointType.TurningPoint,POINT_VEC3.RoutePointAction.TurningPoint,UTILS.KnotsToKmph(speed),true)
-			for idx, waypoint in pairs(waypointCoords) do
-				route[#route + 1] = waypoint:SetAltitude(altitude,true):WaypointAir(POINT_VEC3.RoutePointAltType.BARO,POINT_VEC3.RoutePointType.TurningPoint,POINT_VEC3.RoutePointAction.TurningPoint,UTILS.KnotsToKmph(speed),true)
-			end
-			group:Route(route)
-		else
-			local orbitEndPoint = spawnCoord:Translate(UTILS.NMToMeters(15),heading)
-			local orbit = { 
-				id = 'Orbit', 
-				params = { 
-					pattern = AI.Task.OrbitPattern.RACE_TRACK,
-					point = spawnCoord:GetVec2(),
-					point2 = orbitEndPoint:GetVec2(),
-					speed = UTILS.KnotsToMps(speed),
-					altitude = altitude
-				} 
-			}
-
-			group:SetTask( orbit, 2 )
-		end
-	elseif(distance == 0) then
-		local orbitEndPoint = spawnCoord:Translate(UTILS.NMToMeters(15),heading)
-		local orbit = { 
-			id = 'Orbit', 
-			params = { 
-				pattern = AI.Task.OrbitPattern.RACE_TRACK,
-				point = spawnCoord:GetVec2(),
-				point2 = orbitEndPoint:GetVec2(),
-				speed = UTILS.KnotsToMps(speed),
-				altitude = altitude
-			} 
-		}
-
-		group:SetTask( orbit, 2 )
-	--if distance, we create a waypoint way the fuck out in the boonies
-	elseif(distance > 0) then
-		local WP1 = spawnCoord:Translate(UTILS.NMToMeters(distance),heading)
-		:WaypointAir(POINT_VEC3.RoutePointAltType.BARO,POINT_VEC3.RoutePointType.TurningPoint,POINT_VEC3.RoutePointAction.TurningPoint,UTILS.KnotsToKmph(speed),true)
-		local WP2 = spawnCoord:Translate(UTILS.NMToMeters(distance),heading * 2)
-		:WaypointAir(POINT_VEC3.RoutePointAltType.BARO,POINT_VEC3.RoutePointType.TurningPoint,POINT_VEC3.RoutePointAction.TurningPoint,UTILS.KnotsToKmph(speed),true)
-		
-		local route = {WP1, WP2}
-		group:Route(route)
-	else
-		self:T("[JTF-1] We Fucked Up")
-	end
-	local taskTable = {}
-	if(task ~= "NOTHING") then
-		taskTable = self:MLSetTask(task,group)
-		group:PushTask ( group:TaskCombo( self:MLSetTask(task,group) ) , 3 )
-	end
-	--set group frequency
-	if(freq) then
-		if(freq <= 20) then
-			freq = self:MLRadioPreset(freq)
-		end
-			self:T("[JTF-1] freq:".. freq)
-			freq = freq * 1000000
-			local SetFrequency = { 
-			id = 'SetFrequency', 
-			params = { 
-				frequency = freq, 
-				modulation = 0, 
-			}
-		}
-		group:SetCommand(SetFrequency)
-	end
-
- end
-
------------------
--- SPAWN GROUND GROUP(S)
------------------
-
-function MARKSPAWN:MLGroundSpawn(SpawnTable)
-	local msType = SpawnTable.msType
-	local heading = tonumber(SpawnTable.heading) or self.default.MLDefaultHdg
-	local task = SpawnTable.task or self.default.MLDefaultGroundTask
-	local skill = self:MLSkillCheck(SpawnTable.skill) or self.default.MLDefaultSkill
-	local distance = tonumber(SpawnTable.distance) or self.default.MLDefaultGroundDistance
-	local ROE = SpawnTable.roe or self.default.MLDefaultROE
-	local freq = tonumber(SpawnTable.freq) or self.default.MLDefaultFreq
-	local speed = tonumber(SpawnTable.speed) or self.default.MLDefaultGroundSpeed 
-	local form = SpawnTable.formation or nil
-	local alert = SpawnTable.alert or self.default.MLDefaultAlert
-	local spawnCoord = COORDINATE:NewFromVec3(SpawnTable.pos)
-	local spawner = self:comparator(msType)
-	local category = self:GetProperty(msType, "category")
-	local role = self:GetProperty(msType, "role")
-
-	if(spawner == nil) then
-		self:E("[JTF-1] ERROR! spawner not found in spawnOptions.")
-		return
-	end
-
-	local template = GROUP:FindByName( spawner.SpawnTemplatePrefix )
-	local waypointNameString = SpawnTable.WP or nil
-	
-	--local spawnCoord = COORDINATE:NewFromVec3(SpawnTable.pos)
-	local coal, country
-
-	if(SpawnTable.side) then
-		coal, country = self:MLSideComparator(SpawnTable.side, template)
-	else
-		coal = template:GetCoalition()
-		country = template:GetCountry()
-	end
-
-	
-	local group = spawner:InitSkill(skill):InitCoalition(coal):InitCountry(country):SpawnFromVec3(spawnCoord:GetVec3())
-
-	local _group = group.GroupName
-	self:T("[JTF-1] GSPAWN: " .. _group)
-	
-	self.MLSpawnedGroups[#self.MLSpawnedGroups + 1] = {group = group, side = coal, msType = msType, category = category, role = role}
-	
-	self:MLSetROE(ROE,group)
-	self:MLSetAlarm(alert,group)
-	-- add waypoints
-	--if no distance, then we orbit
-	if(waypointNameString) then
-		local waypointCoords = self:MLFindWaypoints(waypointNameString)
-		self:T('MORE WAYPOINTS')
-		local route = {}
-		for idx, waypoint in pairs(waypointCoords) do
-		route[#route + 1] = waypoint:WaypointGround(UTILS.KnotsToKmph(speed),form)
-		end
-		group:Route(route)
-	elseif(distance > 0) then
-		local WP = spawnCoord:Translate(UTILS.NMToMeters(distance),heading)
-		group:RouteGroundTo(WP, speed, form, 1)
-	end
-end
-  
------------------
--- SPAWN NAVY GROUP(S)
------------------
-
-function MARKSPAWN:MLNavalSpawn(SpawnTable)
-	local msType = SpawnTable.msType
-	local heading = tonumber(SpawnTable.heading) or 000
-	local task = SpawnTable.task or "NOTHING"
-	local skill = self:MLSkillCheck(SpawnTable.skill) or "AVERAGE"
-	local distance = tonumber(SpawnTable.distance) or 0
-	local ROE = SpawnTable.roe or "FREE"
-	local freq = tonumber(SpawnTable.freq) or 251
-	local speed = tonumber(SpawnTable.speed) or 30
-	local form = SpawnTable.formation or nil
-	local alert = SpawnTable.alert or "AUTO"
-	local spawnCoord = COORDINATE:NewFromVec3(SpawnTable.pos)
-	local spawner = self:comparator(msType)
-	local category = self:GetProperty(msType, "category")
-	local role = self:GetProperty(msType, "role")
-	local tgt = nil
-	if(spawner == nil) then
-		return
-	end
-	local template = GROUP:FindByName( spawner.SpawnTemplatePrefix )
-	local waypointNameString = SpawnTable.WP or nil
-	
-	local spawnCoord = COORDINATE:NewFromVec3(SpawnTable.pos)
-	local coal, country
-	if(SpawnTable.side) then
-		coal, country = self:MLSideComparator(SpawnTable.side, template)
-	else
-		coal = template:GetCoalition()
-		country = template:GetCountry()
-	end
-
-	local group = spawner:InitSkill(skill):InitCoalition(coal):InitCountry(country):InitHeading(heading):SpawnFromVec3(spawnCoord:GetVec3())
-	self.MLSpawnedGroups[#self.MLSpawnedGroups + 1] = {group = group, side = coal, msType = msType, category = category, role = role}
-
-	self:MLSetROE(ROE,group)
-	--MLSetAlarm(alert,group)
-	-- LETS DO WAYPOINTS YE JAMMY FOOKERS!
-	--if no distance, then we orbit
-	if(waypointNameString) then
-		local waypointCoords = self:MLFindWaypoints(waypointNameString)
-		self:T('MORE WAYPOINTS')
-		local route = {}
-		for idx, waypoint in pairs(waypointCoords) do
-		route[#route + 1] = waypoint:WaypointGround(UTILS.KnotsToKmph(speed),nil)
-		end
-		group:Route(route)
-	elseif(distance >= 0) then
-		local WP = spawnCoord:Translate(UTILS.NMToMeters(distance),heading)
-		group:RouteGroundTo(WP, speed, nil, 1)
-	end
-end
-  
------------------
--- DELETE SPAWN GROUP
------------------
-
-function MARKSPAWN:MLDeleteGroup(spawnTable,mark)
-
-	local deleteCMD = spawnTable.cmd:upper()
-	
-	self:T(self.traceTitle .. " DELETE: " .. deleteCMD)
-
-	local tblProperties = {}
-
-	local coal = spawnTable.side or "RED"
-	coal = coal:upper()
-	local category = spawnTable.category or "ALL"
-	category = category:upper()
-	local msType = spawnTable.msType or "ALL"
-	msType = msType:upper()
-	local role = spawnTable.role or "ALL"
-	role = role:upper()
-
-
-	local radius =  spawnTable.radius or 5
-	radius = UTILS.NMToMeters(radius)
-
-	local template = spawnTable.template or nil
-
-	if template then
-		template = template:upper()
-	end
-	
-	if (coal == "BLUE") then 
-		coal = 2 
-	elseif (coal == "NEUTRAL") then
-		coal = 0 
-	elseif (coal == "ALL") or (coal:upper() == "ANY") then
-		coal = 99
-	else -- default to RED
-		coal = 1
-	end
-	
-	_msg = string.format("%sDELETE - OPTIONS CMD: %s, SIDE: %s, TYPE: %s, CATEGORY: %s,  ROLE: %s, RADIUS: %d", 
-		self.traceTitle,
-		deleteCMD,
-		tostring(coal or 99),
-		(msType or "nil"),
-		(category or "nil"),
-		(role or "nil"),
-		(radius or 0)
-	)
-	self:T(_msg)
-
-	-- Delete by GROUP
-	if(deleteCMD == "GROUP") then
-		_msg = string.format("%sDELETE: Option GROUP.", self.traceTitle)
-		self:T(_msg)
-
-		local groupName = spawnTable.groupName 
-		_msg = string.format("%sDELETE - groupName = %s", 
-			self.traceTitle,
-			(groupName or "nil")
-		)
-		self:T(_msg)
-
-		local victim = GROUP:FindByName(groupName) or nil
-		if victim then
-			victim:Destroy(false)
-		else
-			self:T(self.traceTitle .. " DELETE -  GROUP not found!")
-		end
-
-	-- Delete by AREA
-	elseif(deleteCMD == "AREA") then
-		_msg = string.format("%sDELETE: Option RAD.", self.traceTitle)
-		self:T(_msg)
-
-		local deleteZone = ZONE_RADIUS:New("DeleteZone",COORDINATE:NewFromVec3(mark.pos):GetVec2(),radius)
-		self:T({self.traceTitle .. " Marker Pos: ", mark.pos, " Zone Pos: ", deleteZone:GetVec2(), "Radius: ", deleteZone:GetRadius()})
-		for idx, entry in pairs (self.MLSpawnedGroups) do
-			if entry.group:IsAlive() then 
-
-				local isCategory = (entry.category == category) or (category == "ALL")
-				local isType = (entry.msType:upper() == msType) or (msType == "ALL")
-				local isRole = (entry.role:upper() == role) or (role == "ALL")
-				local isSide = (entry.side == coal) or (coal == 99)
-				
-				_msg = string.format("%sisCategory: %s, isType: %s, isRole: %s", 
-					self.traceTitle,
-					((isCategory and "True") or "False"),
-					((isType and "True") or "False"),
-					((isRole and "True") or "False"),
-					((isSide and "True") or "False")
-				)
-				self:T(_msg)
-
-				local groupPos = entry.group:GetVec2()
-				local zoneVec2 = deleteZone:GetVec2()
-				local isThere = ((groupPos.x - zoneVec2.x )^2 + ( groupPos.y - zoneVec2.y ) ^2 ) ^ 0.5 <= tonumber(deleteZone:GetRadius())
-
-				self:T(self.traceTitle .. " ZONE: " .. ((groupPos.x - zoneVec2.x )^2 + ( groupPos.y - zoneVec2.y ) ^2 ) ^ 0.5)
-
-				if(isThere) then
-					self:T("self.traceTitle ..  Group in zone")
-					if isType and (isCategory and isRole) then
-						self:T(self.traceTitle .. " Type, Category and Role correct")
-						self:T(self.traceTitle .. " Function Side: " .. coal .. "Group Side: " .. entry.side)
-						if coal and ((entry.side == coal) or (coal == 99)) then
-							self:T(self.traceTitle .. " Side correct")
-							local victim = entry.group
-							victim:Destroy(false)
-							self.MLSpawnedGroups[idx] = nil
-						end
-					end
-				else
-					self:T(self.traceTitle .. " Group out of Zone")
-				end
-			else
-				self:T(self.traceTitle .. " Group is not ALIVE")
-				self.MLSpawnedGroups[idx] = nil
-			end
-		end
-	
-	-- Delete by NEAREST
-	elseif(deleteCMD == "NEAREST") then
-		_msg = string.format("%sDELETE: Option NEAREST.", self.traceTitle)
-		self:T(_msg)
-
-		local minDistance = -1
-		local closest = 1
-		local markPos = COORDINATE:NewFromVec3(mark.pos):GetVec2()
-
-		if(self.MLSpawnedGroups[1].group:IsAlive()) then
-			local groupPos = self.MLSpawnedGroups[1].group:GetVec2()
-			minDistance = ((groupPos.x - markPos.x )^2 + ( groupPos.y - markPos.y ) ^2 ) ^ 0.5
-
-			_msg = string.format("%sGroup idx 1 is alive. Min dist = ", 
-				self.traceTitle
-			)
-			self:T({_msg, minDistance})
-			
-			-- find nearest group that meets the required criteria
-			for idx, entry in pairs (self.MLSpawnedGroups) do
-				if entry.group:IsAlive() then
-
-					local isCategory = (entry.category == category) or (category == "ALL")
-					local isType = (entry.msType:upper() == msType) or (msType == "ALL")
-					local isRole = (entry.role:upper() == role) or (role == "ALL")
-					local isSide = (entry.side == coal) or (coal == 99)
-
-					_msg = string.format("%sisCategory: %s, isType: %s, isRole: %s", 
-						self.traceTitle,
-						((isCategory and "True") or "False"),
-						((isType and "True") or "False"),
-						((isRole and "True") or "False"),
-						((isSide and "True") or "False")
-					)
-					self:T(_msg)
-					
-					if isType and (isCategory and isRole) then
-						if(coal and ((entry.side == coal) or coal == 99)) then
-							local groupPos = entry.group:GetVec2()
-							local currentDistance = ((groupPos.x - markPos.x )^2 + ( groupPos.y - markPos.y ) ^2 ) ^ 0.5
-							if(currentDistance < minDistance) then
-								minDistance = currentDistance
-								closest = idx
-							end
-						end
-					end
-				else
-					self:T(self.traceTitle .. " Group is not ALIVE")
-					self.MLSpawnedGroups[idx] = nil
-				end
-			end
-			local closestEntry = self.MLSpawnedGroups[closest]
-
-			local victim = closestEntry.group
-			victim:Destroy(false)
-			self.MLSpawnedGroups[closest] = nil
-
-		end
-	
-	-- Delete by KIND
-	elseif(deleteCMD == "KIND") then
-		_msg = string.format("%sDELETE: Option TYPE.", self.traceTitle)
-		self:T(_msg)
-
-		if (category and msType) and role then
-			_msg = string.format("%sDELETE: Filter Category, Type, Role.", self.traceTitle)
-			self:T(_msg)
-	
-			for idx, entry in pairs (self.MLSpawnedGroups) do
-				if entry.group:IsAlive() then
-					_msg = string.format("%sentry.category: %s, cmd: %s, entry.msType: %s, cmd: %s, entry.role: %s, cmd: %s, entry.side: %s, cmd: %s", 
-						self.traceTitle,
-						(entry.category or "nil"),
-						category,
-						(entry.msType or "nil"),
-						msType,
-						(entry.role or "nil"),
-						role,
-						(entry.side or "nil"),
-						tostring(coal)
-					)
-					self:T(_msg)
-
-					local isCategory = (entry.category:upper() == category) or (category == "ALL")
-					local isType = (entry.msType:upper() == msType) or (msType == "ALL")
-					local isRole = (entry.role:upper() == role) or (role == "ALL")
-					local isSide = (entry.side == coal) or (coal == 99)
-					
-					--_msg = string.format("%sCheck match", self.traceTitle)
-					_msg = string.format("%sisCategory: %s, isType: %s, isRole: %s, isSide: %s", 
-						self.traceTitle,
-						((isCategory and "True") or "False"),
-						((isType and "True") or "False"),
-						((isRole and "True") or "False"),
-						((isSide and "True") or "False")
-					)
-					self:T(_msg)
-					-- self:T({_msg, isCategory = isCategory, isType = isType, isRole = isRole, isSide = isSide})
-	
-					if isType and (isCategory and isRole) then
-						if(coal and ((entry.side == coal) or (coal == 99))) then
-							self:T(self.traceTitle .. " Side correct")
-							local victim = entry.group
-							victim:Destroy(false)
-							self.MLSpawnedGroups[idx] = nil
-						end
-					else
-						self:T(self.traceTitle .. "category or type or side do not match entry")
-					end
-				else
-					self:T("[JTF-1] Group is not alive.")
-					self.MLSpawnedGroups[idx] = nil
-				end
-			end
-		else
-			self:E("[JTF-1] CATEGORY, TYPE or ROLE option not defined")
-		end
-
-	-- Delete ALL
-	elseif(deleteCMD == "ALL") then
-		_msg = string.format("%sDELETE: Option ALL.", self.traceTitle)
-		self:T(_msg)
-
-		for idx, entry in pairs (self.MLSpawnedGroups) do
-			if entry.group:IsAlive() then
-
-				_msg = string.format("%sentry.class: %s, entry.msType: %s, entry.role: %s, entry.side: %s", 
-				self.traceTitle,
-					(entry.category or "nil"),
-					(entry.msType or "nil"),
-					(entry.role or "nil"),
-					(entry.side or "nil")
-				)
-				self:T(_msg)
-
-				local isCategory = (entry.category == category) or (category == "ALL")
-				local isType = (entry.msType:upper() == msType) or (msType == "ALL")
-				local isRole = (entry.role:upper() == role) or (role == "ALL")
-				local isSide = (entry.side == coal) or (coal == 99)
-				
-				_msg = string.format("%sisCategory: %s, isType: %s, isRole: %s, isSide: %s", 
-					self.traceTitle,
-					((isCategory and "True") or "False"),
-					((isType and "True") or "False"),
-					((isRole and "True") or "False"),
-					((isSide and "True") or "False")
-				)
-				self:T(_msg)
-
-				if isType and (isCategory and isRole) then
-					if(coal and ((entry.side == coal) or coal == 99)) then
-						self:T(self.traceTitle .. " Side correct")
-						local victim = entry.group
-						victim:Destroy(false)
-						self.MLSpawnedGroups[idx] = nil
-					end
-				end
-			else
-				self.MLSpawnedGroups[idx] = nil
-			end
-		end
-	else
-		_msg = string.format("%sDELETE: Nothing done!", self.traceTitle)
-		self:E(_msg)
-	end
-end
-
------------------
--- WX REPORT
------------------
-
-function MARKSPAWN:MLWxReport(repoString, mark)
-	_msg = string.format("%s WXREPORT. repostring = %s", 
-		self.traceTitle,
-		repoString
-	)
-	self:T(_msg)
-
-	local qfe = false
-	local metric = false
-	local options = self:split(repoString, ",")
-	--local pos = mark:GetCoordinate()
-	self:T({options = options, markpos = {mark.pos}})
-
-	for idx, option in pairs (options) do
-		option = option:gsub("%s+", "")
-		self:T({option_sub = option})
-		if(option:upper() == "METRIC") then
-		metric = true
-		elseif(option:upper() == "QFE") then
-		qfe = true
-		end
-	end
-	
-	local wxPos = COORDINATE:NewFromVec3(mark.pos) -- COORDINATE:NewFromVec3(self:MLConvertMarkPos(mark.pos))
-	local wxLandHeight = wxPos:GetLandHeight()
-	local heading, windSpeedMPS = wxPos:GetWind()
-	
-	_msg = string.format("%s Land Height: %d, Heading: %d, Speed m/s: %4.2f", 
-		self.traceTitle,
-		wxLandHeight,
-		heading,
-		windSpeedMPS
-	)
-	self:T(_msg)
-	
-	--heading = self:_Heading(heading + 180)
-	local windSpeedKnots = UTILS.MpsToKnots(windSpeedMPS)
-	local temperature = wxPos:GetTemperature()
-	
-	local pressure_hPa,pressure_inHg
-	if(qfe) then
-		pressure_hPa = wxPos:GetPressure(wxLandHeight)
-	else
-		pressure_hPa = wxPos:GetPressure(0)
-	end
-	pressure_inHg = pressure_hPa * 0.0295299830714
-	
-	local coal
-	if(mark.initiator) then
-		coal = UNIT:Find(mark.initiator):GetGroup():GetCoalition()
-	else
-		coal = mark.coalition
-	end
-
-	local msgWx = ""
-	local msgWind, msgPressure, msgTemperature
-
-	-- requested in Metric
-	if(metric) then
-		msgWind = string.format("Wind is from %03d Degrees at %.2f Mps",heading, windSpeedMPS)
-		if(qfe) then
-			msgPressure = string.format("QFE is %4.2f hPa", pressure_hPa)
-		else
-			msgPressure = string.format("QNH is %4.2f hPa", pressure_hPa)
-		end
-	-- requested in Imperial
-	else
-		msgWind = string.format("Wind is from %03d Degrees at %d Knots",heading, windSpeedKnots)
-		if(qfe) then
-			msgPressure = string.format("QFE is %4.2f inHg", pressure_inHg)
-		else
-			msgPressure = string.format("QNH is %4.2f inHg", pressure_inHg)
-		end
-	end
-	
-	msgTemperature = string.format("Temperature is %d Degrees C", temperature)
-
-	msgWx = string.format("%s\n%s\n%s", 
-		msgWind,
-		msgPressure,
-		msgTemperature
-	)
-	wxPos:MarkToCoalition(msgWx,coal,false,nil)
-
-	_msg = string.format("%s%s", 
-		self.traceTitle,
-		(string.gsub(msgWx, "%c", " | "))
-	)
-	self:T(_msg)
-	-- _msg = string.format("%s %s | %s | %s", 
-	-- 	self.traceTitle,
-	-- 	msgWind,
-	-- 	msgPressure,
-	-- 	msgTemperature
-	-- )
-	-- self:T(_msg)
-end
-
------------------
--- REMOVE CMD MARK POINT
------------------
-
-function MARKSPAWN:MLRemoveMark(markId)
-	local allMarks = world.getMarkPanels()
-	for idx, mark in pairs(allMarks) do
-		if markId == mark.idx then
-		trigger.action.removeMark(markId)
-		allMarks[idx] = nil
-		return
-		end
-	end
-end
-
------------------
--- SPAWN RADIO
------------------
-
-function MARKSPAWN:MLRadioSpawn(SpawnTable)
-	local song = SpawnTable.song
-	local freq = tonumber(SpawnTable.freq) or 251
-
-	local band = SpawnTable.band or "AM"
-	if(band == "FM") then
-		band = 1
-	else
-		band = 0
-	end
-	local power = tonumber(SpawnTable.power) or 1200
-	local loop = SpawnTable.loop
-
-	self:T(freq)
-	self:T(band)
-	self:T(power)
-
-	local radioPositionable = SpawnTable.group
-	if(radioPositionable) then
-
-		local pirateRadio = RADIO:New(radioPositionable)
-		pirateRadio:NewGenericTransmission(song,freq,band,power,false)
-		pirateRadio:Broadcast()
-		self:T("[JTF-1] boobs")
-	else
-		MLRadio:NewGenericTransmission(song,freq,band,power,false)
-		MLRadio:Broadcast()
-		self:T("[JTF-1] tatas")
-	end
-
-end
-
------------------
--- Get Property for SpawnType
------------------
-
-function MARKSPAWN:GetProperty(msType, property)
-	_msg = string.format("%sGetProperty called for type: %s, property: %s", 
-		self.traceTitle,
-		tostring(msType),
-		tostring(property)
-	)
-	self:T(_msg)
-
-	for idx, spawnType in pairs(self.spawnTypes) do
-		-- find the requested type
-		if string.upper(msType) == string.upper(spawnType.msType) then
-			-- get the requested property value
-			local propertyVal = spawnType[property]
-			-- if found return the value
-			if propertyVal ~= nil then
-				return propertyVal
-			else
-				_msg = string.format("%sError! Property %s not found for type %s",
-					self.traceTitle,
-					property,
-					msType
-				)
-				self:E(_msg)
-			end
-		end
-	end
-	return nil
-end
-
------------------
--- Spawn Template Name String Comparison
------------------
-
-function MARKSPAWN:comparator(msType)
-	for idx, val in pairs(self.spawnTypes) do
-		if string.upper(msType) == string.upper(val.msType) then
-			self:T("[JTF-1] Type: " .. val.msType)
-			self:T("[JTF-1] Value: " .. val.category)
-			self:T("[JTF-1] Role: " .. val.role)
-			if val.spawn then
-				return val.spawn, val.category, val.role
-			else
-				_msg = string.format("%sError! Skipping type for missing spawn template %s",
-					self.traceTitle,
-					val.template
-				)
-			end
-		end
-	end
-	return nil
-end
-
------------------
--- Set ROE
------------------
-
-function MARKSPAWN:MLSetROE(ROEString, group)
-	local text = string.upper(ROEString)
-	if(text == "FREE") then 
-		group:OptionROEWeaponFree()
-	elseif (text == "RETURN") then
-		group:OptionROEReturnFire()
-	elseif (text == "HOLD") then
-		group:OptionROEHoldFire()
-	end
-end
-
------------------
--- Set ROT
------------------
-
-function MARKSPAWN:MLSetROT(ROTString, group)
-	local text = string.upper(ROTString)
-	if(text == "EVADE") then
-		group:OptionROTEvadeFire()
-	elseif (text == "PASSIVE") then
-		group:OptionROTPassiveDefense()
-	elseif (text == "NONE") then
-		group:OptionROTNoReaction()
-	end
-end
-
------------------
--- Set Alarm State
------------------
-
-function MARKSPAWN:MLSetAlarm(alarmString, group)
-	local text = string.upper(alarmString)
-	if(text == "GREEN") then 
-		group:OptionAlarmStateGreen()
-	elseif (text == "RED") then
-		group:OptionAlarmStateRed()
-	elseif (text == "AUTO") then
-		group:OptionAlarmStateAuto()
-	end
-end
-
------------------
--- Set Task
------------------
-
-function MARKSPAWN:MLSetTask(TaskString, group)
-		local text = string.upper(TaskString)
-		local taskTable = {}
-	
-		if(text == "CAP") then 
-		local EngageTargets = { 
-		id = 'EngageTargets', 
-		params = { 
-			maxDist = UTILS.NMToMeters(40), 
-			targetTypes = {"Air"},
-			priority = 0 
-		} 
-		}
-		taskTable[1] = EngageTargets
-	
-	elseif (text == "REFUELING" or text == "TANKER") then
-		local task = group:EnRouteTaskTanker()
-		taskTable[1] = task
-	
-	elseif (text == "CAS") then
-		local EngageTargets = { 
-		id = 'EngageTargets', 
-		params = { 
-			maxDist = UTILS.NMToMeters(25), 
-			targetTypes = {"Ground Units","Light armed ships","Helicopters"},
-			priority = 0 
-		} 
-		}
-	
-	elseif (text == "SEAD") then
-		local EngageTargets = { 
-		id = 'EngageTargets', 
-		params = {
-			maxDist = UTILS.NMToMeters(25), 
-			targetTypes = {"Air Defence"},
-			priority = 0 
-		} 
-		}
-		taskTable[1] = EngageTargets
-	
-	elseif (text == "TASMO") then
-		local EngageTargets = { 
-		id = 'EngageTargets', 
-		params = { 
-			maxDist = UTILS.NMToMeters(100), 
-			targetTypes = {"Ships"},
-			priority = 0 
-		} 
-		}
-		taskTable[1] = EngageTargets
-	
-	elseif (text == "AWACS") then
-		local task = group:EnRouteTaskAWACS()
-		local EPLRS = { 
-		id = 'EPLRS', 
-		params = { 
-			value = true,
-		} 
-		}
-		group:SetCommand(EPLRS)
-		taskTable[1] = task
-	
-	elseif (text == "AFAC") then
-		local task = group:EnRouteTaskFAC(UTILS.NMToMeters(10), 0)
-		taskTable[1] = task
-	
-	end
-	
-	return taskTable
-end
-  
------------------
--- COALITION ENUMERATOR
------------------
-  
-function MARKSPAWN:MLSideComparator(side, template)
-	local coal
-	local country = template:GetCountry()
-	if(side == "BLUE") then
-		coal = coalition.side.BLUE
-		if(coal ~= template:GetCoalition()) then
-			country = self.default.DEFAULT_BLUE_COUNTRY
-		end
-	elseif(side == "RED") then
-		coal =  coalition.side.RED
-		if(coal ~= template:GetCoalition()) then
-			country = self.default.DEFAULT_RED_COUNTRY
-		end
-	elseif(side == "NEUTRAL") then
-		coal =  coalition.side.NEUTRAL
-		if(coal ~= template:GetCoalition()) then
-			country = self.default.DEFAULT_NEUTRAL_COUNTRY
-		end
-	else
-		coal = template:GetCoalition()
-		country = template:GetCountry()
-	end
-
-	self:T(coal .. " " .. country)
-	return coal, country
-end
-
------------------
--- Get Radio Preset
------------------
-
-function MARKSPAWN:MLRadioPreset(channel)
-	return self.radioPresets[channel]
-end
-
------------------
--- CONVERT POS TO VEC2?
------------------
-
-function MARKSPAWN:MLConvertMarkPos(pos)
-	local newPos = UTILS.DeepCopy(pos)
-	local zVal = pos.x
-	local xVal = pos.z
-	newPos.z = zVal
-	newPos.x = xVal
-	_msg = self.traceTitle .. " newPos.z = " .. newPos.z .. " newPos.x = " .. newPos.x
-	self:T(_msg)
-
-	return newPos
-end
-
------------------
--- GET LIST OF WAYPOINT COORDINATES
------------------
-
-function MARKSPAWN:MLFindWaypoints(waypointNameList)
-	self:T("[JTF-1] WAYPOINTS MODE TURN ON")
-	local waypointNames={}
-	local waypointCoords = {}
-	--waypoints:gsub("%w*",function(name) table.insert(waypointNames,name) end)
-	--for k, v in waypointNameList:gmatch("(%w*)") do
-	--  table.insert(waypointNames,k)
-	--end
-	
-	waypointNames = self:split(waypointNameList,",")
-	local allMarks = world.getMarkPanels()
-	for idx, name in pairs(waypointNames) do
-		for idy, mark in pairs(allMarks) do
-		self:T("[JTF-1] name: " .. name)
-		self:T("[JTF-1] mark: " .. mark.text)
-		if string.upper(name) == string.upper(mark.text) then
-			waypointCoords[#waypointCoords + 1] = COORDINATE:NewFromVec3(mark.pos)
-			break
-		end
-		end
-	end
-	return waypointCoords
-end
-
------------------
--- SPLIT STRING AT DELIMITER
------------------
-
-function MARKSPAWN:split(s, delimiter)
-	local result = {};
-	for match in (s..delimiter):gmatch("(.-)"..delimiter) do
-		table.insert(result, match);
-	end
-	return result;
-end
-
------------------
--- Display message with the mark's command and options
------------------
-
-function MARKSPAWN:MLListSpawnOptions(category, mark)
-	local messageString = ""
-	for idx, value in pairs(self.spawnTypes) do
-		--list name, role, maybe default coalition
-		if value.spawn then
-			if(category:upper() == value.category:upper()) then
-				local name = value.msType
-				local role = value.role
-				local defaultCoalition = GROUP:FindByName( value.spawn.SpawnTemplatePrefix ):GetCoalition()
-				local coal
-				if(defaultCoalition == 1) then 
-					coal = "Red" 
-				elseif defaultCoalition == 2 then 
-					coal = "Blue" 
-				else 
-					coal = "Neutral"
-				end
-				local line = string.format("Type: %s, Role: %s, Coalition: %s\n", 
-					name, 
-					role, 
-					coal
-				)
-				messageString = messageString .. line 
-			end
-		else
-			_msg = string.format("%sError! Skipping OPTIONS for missing spawn template %s.",
-				self.traceTitle,
-				value.template
-			)
-			self:T(_msg)
-		end
-
-	end
-	self:T("[JTF-1] OPTIONS: " .. messageString)
-	local DCSUnit = mark.initiator
-	if(DCSUnit) then
-		--local group = unit:GetGroup()
-		local unit = UNIT:Find(DCSUnit)
-		local group = unit:GetGroup()
-		MESSAGE:New(messageString,30):ToUnit(unit) -- ToGroup(group)
-	else
-		local coal = mark.coalition
-		self:T(coal)
-		MESSAGE:New(messageString,30):ToCoalition(coal)
-	end
-end
-
------------------
--- GET REVERSE OF HEADING 
------------------
-
---stolen from moose, cred to them
-function MARKSPAWN:_Heading(course)
-	local h
-	if course<=180 then
-		h=math.rad(course)
-	else
-		h=-math.rad(360-course)
-	end
-	return h 
-end
-
------------------
--- VALIDATE SKILL OPTION 
------------------
-
-function MARKSPAWN:MLSkillCheck(skill)
-	if(skill == nil) then
-		return nil
-	end
-
-	skill = skill:upper()
-	if(skill == "AVERAGE") then
-		return skill
-	elseif(skill == "NORMAL") then
-		return skill
-	elseif(skill == "GOOD") then
-		return skill
-	elseif(skill == "HIGH") then
-		return skill
-	elseif(skill == "EXCELLENT") then
-		return skill
-	elseif(skill == "RANDOM") then
-		return skill
-	else
-		return nil
-	end
-
-end
-
------------------
--- TEMPLATES 
------------------
-
-function MARKSPAWN:AddTemplate(spawnType)
-
-end
-
---- END MARKSPAWN  
 --------------------------------[markspawn_data.lua]-------------------------------- 
  
 env.info( "[JTF-1] markspawn_data" )
@@ -34725,696 +35608,6 @@ if MARKSPAWN.Start ~= nil then
     MARKSPAWN:Start()
   end
   
-  
---------------------------------[core\Hercules_Cargo.lua]-------------------------------- 
- 
-env.info( "[JTF-1] Hercules_Cargo.lua" )
--- Hercules Cargo Drop Events by Anubis Yinepu
-
--- This script will only work for the Herculus mod by Anubis
--- Payloads carried by pylons 11, 12 and 13 need to be declared in the Herculus_Loadout.lua file
--- Except for Ammo pallets, this script will spawn whatever payload gets launched from pylons 11, 12 and 13
--- Pylons 11, 12 and 13 are moveable within the Herculus cargobay area
--- Ammo pallets can only be jettisoned from these pylons with no benefit to DCS world
--- To benefit DCS world, Ammo pallets need to be off/on loaded using DCS arming and refueling window
--- Cargo_Container_Enclosed = true: Cargo enclosed in container with parachute, need to be dropped from 100m (300ft) or more, except when parked on ground
--- Cargo_Container_Enclosed = false: Open cargo with no parachute, need to be dropped from 10m (30ft) or less
-
-Hercules_Cargo = {}
-Hercules_Cargo.Hercules_Cargo_Drop_Events = {}
-local GT_DisplayName = ""
-local GT_Name = ""
-local Cargo_Drop_initiator = ""
-local Cargo_Container_Enclosed = false
-local SoldierGroup = false
-local ParatrooperCount = 1
-local ParatrooperGroupSpawnInit = false
-local ParatrooperGroupSpawn = false
-
-local Herc_j = 0
-local Herc_Cargo = {}
-Herc_Cargo.Cargo_Drop_Direction = 0
-Herc_Cargo.Cargo_Contents = ""
-Herc_Cargo.Cargo_Type_name = ""
-Herc_Cargo.Cargo_over_water = false
-Herc_Cargo.Container_Enclosed = false
-Herc_Cargo.offload_cargo = false
-Herc_Cargo.all_cargo_survive_to_the_ground = false
-Herc_Cargo.all_cargo_gets_destroyed = false
-Herc_Cargo.destroy_cargo_dropped_without_parachute = false
-Herc_Cargo.scheduleFunctionID = 0
-
-local CargoHeading = 0
-local Cargo_Drop_Position = {}
-
-local SoldierUnitID = 12000
-local SoldierGroupID = 12000
-local GroupSpacing = 0
---added by wrench
-Hercules_Cargo.types = {
-	["ATGM M1045 HMMWV TOW Air [7183lb]"] = {['name'] = "M1045 HMMWV TOW", ['container'] = true},
-	["ATGM M1045 HMMWV TOW Skid [7073lb]"] = {['name'] = "M1045 HMMWV TOW", ['container'] = false},
-	["APC M1043 HMMWV Armament Air [7023lb]"] = {['name'] = "M1043 HMMWV Armament", ['container'] = true},
-	["APC M1043 HMMWV Armament Skid [6912lb]"] = {['name'] = "M1043 HMMWV Armament", ['container'] = false},
-	["SAM Avenger M1097 Air [7200lb]"] = {['name'] = "M1097 Avenger", ['container'] = true},
-	["SAM Avenger M1097 Skid [7090lb]"] = {['name'] = "M1097 Avenger", ['container'] = false},
-	["APC Cobra Air [10912lb]"] = {['name'] = "Cobra", ['container'] = true},
-	["APC Cobra Skid [10802lb]"] = {['name'] = "Cobra", ['container'] = false},
-	["APC M113 Air [21624lb]"] = {['name'] = "M-113", ['container'] = true},
-	["APC M113 Skid [21494lb]"] = {['name'] = "M-113", ['container'] = false},
-	["Tanker M978 HEMTT [34000lb]"] = {['name'] = "M978 HEMTT Tanker", ['container'] = false},
-	["HEMTT TFFT [34400lb]"] = {['name'] = "HEMTT TFFT", ['container'] = false},
-	["SPG M1128 Stryker MGS [33036lb]"] = {['name'] = "M1128 Stryker MGS", ['container'] = false},
-	["AAA Vulcan M163 Air [21666lb]"] = {['name'] = "Vulcan", ['container'] = true},
-	["AAA Vulcan M163 Skid [21577lb]"] = {['name'] = "Vulcan", ['container'] = false},
-	["APC M1126 Stryker ICV [29542lb]"] = {['name'] = "M1126 Stryker ICV", ['container'] = false},
-	["ATGM M1134 Stryker [30337lb]"] = {['name'] = "M1134 Stryker ATGM", ['container'] = false},
-	["APC LAV-25 Air [22520lb]"] = {['name'] = "LAV-25", ['container'] = true},
-	["APC LAV-25 Skid [22514lb]"] = {['name'] = "LAV-25", ['container'] = false},
-	["M1025 HMMWV Air [6160lb]"] = {['name'] = "Hummer", ['container'] = true},
-	["M1025 HMMWV Skid [6050lb]"] = {['name'] = "Hummer", ['container'] = false},
-	["IFV M2A2 Bradley [34720lb]"] = {['name'] = "M-2 Bradley", ['container'] = false},
-	["IFV MCV-80 [34720lb]"] = {['name'] = "MCV-80", ['container'] = false},
-	["IFV BMP-1 [23232lb]"] = {['name'] = "BMP-1", ['container'] = false},
-	["IFV BMP-2 [25168lb]"] = {['name'] = "BMP-2", ['container'] = false},
-	["IFV BMP-3 [32912lb]"] = {['name'] = "BMP-3", ['container'] = false},
-	["ARV BRDM-2 Air [12320lb]"] = {['name'] = "BRDM-2", ['container'] = true},
-	["ARV BRDM-2 Skid [12210lb]"] = {['name'] = "BRDM-2", ['container'] = false},
-	["APC BTR-80 Air [23936lb]"] = {['name'] = "BTR-80", ['container'] = true},
-	["APC BTR-80 Skid [23826lb]"] = {['name'] = "BTR-80", ['container'] = false},
-	["APC BTR-82A Air [24998lb]"] = {['name'] = "BTR-82A", ['container'] = true},
-	["APC BTR-82A Skid [24888lb]"] = {['name'] = "BTR-82A", ['container'] = false},
-	["SAM ROLAND ADS [34720lb]"] = {['name'] = "Roland Radar", ['container'] = false},
-	["SAM ROLAND LN [34720b]"] = {['name'] = "Roland ADS", ['container'] = false},
-	["SAM SA-13 STRELA [21624lb]"] = {['name'] = "Strela-10M3", ['container'] = false},
-	["AAA ZSU-23-4 Shilka [32912lb]"] = {['name'] = "ZSU-23-4 Shilka", ['container'] = false},
-	["SAM SA-19 Tunguska 2S6 [34720lb]"] = {['name'] = "2S6 Tunguska", ['container'] = false},
-	["Transport UAZ-469 Air [3747lb]"] = {['name'] = "UAZ-469", ['container'] = true},
-	["Transport UAZ-469 Skid [3630lb]"] = {['name'] = "UAZ-469", ['container'] = false},
-	["AAA GEPARD [34720lb]"] = {['name'] = "Gepard", ['container'] = false},
-	["SAM CHAPARRAL Air [21624lb]"] = {['name'] = "M48 Chaparral", ['container'] = true},
-	["SAM CHAPARRAL Skid [21516lb]"] = {['name'] = "M48 Chaparral", ['container'] = false},
-	["SAM LINEBACKER [34720lb]"] = {['name'] = "M6 Linebacker", ['container'] = false},
-	["Transport URAL-375 [14815lb]"] = {['name'] = "Ural-375", ['container'] = false},
-	["Transport M818 [16000lb]"] = {['name'] = "M 818", ['container'] = false},
-	["IFV MARDER [34720lb]"] = {['name'] = "Marder", ['container'] = false},
-	["Transport Tigr Air [15900lb]"] = {['name'] = "Tigr_233036", ['container'] = true},
-	["Transport Tigr Skid [15730lb]"] = {['name'] = "Tigr_233036", ['container'] = false},
-	["IFV TPZ FUCH [33440lb]"] = {['name'] = "TPZ", ['container'] = false},
-	["IFV BMD-1 Air [18040lb]"] = {['name'] = "BMD-1", ['container'] = true},
-	["IFV BMD-1 Skid [17930lb]"] = {['name'] = "BMD-1", ['container'] = false},
-	["IFV BTR-D Air [18040lb]"] = {['name'] = "BTR_D", ['container'] = true},
-	["IFV BTR-D Skid [17930lb]"] = {['name'] = "BTR_D", ['container'] = false},
-	["EWR SBORKA Air [21624lb]"] = {['name'] = "Dog Ear radar", ['container'] = true},
-	["EWR SBORKA Skid [21624lb]"] = {['name'] = "Dog Ear radar", ['container'] = false},
-	["ART 2S9 NONA Air [19140lb]"] = {['name'] = "SAU 2-C9", ['container'] = true},
-	["ART 2S9 NONA Skid [19030lb]"] = {['name'] = "SAU 2-C9", ['container'] = false},
-	["ART GVOZDIKA [34720lb]"] = {['name'] = "SAU Gvozdika", ['container'] = false},
-	["APC MTLB Air [26400lb]"] = {['name'] = "MTLB", ['container'] = true},
-	["APC MTLB Skid [26290lb]"] = {['name'] = "MTLB", ['container'] = false},
-	--["Generic Crate [20000lb]"] = {['name'] =  "Hercules_Container_Parachute", ['container'] = true}
-}
-function Hercules_Cargo.Soldier_SpawnGroup(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, Cargo_Country, GroupSpacing)
-	SoldierUnitID = SoldierUnitID + 30
-	SoldierGroupID = SoldierGroupID + 1
-	local Herc_Soldier_Spawn = 
-	{
-		["visible"] = false,
-		["tasks"] = 
-		{
-		}, -- end of ["tasks"]
-		["uncontrollable"] = false,
-		["task"] = "Ground Nothing",
-		["taskSelected"] = true,
-		["groupId"] = SoldierGroupID,
-		["hidden"] = false,
-		["units"] = 
-		{
-			[1] = 
-			{
-				["type"] = Cargo_Type_name,
-				["transportable"] = 
-				{
-					["randomTransportable"] = true,
-				}, -- end of ["transportable"]
-				["unitId"] = SoldierUnitID + 1,
-				["skill"] = "Excellent",
-				["y"] = Cargo_Drop_Position.z + 0.5 + GroupSpacing,
-				["x"] = Cargo_Drop_Position.x + 0.5 + GroupSpacing,
-				["name"] = "Soldier Unit "..SoldierUnitID,
-				["heading"] = CargoHeading,
-				["playerCanDrive"] = false,
-			}, -- end of [1]
-			[2] = 
-			{
-				["type"] = Cargo_Type_name,
-				["transportable"] = 
-				{
-					["randomTransportable"] = true,
-				}, -- end of ["transportable"]
-				["unitId"] = SoldierUnitID + 1,
-				["skill"] = "Excellent",
-				["y"] = Cargo_Drop_Position.z + 1.0 + GroupSpacing,
-				["x"] = Cargo_Drop_Position.x + 1.0 + GroupSpacing,
-				["name"] = "Soldier Unit "..SoldierUnitID,
-				["heading"] = CargoHeading,
-				["playerCanDrive"] = false,
-			}, -- end of [2]
-			[3] = 
-			{
-				["type"] = Cargo_Type_name,
-				["transportable"] = 
-				{
-					["randomTransportable"] = true,
-				}, -- end of ["transportable"]
-				["unitId"] = SoldierUnitID + 1,
-				["skill"] = "Excellent",
-				["y"] = Cargo_Drop_Position.z + 1.5 + GroupSpacing,
-				["x"] = Cargo_Drop_Position.x + 1.0 + GroupSpacing,
-				["name"] = "Soldier Unit "..SoldierUnitID,
-				["heading"] = CargoHeading,
-				["playerCanDrive"] = false,
-			}, -- end of [3]
-			[4] = 
-			{
-				["type"] = Cargo_Type_name,
-				["transportable"] = 
-				{
-					["randomTransportable"] = true,
-				}, -- end of ["transportable"]
-				["unitId"] = SoldierUnitID + 1,
-				["skill"] = "Excellent",
-				["y"] = Cargo_Drop_Position.z + 2.0 + GroupSpacing,
-				["x"] = Cargo_Drop_Position.x + 2.0 + GroupSpacing,
-				["name"] = "Soldier Unit "..SoldierUnitID,
-				["heading"] = CargoHeading,
-				["playerCanDrive"] = false,
-			}, -- end of [4]
-			[5] = 
-			{
-				["type"] = Cargo_Type_name,
-				["transportable"] = 
-				{
-					["randomTransportable"] = true,
-				}, -- end of ["transportable"]
-				["unitId"] = SoldierUnitID + 1,
-				["skill"] = "Excellent",
-				["y"] = Cargo_Drop_Position.z + 2.5 + GroupSpacing,
-				["x"] = Cargo_Drop_Position.x + 2.5 + GroupSpacing,
-				["name"] = "Soldier Unit "..SoldierUnitID,
-				["heading"] = CargoHeading,
-				["playerCanDrive"] = false,
-			}, -- end of [5]
-			[6] = 
-			{
-				["type"] = Cargo_Type_name,
-				["transportable"] = 
-				{
-					["randomTransportable"] = true,
-				}, -- end of ["transportable"]
-				["unitId"] = SoldierUnitID + 1,
-				["skill"] = "Excellent",
-				["y"] = Cargo_Drop_Position.z + 3.0 + GroupSpacing,
-				["x"] = Cargo_Drop_Position.x + 3.0 + GroupSpacing,
-				["name"] = "Soldier Unit "..SoldierUnitID,
-				["heading"] = CargoHeading,
-				["playerCanDrive"] = false,
-			}, -- end of [6]
-			[7] = 
-			{
-				["type"] = "Soldier M249",
-				["transportable"] = 
-				{
-					["randomTransportable"] = true,
-				}, -- end of ["transportable"]
-				["unitId"] = SoldierUnitID + 1,
-				["skill"] = "Excellent",
-				["y"] = Cargo_Drop_Position.z + 3.5 + GroupSpacing,
-				["x"] = Cargo_Drop_Position.x + 3.5 + GroupSpacing,
-				["name"] = "Soldier Unit "..SoldierUnitID,
-				["heading"] = CargoHeading,
-				["playerCanDrive"] = false,
-			}, -- end of [7]
-			[8] = 
-			{
-				["type"] = "Soldier M249",
-				["transportable"] = 
-				{
-					["randomTransportable"] = true,
-				}, -- end of ["transportable"]
-				["unitId"] = SoldierUnitID + 1,
-				["skill"] = "Excellent",
-				["y"] = Cargo_Drop_Position.z + 4.0 + GroupSpacing,
-				["x"] = Cargo_Drop_Position.x + 4.0 + GroupSpacing,
-				["name"] = "Soldier Unit "..SoldierUnitID,
-				["heading"] = CargoHeading,
-				["playerCanDrive"] = false,
-			}, -- end of [8]
-			[9] = 
-			{
-				["type"] = Cargo_Type_name,
-				["transportable"] = 
-				{
-					["randomTransportable"] = true,
-				}, -- end of ["transportable"]
-				["unitId"] = SoldierUnitID + 1,
-				["skill"] = "Excellent",
-				["y"] = Cargo_Drop_Position.z + 4.5 + GroupSpacing,
-				["x"] = Cargo_Drop_Position.x + 4.5 + GroupSpacing,
-				["name"] = "Soldier Unit "..SoldierUnitID,
-				["heading"] = CargoHeading,
-				["playerCanDrive"] = false,
-			}, -- end of [9]
-			[10] = 
-			{
-				["type"] = "Paratrooper RPG-16",
-				["transportable"] = 
-				{
-					["randomTransportable"] = true,
-				}, -- end of ["transportable"]
-				["unitId"] = SoldierUnitID + 1,
-				["skill"] = "Excellent",
-				["y"] = Cargo_Drop_Position.z + 5.0 + GroupSpacing,
-				["x"] = Cargo_Drop_Position.x + 5.0 + GroupSpacing,
-				["name"] = "Soldier Unit "..SoldierUnitID,
-				["heading"] = CargoHeading,
-				["playerCanDrive"] = false,
-			}, -- end of [10]
-		}, -- end of ["units"]
-		["y"] = Cargo_Drop_Position.z,
-		["x"] = Cargo_Drop_Position.x,
-		["name"] = "Soldier_Group_"..SoldierGroupID,
-		["start_time"] = 0,
-	}
-	coalition.addGroup(Cargo_Country, Group.Category.GROUND, Herc_Soldier_Spawn)
-end
-
-local CargoUnitID = 10000
-local CargoGroupID = 10000
-local CargoStaticGroupID = 11000
-
-function Hercules_Cargo.Cargo_SpawnGroup(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, Cargo_Country)
-	CargoUnitID = CargoUnitID + 1
-	CargoGroupID = CargoGroupID + 1
-	local Herc_Cargo_Spawn = 
-	{
-		["visible"] = false,
-		["tasks"] = 
-		{
-		}, -- end of ["tasks"]
-		["uncontrollable"] = false,
-		["task"] = "Ground Nothing",
-		["groupId"] = CargoGroupID,
-		["hidden"] = false,
-		["units"] = 
-		{
-			[1] = 
-			{
-				["type"] = Cargo_Type_name,
-				["transportable"] = 
-				{
-					["randomTransportable"] = false,
-				}, -- end of ["transportable"]
-				["unitId"] = CargoUnitID,
-				["skill"] = "Excellent",
-				["y"] = Cargo_Drop_Position.z,
-				["x"] = Cargo_Drop_Position.x,
-				["name"] = "Cargo Unit "..CargoUnitID,
-				["heading"] = CargoHeading,
-				["playerCanDrive"] = true,
-			}, -- end of [1]
-		}, -- end of ["units"]
-		["y"] = Cargo_Drop_Position.z,
-		["x"] = Cargo_Drop_Position.x,
-		["name"] = "Cargo Group "..CargoUnitID,
-		["start_time"] = 0,
-	}
-	coalition.addGroup(Cargo_Country, Group.Category.GROUND, Herc_Cargo_Spawn)
-end
-
-function Hercules_Cargo.Cargo_SpawnStatic(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, dead, Cargo_Country)
-	CargoStaticGroupID = CargoStaticGroupID + 1
-	local Herc_CargoObject_Spawn = 
-	{
-		["type"] = Cargo_Type_name,
-		["y"] = Cargo_Drop_Position.z,
-		["x"] = Cargo_Drop_Position.x,
-		["name"] = "Cargo Static Group "..CargoStaticGroupID,
-		["heading"] = CargoHeading,
-		["dead"] = dead,
-	}
-	coalition.addStaticObject(Cargo_Country, Herc_CargoObject_Spawn)
-end
-
-function Hercules_Cargo.Cargo_SpawnObjects(Cargo_Drop_Direction, Cargo_Content_position, Cargo_Type_name, Cargo_over_water, Container_Enclosed, ParatrooperGroupSpawn, offload_cargo, all_cargo_survive_to_the_ground, all_cargo_gets_destroyed, destroy_cargo_dropped_without_parachute, Cargo_Country)
-	if offload_cargo == true then
-		------------------------------------------------------------------------------
-		if CargoHeading >= 3.14 then
-			CargoHeading = 0
-			Cargo_Drop_Position = {["x"] = Cargo_Content_position.x - (30.0 * math.cos(Cargo_Drop_Direction - 1.0)),
-								   ["z"] = Cargo_Content_position.z - (30.0 * math.sin(Cargo_Drop_Direction - 1.0))}
-		else
-			if CargoHeading >= 1.57 then
-				CargoHeading = 3.14
-				Cargo_Drop_Position = {["x"] = Cargo_Content_position.x - (20.0 * math.cos(Cargo_Drop_Direction + 0.5)),
-									   ["z"] = Cargo_Content_position.z - (20.0 * math.sin(Cargo_Drop_Direction + 0.5))}
-			else
-				if CargoHeading >= 0 then
-					CargoHeading = 1.57
-					Cargo_Drop_Position = {["x"] = Cargo_Content_position.x - (10.0 * math.cos(Cargo_Drop_Direction + 1.5)),
-										   ["z"] = Cargo_Content_position.z - (10.0 * math.sin(Cargo_Drop_Direction + 1.5))}
-				end
-			end
-		end
-		------------------------------------------------------------------------------
-		if ParatrooperGroupSpawn == true then
-			Hercules_Cargo.Soldier_SpawnGroup(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, Cargo_Country, 0)
-			Hercules_Cargo.Soldier_SpawnGroup(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, Cargo_Country, 5)
-			Hercules_Cargo.Soldier_SpawnGroup(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, Cargo_Country, 10)
-		else
-			Hercules_Cargo.Cargo_SpawnGroup(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, Cargo_Country, 0)
-		end
-	else
-		------------------------------------------------------------------------------
-		CargoHeading = 0
-		Cargo_Drop_Position = {["x"] = Cargo_Content_position.x - (20.0 * math.cos(Cargo_Drop_Direction)),
-							   ["z"] = Cargo_Content_position.z - (20.0 * math.cos(Cargo_Drop_Direction))}
-		------------------------------------------------------------------------------
-		if all_cargo_gets_destroyed == true or Cargo_over_water == true then
-			if Container_Enclosed == true then
-				Hercules_Cargo.Cargo_SpawnStatic(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, true, Cargo_Country)
-				if ParatrooperGroupSpawn == false then
-					Hercules_Cargo.Cargo_SpawnStatic(Cargo_Drop_Position, "Hercules_Container_Parachute_Static", CargoHeading, true, Cargo_Country)
-				end
-			else
-				Hercules_Cargo.Cargo_SpawnStatic(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, true, Cargo_Country)
-			end
-		else
-			------------------------------------------------------------------------------
-			if all_cargo_survive_to_the_ground == true then
-				if ParatrooperGroupSpawn == true then
-					Hercules_Cargo.Cargo_SpawnStatic(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, true, Cargo_Country)
-				else
-					Hercules_Cargo.Cargo_SpawnGroup(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, Cargo_Country)
-				end
-				if Container_Enclosed == true then
-					if ParatrooperGroupSpawn == false then
-						Hercules_Cargo.Cargo_SpawnStatic({["z"] = Cargo_Drop_Position.z + 10.0,["x"] = Cargo_Drop_Position.x + 10.0}, "Hercules_Container_Parachute_Static", CargoHeading, false, Cargo_Country)
-					end
-				end
-			end
-			------------------------------------------------------------------------------
-			if destroy_cargo_dropped_without_parachute == true then
-				if Container_Enclosed == true then
-					if ParatrooperGroupSpawn == true then
-						Hercules_Cargo.Soldier_SpawnGroup(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, Cargo_Country, 0)
-					else
-						Hercules_Cargo.Cargo_SpawnGroup(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, Cargo_Country)
-						Hercules_Cargo.Cargo_SpawnStatic({["z"] = Cargo_Drop_Position.z + 10.0,["x"] = Cargo_Drop_Position.x + 10.0}, "Hercules_Container_Parachute_Static", CargoHeading, false, Cargo_Country)
-					end
-				else
-					Hercules_Cargo.Cargo_SpawnStatic(Cargo_Drop_Position, Cargo_Type_name, CargoHeading, true, Cargo_Country)
-				end
-			end
-			------------------------------------------------------------------------------
-		end
-	end
-end
-
-function Hercules_Cargo.Calculate_Object_Height_AGL(object)
-	return object:getPosition().p.y - land.getHeight({x = object:getPosition().p.x, y = object:getPosition().p.z})
-end
-
-function Hercules_Cargo.Check_SurfaceType(object)
-   -- LAND,--1 SHALLOW_WATER,--2 WATER,--3 ROAD,--4 RUNWAY--5
-	return land.getSurfaceType({x = object:getPosition().p.x, y = object:getPosition().p.z})
-end
-
-function Hercules_Cargo.Cargo_Track(Arg, time)
-	local status, result = pcall(
-		function()
-		local next = next
-		if next(Arg[1].Cargo_Contents) ~= nil then
-			if Hercules_Cargo.Calculate_Object_Height_AGL(Arg[1].Cargo_Contents) < 5.0 then--pallet less than 5m above ground before spawning
-				if Hercules_Cargo.Check_SurfaceType(Arg[1].Cargo_Contents) == 2 or Hercules_Cargo.Check_SurfaceType(Arg[1].Cargo_Contents) == 3 then
-					Arg[1].Cargo_over_water = true--pallets gets destroyed in water
-				end
-				Arg[1].Cargo_Contents:destroy()--remove pallet+parachute before hitting ground and replace with Cargo_SpawnContents
-				Hercules_Cargo.Cargo_SpawnObjects(Arg[1].Cargo_Drop_Direction, Object.getPoint(Arg[1].Cargo_Contents), Arg[1].Cargo_Type_name, Arg[1].Cargo_over_water, Arg[1].Container_Enclosed, Arg[1].ParatrooperGroupSpawn, Arg[1].offload_cargo, Arg[1].all_cargo_survive_to_the_ground, Arg[1].all_cargo_gets_destroyed, Arg[1].destroy_cargo_dropped_without_parachute, Arg[1].Cargo_Country)
-				timer.removeFunction(Arg[1].scheduleFunctionID)
-				Arg[1] = {}
-			end
-			return time + 0.1
-		end
-	end) -- pcall
-	if not status then
-		-- env.error(string.format("Cargo_Spawn: %s", result))
-	else
-		return result
-	end
-end
-
-function Hercules_Cargo.Calculate_Cargo_Drop_initiator_NorthCorrection(point)	--correction needed for true north
-	if not point.z then --Vec2; convert to Vec3
-		point.z = point.y
-		point.y = 0
-	end
-	local lat, lon = coord.LOtoLL(point)
-	local north_posit = coord.LLtoLO(lat + 1, lon)
-	return math.atan2(north_posit.z - point.z, north_posit.x - point.x)
-end
-
-function Hercules_Cargo.Calculate_Cargo_Drop_initiator_Heading(Cargo_Drop_initiator)
-	local Heading = math.atan2(Cargo_Drop_initiator:getPosition().x.z, Cargo_Drop_initiator:getPosition().x.x)
-	Heading = Heading + Hercules_Cargo.Calculate_Cargo_Drop_initiator_NorthCorrection(Cargo_Drop_initiator:getPosition().p)
-	if Heading < 0 then
-		Heading = Heading + (2 * math.pi)-- put heading in range of 0 to 2*pi
-	end
-	return Heading + 0.06 -- rad
-end
-
-function Hercules_Cargo.Cargo_Initialize(initiator, Cargo_Contents, Cargo_Type_name, Container_Enclosed)
-	local status, result = pcall(
-		function()
-		Cargo_Drop_initiator = Unit.getByName(initiator:getName())
-		local next = next
-		if next(Cargo_Drop_initiator) ~= nil then
-			if ParatrooperGroupSpawnInit == true then
-				if (ParatrooperCount == 1 or ParatrooperCount == 2 or ParatrooperCount == 3) then
-					Herc_j = Herc_j + 1
-					Herc_Cargo[Herc_j] = {}
-					Herc_Cargo[Herc_j].Cargo_Drop_Direction = Hercules_Cargo.Calculate_Cargo_Drop_initiator_Heading(Cargo_Drop_initiator)
-					Herc_Cargo[Herc_j].Cargo_Contents = Cargo_Contents
-					Herc_Cargo[Herc_j].Cargo_Type_name = Cargo_Type_name
-					Herc_Cargo[Herc_j].Container_Enclosed = Container_Enclosed
-					Herc_Cargo[Herc_j].ParatrooperGroupSpawn = ParatrooperGroupSpawnInit
-					Herc_Cargo[Herc_j].Cargo_Country = initiator:getCountry()
-				------------------------------------------------------------------------------
-					if Hercules_Cargo.Calculate_Object_Height_AGL(Cargo_Drop_initiator) < 5.0 then--aircraft on ground
-						Herc_Cargo[Herc_j].offload_cargo = true
-						ParatrooperCount = 0
-						ParatrooperGroupSpawnInit = false
-					else
-				------------------------------------------------------------------------------
-						if Hercules_Cargo.Calculate_Object_Height_AGL(Cargo_Drop_initiator) < 10.0 then--aircraft less than 10m above ground
-							Herc_Cargo[Herc_j].all_cargo_survive_to_the_ground = true
-						else
-				------------------------------------------------------------------------------
-							if Hercules_Cargo.Calculate_Object_Height_AGL(Cargo_Drop_initiator) < 152.4 then--aircraft more than 30ft but less than 500ft above ground
-								Herc_Cargo[Herc_j].all_cargo_gets_destroyed = true
-							else
-				------------------------------------------------------------------------------
-								Herc_Cargo[Herc_j].destroy_cargo_dropped_without_parachute = true--aircraft more than 152.4m (500ft)above ground
-							end
-						end
-					end
-				------------------------------------------------------------------------------
-					Herc_Cargo[Herc_j].scheduleFunctionID = timer.scheduleFunction(Hercules_Cargo.Cargo_Track, {Herc_Cargo[Herc_j]}, timer.getTime() + 0.1)
-					ParatrooperCount = ParatrooperCount + 1.0
-				else
-					if (ParatrooperCount == 30) then
-						ParatrooperGroupSpawnInit = false
-						ParatrooperCount = 1
-					else
-						ParatrooperCount = ParatrooperCount + 1.0
-					end
-				end
-			else
-				Herc_j = Herc_j + 1
-				Herc_Cargo[Herc_j] = {}
-				Herc_Cargo[Herc_j].Cargo_Drop_Direction = Hercules_Cargo.Calculate_Cargo_Drop_initiator_Heading(Cargo_Drop_initiator)
-				Herc_Cargo[Herc_j].Cargo_Contents = Cargo_Contents
-				Herc_Cargo[Herc_j].Cargo_Type_name = Cargo_Type_name
-				Herc_Cargo[Herc_j].Container_Enclosed = Container_Enclosed
-				Herc_Cargo[Herc_j].ParatrooperGroupSpawn = ParatrooperGroupSpawnInit
-				Herc_Cargo[Herc_j].Cargo_Country = initiator:getCountry()
-			------------------------------------------------------------------------------
-				if Hercules_Cargo.Calculate_Object_Height_AGL(Cargo_Drop_initiator) < 5.0 then--aircraft on ground
-					Herc_Cargo[Herc_j].offload_cargo = true
-				else
-			------------------------------------------------------------------------------
-					if Hercules_Cargo.Calculate_Object_Height_AGL(Cargo_Drop_initiator) < 10.0 then--aircraft less than 10m above ground
-						Herc_Cargo[Herc_j].all_cargo_survive_to_the_ground = true
-					else
-			------------------------------------------------------------------------------
-						if Hercules_Cargo.Calculate_Object_Height_AGL(Cargo_Drop_initiator) < 100.0 then--aircraft more than 10m but less than 100m above ground
-							Herc_Cargo[Herc_j].all_cargo_gets_destroyed = true
-						else
-			------------------------------------------------------------------------------
-							Herc_Cargo[Herc_j].destroy_cargo_dropped_without_parachute = true--aircraft more than 100m above ground
-						end
-					end
-				end
-			------------------------------------------------------------------------------
-				Herc_Cargo[Herc_j].scheduleFunctionID = timer.scheduleFunction(Hercules_Cargo.Cargo_Track, {Herc_Cargo[Herc_j]}, timer.getTime() + 0.1)
-			end
-		end
-	end) -- pcall
-	if not status then
-		-- env.error(string.format("Cargo_Initialize: %s", result))
-	else
-		return result
-	end
-end
-
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	-- EventHandlers
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-function Hercules_Cargo.Hercules_Cargo_Drop_Events:onEvent(Cargo_Drop_Event)
-	if Cargo_Drop_Event.id == world.event.S_EVENT_SHOT then
-		GT_DisplayName = Weapon.getDesc(Cargo_Drop_Event.weapon).typeName:sub(15, -1)--Remove "weapons.bombs." from string
-		 -- trigger.action.outTextForCoalition(coalition.side.BLUE, string.format("Cargo_Drop_Event: %s", Weapon.getDesc(Cargo_Drop_Event.weapon).typeName), 10)
-		 -- trigger.action.outTextForCoalition(coalition.side.RED, string.format("Cargo_Drop_Event: %s", Weapon.getDesc(Cargo_Drop_Event.weapon).typeName), 10)
-			 ---------------------------------------------------------------------------------------------------------------------------------
-			if (GT_DisplayName == "Squad 30 x Soldier [7950lb]") then
-				GT_Name = "Soldier M4 GRG"
-				SoldierGroup = true
-				ParatrooperGroupSpawnInit = true
-				Hercules_Cargo.Cargo_Initialize(Cargo_Drop_Event.initiator, Cargo_Drop_Event.weapon, GT_Name, SoldierGroup)
-			end
-			 ---------------------------------------------------------------------------------------------------------------------------------
-			if Hercules_Cargo.types[GT_DisplayName] then
-				local GT_Name = Hercules_Cargo.types[GT_DisplayName]['name']
-				local Cargo_Container_Enclosed = Hercules_Cargo.types[GT_DisplayName]['container']
-				Hercules_Cargo.Cargo_Initialize(Cargo_Drop_Event.initiator, Cargo_Drop_Event.weapon, GT_Name, Cargo_Container_Enclosed)
-			end
-	end
-end
-world.addEventHandler(Hercules_Cargo.Hercules_Cargo_Drop_Events)
-
--- trigger.action.outTextForCoalition(coalition.side.BLUE, string.format("Cargo_Drop_Event.weapon: %s", Weapon.getDesc(Cargo_Drop_Event.weapon).typeName), 10)
--- trigger.action.outTextForCoalition(coalition.side.BLUE, tostring('Calculate_Object_Height_AGL: ' .. aaaaa), 10)
--- trigger.action.outTextForCoalition(coalition.side.BLUE, string.format("Speed: %.2f", Calculate_Object_Speed(Cargo_Drop_initiator)), 10)
--- trigger.action.outTextForCoalition(coalition.side.BLUE, string.format("Russian Interceptor Patrol scrambled from Nalchik"), 10)
-
--- function basicSerialize(var)
-	-- if var == nil then
-		-- return "\"\""
-	-- else
-		-- if ((type(var) == 'number') or
-				-- (type(var) == 'boolean') or
-				-- (type(var) == 'function') or
-				-- (type(var) == 'table') or
-				-- (type(var) == 'userdata') ) then
-			-- return tostring(var)
-		-- else
-			-- if type(var) == 'string' then
-				-- var = string.format('%q', var)
-				-- return var
-			-- end
-		-- end
-	-- end
--- end
-	
--- function tableShow(tbl, loc, indent, tableshow_tbls) --based on serialize_slmod, this is a _G serialization
-	-- tableshow_tbls = tableshow_tbls or {} --create table of tables
-	-- loc = loc or ""
-	-- indent = indent or ""
-	-- if type(tbl) == 'table' then --function only works for tables!
-		-- tableshow_tbls[tbl] = loc
-		-- local tbl_str = {}
-		-- tbl_str[#tbl_str + 1] = indent .. '{\n'
-		-- for ind,val in pairs(tbl) do -- serialize its fields
-			-- if type(ind) == "number" then
-				-- tbl_str[#tbl_str + 1] = indent
-				-- tbl_str[#tbl_str + 1] = loc .. '['
-				-- tbl_str[#tbl_str + 1] = tostring(ind)
-				-- tbl_str[#tbl_str + 1] = '] = '
-			-- else
-				-- tbl_str[#tbl_str + 1] = indent
-				-- tbl_str[#tbl_str + 1] = loc .. '['
-				-- tbl_str[#tbl_str + 1] = basicSerialize(ind)
-				-- tbl_str[#tbl_str + 1] = '] = '
-			-- end
-			-- if ((type(val) == 'number') or (type(val) == 'boolean')) then
-				-- tbl_str[#tbl_str + 1] = tostring(val)
-				-- tbl_str[#tbl_str + 1] = ',\n'
-			-- elseif type(val) == 'string' then
-				-- tbl_str[#tbl_str + 1] = basicSerialize(val)
-				-- tbl_str[#tbl_str + 1] = ',\n'
-			-- elseif type(val) == 'nil' then -- won't ever happen, right?
-				-- tbl_str[#tbl_str + 1] = 'nil,\n'
-			-- elseif type(val) == 'table' then
-				-- if tableshow_tbls[val] then
-					-- tbl_str[#tbl_str + 1] = tostring(val) .. ' already defined: ' .. tableshow_tbls[val] .. ',\n'
-				-- else
-					-- tableshow_tbls[val] = loc ..	'[' .. basicSerialize(ind) .. ']'
-					-- tbl_str[#tbl_str + 1] = tostring(val) .. ' '
-					-- tbl_str[#tbl_str + 1] = tableShow(val,	loc .. '[' .. basicSerialize(ind).. ']', indent .. '		', tableshow_tbls)
-					-- tbl_str[#tbl_str + 1] = ',\n'
-				-- end
-			-- elseif type(val) == 'function' then
-				-- if debug and debug.getinfo then
-					-- local fcnname = tostring(val)
-					-- local info = debug.getinfo(val, "S")
-					-- if info.what == "C" then
-						-- tbl_str[#tbl_str + 1] = string.format('%q', fcnname .. ', C function') .. ',\n'
-					-- else
-						-- if (string.sub(info.source, 1, 2) == [[./]]) then
-							-- tbl_str[#tbl_str + 1] = string.format('%q', fcnname .. ', defined in (' .. info.linedefined .. '-' .. info.lastlinedefined .. ')' .. info.source) ..',\n'
-						-- else
-							-- tbl_str[#tbl_str + 1] = string.format('%q', fcnname .. ', defined in (' .. info.linedefined .. '-' .. info.lastlinedefined .. ')') ..',\n'
-						-- end
-					-- end
-				-- else
-					-- tbl_str[#tbl_str + 1] = 'a function,\n'
-				-- end
-			-- else
-				-- tbl_str[#tbl_str + 1] = 'unable to serialize value type ' .. basicSerialize(type(val)) .. ' at index ' .. tostring(ind)
-			-- end
-		-- end
-		-- tbl_str[#tbl_str + 1] = indent .. '}'
-		-- return table.concat(tbl_str)
-	-- end
--- end
-
-
-
-
--- function F10CargoDrop(GroupId, Unitname)
-	-- local rootPath = missionCommands.addSubMenuForGroup(GroupId, "Cargo Drop")
-	-- missionCommands.addCommandForGroup(GroupId, "Drop direction", rootPath, CruiseMissilesMessage, {GroupId, Unitname})
-	-- missionCommands.addCommandForGroup(GroupId, "Drop distance", rootPath, ForwardConvoy, nil)
-	-- local measurementsSetPath = missionCommands.addSubMenuForGroup(GroupId,"Set measurement units",rootPath)
-	-- missionCommands.addCommandForGroup(GroupId, "Set to Imperial (feet, knts)",measurementsSetPath,setMeasurements,{GroupId, "imperial"})
-	-- missionCommands.addCommandForGroup(GroupId, "Set to Metric (meters, km/h)",measurementsSetPath,setMeasurements,{GroupId, "metric"})
--- end
-
--- function Calculate_Object_Speed(object)
-	-- return math.sqrt(object:getVelocity().x^2 + object:getVelocity().y^2 + object:getVelocity().z^2) * 3600 / 1852 -- knts
--- end
-
--- function vecDotProduct(vec1, vec2)
-	-- return vec1.x*vec2.x + vec1.y*vec2.y + vec1.z*vec2.z
--- end
-
--- function Calculate_Aircraft_ForwardVelocity(Drop_initiator)
-	-- return vecDotProduct(Drop_initiator:getPosition().x, Drop_initiator:getVelocity())
--- end
-
---- END HERCULES CARGO SUPPORT SECTION
-
-
   
 --------------------------------[core\mission_end.lua]-------------------------------- 
  
