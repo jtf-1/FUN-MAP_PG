@@ -22,7 +22,7 @@ end
 --- Strike Attack Mission Data ---
 ----------------------------------
 
-MISSIONSTRIKE.drawZones = true -- if true, draw mission zones
+--MISSIONSTRIKE.drawZones = true -- If true, draw mission zones. default is false
 
 MISSIONSTRIKE.enums.region.qeshm = "Qeshm Island"
 
