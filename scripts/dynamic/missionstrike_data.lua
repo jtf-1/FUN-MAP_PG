@@ -22,6 +22,10 @@ end
 --- Strike Attack Mission Data ---
 ----------------------------------
 
+MISSIONSTRIKE.drawZones = true -- if true, draw mission zones
+
+MISSIONSTRIKE.enums.region.qeshm = "Qeshm Island"
+
 --- MISSIONSTRIKE.mission table 
 -- @type MISSIONSTRIKE.mission
 -- @field #string striketype type of strike; Airfield, Factory, Bridge, Communications, C2
@@ -74,6 +78,29 @@ MISSIONSTRIKE.missions = { -- TableStrikeAttack
 		spawnobjects = {},
 		is_open = true,
 	},-- End Fujairah
+
+	------------ AIRFIELD QESHM ISLAND ------------
+	{ -- Qeshm Airfield
+		striketype = MISSIONSTRIKE.enums.striketype.airfield,
+		strikeregion = MISSIONSTRIKE.enums.region.qeshm,
+		strikename = "Qeshm",
+		strikeivo = "AFB",
+		strikemission = MISSIONSTRIKE.enums.strikemission.airfield, -- text mission description
+		strikezone = "ZONE_QeshmStrike",
+		striketargetprefix = "TARGET_QESHM",
+		zoneprefix = {
+			{class = "small", prefix = "ZONE_QeshmSmall"},
+			{class = "medium", prefix = "ZONE_QeshmMed"},
+		},
+		defassets = {
+			sam = 2,
+			aaa = 4,
+			manpad = 2,
+			armour = 3,
+		},
+		spawnobjects = {},
+		is_open = true,
+	},-- End Qeshm
 
 	------------ AIRFIELD EAST ------------
 	{ -- Bandar-e-Jask Airfield-East
@@ -141,27 +168,6 @@ MISSIONSTRIKE.missions = { -- TableStrikeAttack
 		spawnobjects = {},
 		is_open = true,
 	},-- End Havadarya
-	{ -- Qeshm Airfield
-		striketype = MISSIONSTRIKE.enums.striketype.airfield,
-        strikeregion = MISSIONSTRIKE.enums.region.central,
-		strikename = "Qeshm",
-		strikeivo = "AFB",
-		strikemission = MISSIONSTRIKE.enums.strikemission.airfield, -- text mission description
-		strikezone = "ZONE_QeshmStrike",
-		striketargetprefix = "TARGET_QESHM",
-		zoneprefix = {
-			{class = "small", prefix = "ZONE_QeshmSmall"},
-			{class = "medium", prefix = "ZONE_QeshmMed"},
-		},
-		defassets = {
-			sam = 2,
-			aaa = 4,
-			manpad = 2,
-			armour = 3,
-		},
-		spawnobjects = {},
-		is_open = true,
-	},-- End Qeshm
 	{ -- Lar Airfield
 		striketype = MISSIONSTRIKE.enums.striketype.airfield,
         strikeregion = MISSIONSTRIKE.enums.region.central,
@@ -229,7 +235,29 @@ MISSIONSTRIKE.missions = { -- TableStrikeAttack
 		},
 		spawnobjects = {},
 		is_open = true,
-	},-- End LN83
+	},-- End DR30
+	{ -- BR61 Factory
+		striketype = MISSIONSTRIKE.enums.striketype.factory,
+        strikeregion = MISSIONSTRIKE.enums.region.central,                            
+		strikename = "BR61",
+		strikeivo = "Chah Banard",
+		strikemission = MISSIONSTRIKE.enums.strikemission.factory.chemical, -- text mission description
+		--strikethreats = "RADAR SAM, I/R SAM, AAA, LIGHT ARMOUR",
+		strikezone = "ZONE_BR61Strike",
+		striketargetprefix = "TARGET_BR61",
+		zoneprefix = {
+			{class = "small", prefix = "ZONE_BR61Small"},
+			{class = "medium", prefix = "ZONE_BR61Med"},
+		},
+		defassets = { 
+			sam = 3, 
+			aaa = 3, 
+			manpad = 2, 
+			armour = 3, 
+		},
+		spawnobjects = {},
+		is_open = true,
+	},-- End BR61
 
 	------------ PORT ------------
 --[[ 	{ -- DK05 Port-North
@@ -528,6 +556,134 @@ MISSIONSTRIKE.missions = { -- TableStrikeAttack
 			MISSIONSTRIKE.enums.convoy.armoured,
 		},
 	},-- End Convoy-BRAVO
+	{ -- Convoy-Qeshm
+		striketype = MISSIONSTRIKE.enums.striketype.convoy,
+        strikeregion = MISSIONSTRIKE.enums.region.qeshm,                            
+		strikename = "Add",
+		strikeivo = "Convoy Mission",
+		strikemission = MISSIONSTRIKE.enums.strikemission.convoy, -- text mission description
+		striketargets = {
+			{ 
+				strikezone = "ZONE_Convoy_Start_q-1",
+				endzone = "ZONE_Convoy_End_q-1",
+				destname = "DQ2873 Qeshm",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_q-2",
+				endzone = "ZONE_Convoy_End_q-2",
+				destname = "DQ0883 Dargahan",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_q-2",
+				endzone = "ZONE_Convoy_End_q-5",
+				destname = "CQ7861",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_q-3",
+				endzone = "ZONE_Convoy_End_q-3",
+				destname = "DQ0672 Suza",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_q-3",
+				endzone = "ZONE_Convoy_End_q-1",
+				destname = "DQ2873 Qeshm",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_q-4",
+				endzone = "ZONE_Convoy_End_q-4",
+				destname = "CQ2479 Basa Idu",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_q-4",
+				endzone = "ZONE_Convoy_End_q-1",
+				destname = "DQ2873 Qeshm",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_q-5",
+				endzone = "ZONE_Convoy_End_q-5",
+				destname = "CQ7861",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_q-5",
+				endzone = "ZONE_Convoy_End_q-2",
+				destname = "DQ0883 Dargahan",
+				is_open = true
+			},
+		},
+		options = {
+			MISSIONSTRIKE.enums.convoy.supply,
+			MISSIONSTRIKE.enums.convoy.armoured,
+		},
+	},-- End Convoy-EAST
+	{ -- Convoy-EAST
+		striketype = MISSIONSTRIKE.enums.striketype.convoy,
+        strikeregion = MISSIONSTRIKE.enums.region.east,                            
+		strikename = "Add",
+		strikeivo = "Convoy Mission",
+		strikemission = MISSIONSTRIKE.enums.strikemission.convoy, -- text mission description
+		striketargets = {
+			{ 
+				strikezone = "ZONE_Convoy_Start_e-1",
+				endzone = "ZONE_Convoy_End_e-1",
+				destname = "EP3614 Miski",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_e-2",
+				endzone = "ZONE_Convoy_End_e-2",
+				destname = "DQ8979 Teyab",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_e-2",
+				endzone = "ZONE_Convoy_End_e-1",
+				destname = "EP3614 Miski",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_e-3",
+				endzone = "ZONE_Convoy_End_e-3",
+				destname = "EQ5467 Dar Pahn",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_e-3",
+				endzone = "ZONE_Convoy_End_e-2",
+				destname = "DQ8979 Teyab",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_e-3",
+				endzone = "ZONE_Convoy_End_e-4",
+				destname = "ER1396 Dehbarez",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_e-4",
+				endzone = "ZONE_Convoy_End_e-4",
+				destname = "ER1396 Dehbarez",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_e-4",
+				endzone = "ZONE_Convoy_End_e-3",
+				destname = "EQ5467 Dar Pahn",
+				is_open = true
+			},
+		},
+		options = {
+			MISSIONSTRIKE.enums.convoy.supply,
+			MISSIONSTRIKE.enums.convoy.armoured,
+		},
+	},-- End Convoy-EAST
 }
 
 -- Start Strike Attack Module
