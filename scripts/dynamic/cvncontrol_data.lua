@@ -15,7 +15,7 @@ if not CVNCONTROL then
 	BASE:E(_msg)
 end
 
-CVNCONTROL.markWaypoints = true
+--CVNCONTROL.markWaypoints = true -- if true, mark waypoints in F10 map. Dfault is false.
 
 -- table of Carriers
 CVNCONTROL.cvn = {
