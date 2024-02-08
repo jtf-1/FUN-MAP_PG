@@ -15,6 +15,8 @@ if not CVNCONTROL then
 	BASE:E(_msg)
 end
 
+CVNCONTROL.markWaypoints = true
+
 -- table of Carriers
 CVNCONTROL.cvn = {
 	{
