@@ -1,4 +1,4 @@
- env.info("[JTF-1] MISSION BUILD 2024-02-11T15:11:37.63")  
+ env.info("[JTF-1] MISSION BUILD 2024-02-12T22:24:04.11")  
   
 --------------------------------[core\mission_init.lua]-------------------------------- 
  
@@ -1995,7 +1995,7 @@ function MISSIONSTRIKE:SpawnConvoy(selectedTarget) -- ConvoyTemplates, SpawnHost
 		convoySpawn:SpawnInZone(strikeZone)
 	else
 		-- error to log if an end zone has not been defined/found
-		_msg = string.format("%sError. End zone not found for mission type %s for mission %s in region %s with option %s!",
+		_msg = string.format("%sError. Start zone not found for mission type %s for mission %s in region %s with option %s!",
 			self.traceTitle, 
 			strikeType,
 			strikeName,
@@ -16014,17 +16014,17 @@ SPAWNTEMPLATES.templates = {
 			{
 				[1] = 
 				{
-					["alt"] = 5,
+					["alt"] = 52,
 					["type"] = "Turning Point",
 					["ETA"] = 0,
 					["alt_type"] = "BARO",
 					["formation_template"] = "",
-					["y"] = 306991.33844617,
-					["x"] = 36455.435715355,
+					["y"] = 427622.79355021,
+					["x"] = 13792.384414609,
 					["name"] = "",
 					["ETA_locked"] = true,
 					["speed"] = 5.5555555555556,
-					["action"] = "On Road",
+					["action"] = "Off Road",
 					["task"] = 
 					{
 						["id"] = "ComboTask",
@@ -16078,7 +16078,7 @@ SPAWNTEMPLATES.templates = {
 			}, -- end of ["points"]
 			["routeRelativeTOT"] = true,
 		}, -- end of ["route"]
-		["groupId"] = 45,
+		["groupId"] = 323,
 		["hidden"] = false,
 		["units"] = 
 		{
@@ -16087,11 +16087,11 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "Tigr_233036",
-				["unitId"] = 326,
-				["y"] = 306991.33844617,
-				["x"] = 36455.435715355,
-				["name"] = "Unit #033",
-				["heading"] = 2.8333339754249,
+				["unitId"] = 3127,
+				["y"] = 427622.79355021,
+				["x"] = 13792.384414609,
+				["name"] = "CONVOY_light-1-1",
+				["heading"] = 1.8849555921539,
 				["playerCanDrive"] = false,
 				["wagons"] = 
 				{
@@ -16102,10 +16102,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "BTR-80",
-				["unitId"] = 327,
-				["y"] = 306962.75232017,
-				["x"] = 36464.537000937,
-				["name"] = "Unit #034",
+				["unitId"] = 3128,
+				["y"] = 427626.31175636,
+				["x"] = 13800.112737528,
+				["name"] = "CONVOY_light-1-2",
 				["heading"] = 1.8790433242373,
 				["playerCanDrive"] = false,
 			}, -- end of [2]
@@ -16114,10 +16114,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "BTR-80",
-				["unitId"] = 328,
-				["y"] = 306934.16599896,
-				["x"] = 36473.637673398,
-				["name"] = "Unit #035",
+				["unitId"] = 3129,
+				["y"] = 427629.89876323,
+				["x"] = 13807.286751269,
+				["name"] = "CONVOY_light-1-3",
 				["heading"] = 1.8790149274913,
 				["playerCanDrive"] = false,
 			}, -- end of [3]
@@ -16126,10 +16126,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "Ural-375 ZU-23",
-				["unitId"] = 329,
-				["y"] = 306905.57963757,
-				["x"] = 36482.738219676,
-				["name"] = "Unit #036",
+				["unitId"] = 3130,
+				["y"] = 427632.96159248,
+				["x"] = 13815.434763184,
+				["name"] = "CONVOY_light-1-4",
 				["heading"] = 1.8790045696829,
 				["playerCanDrive"] = false,
 			}, -- end of [4]
@@ -16138,10 +16138,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "Ural-375 PBU",
-				["unitId"] = 330,
-				["y"] = 306876.99344612,
-				["x"] = 36491.839299659,
-				["name"] = "Unit #079",
+				["unitId"] = 3131,
+				["y"] = 427607.96625072,
+				["x"] = 13796.5513766,
+				["name"] = "CONVOY_light-1-5",
 				["heading"] = 1.8790140394514,
 				["playerCanDrive"] = false,
 			}, -- end of [5]
@@ -16150,10 +16150,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "Tigr_233036",
-				["unitId"] = 331,
-				["y"] = 306848.40800062,
-				["x"] = 36500.942721509,
-				["name"] = "Unit #080",
+				["unitId"] = 3132,
+				["y"] = 427612.49231782,
+				["x"] = 13804.369128866,
+				["name"] = "CONVOY_light-1-6",
 				["heading"] = 1.8790787459442,
 				["playerCanDrive"] = false,
 			}, -- end of [6]
@@ -16162,10 +16162,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "KAMAZ Truck",
-				["unitId"] = 332,
-				["y"] = 306819.82419292,
-				["x"] = 36510.051281374,
-				["name"] = "Unit #081",
+				["unitId"] = 3133,
+				["y"] = 427615.21163357,
+				["x"] = 13812.799293817,
+				["name"] = "CONVOY_light-1-7",
 				["heading"] = 1.8792307204181,
 				["playerCanDrive"] = false,
 			}, -- end of [7]
@@ -16174,10 +16174,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "Ural-375 ZU-23",
-				["unitId"] = 333,
-				["y"] = 306791.24378837,
-				["x"] = 36519.170500361,
-				["name"] = "Unit #083",
+				["unitId"] = 3134,
+				["y"] = 427617.34538382,
+				["x"] = 13820.600818143,
+				["name"] = "CONVOY_light-1-8",
 				["heading"] = 1.8795438987433,
 				["playerCanDrive"] = false,
 			}, -- end of [8]
@@ -16186,10 +16186,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "KAMAZ Truck",
-				["unitId"] = 334,
-				["y"] = 306762.66880464,
-				["x"] = 36528.306677043,
-				["name"] = "Unit #084",
+				["unitId"] = 3135,
+				["y"] = 427594.59377974,
+				["x"] = 13800.871713379,
+				["name"] = "CONVOY_light-1-9",
 				["heading"] = 1.8801155465484,
 				["playerCanDrive"] = false,
 			}, -- end of [9]
@@ -16198,10 +16198,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "KAMAZ Truck",
-				["unitId"] = 335,
-				["y"] = 306734.09679001,
-				["x"] = 36537.452161264,
-				["name"] = "Unit #085",
+				["unitId"] = 3136,
+				["y"] = 427598.40835041,
+				["x"] = 13809.598668452,
+				["name"] = "CONVOY_light-1-10",
 				["heading"] = 1.8805447152192,
 				["playerCanDrive"] = false,
 			}, -- end of [10]
@@ -16210,10 +16210,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "KAMAZ Truck",
-				["unitId"] = 336,
-				["y"] = 306705.52412294,
-				["x"] = 36546.595611428,
-				["name"] = "Unit #086",
+				["unitId"] = 3137,
+				["y"] = 427602.14241334,
+				["x"] = 13817.600231864,
+				["name"] = "CONVOY_light-1-11",
 				["heading"] = 1.8805410215421,
 				["playerCanDrive"] = false,
 			}, -- end of [11]
@@ -16222,10 +16222,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "Ural-375 ZU-23",
-				["unitId"] = 337,
-				["y"] = 306676.95006854,
-				["x"] = 36555.734724067,
-				["name"] = "Unit #087",
+				["unitId"] = 3138,
+				["y"] = 427604.40952297,
+				["x"] = 13825.601795274,
+				["name"] = "CONVOY_light-1-12",
 				["heading"] = 1.8803837453141,
 				["playerCanDrive"] = false,
 			}, -- end of [12]
@@ -16234,10 +16234,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "SKP-11",
-				["unitId"] = 342,
-				["y"] = 306648.37513627,
-				["x"] = 36564.871092641,
-				["name"] = "Unit #088",
+				["unitId"] = 3139,
+				["y"] = 427582.07182511,
+				["x"] = 13804.397652236,
+				["name"] = "CONVOY_light-1-13",
 				["heading"] = 1.8802767356983,
 				["playerCanDrive"] = false,
 			}, -- end of [13]
@@ -16246,10 +16246,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "Tigr_233036",
-				["unitId"] = 343,
-				["y"] = 306619.79957931,
-				["x"] = 36574.005507597,
-				["name"] = "Unit #089",
+				["unitId"] = 3140,
+				["y"] = 427585.67252865,
+				["x"] = 13812.06581717,
+				["name"] = "CONVOY_light-1-14",
 				["heading"] = 1.8802038056136,
 				["playerCanDrive"] = false,
 			}, -- end of [14]
@@ -16258,10 +16258,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "ZiL-131 APA-80",
-				["unitId"] = 344,
-				["y"] = 306591.22351138,
-				["x"] = 36583.138324052,
-				["name"] = "Unit #090",
+				["unitId"] = 3141,
+				["y"] = 427588.33971645,
+				["x"] = 13821.134255703,
+				["name"] = "CONVOY_light-1-15",
 				["heading"] = 1.8801457366544,
 				["playerCanDrive"] = false,
 			}, -- end of [15]
@@ -16270,10 +16270,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "ZiL-131 APA-80",
-				["unitId"] = 345,
-				["y"] = 306562.64680561,
-				["x"] = 36592.269144119,
-				["name"] = "Unit #091",
+				["unitId"] = 3142,
+				["y"] = 427592.07377938,
+				["x"] = 13829.335858199,
+				["name"] = "CONVOY_light-1-16",
 				["heading"] = 1.8800874621262,
 				["playerCanDrive"] = false,
 			}, -- end of [16]
@@ -16282,10 +16282,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "KAMAZ Truck",
-				["unitId"] = 346,
-				["y"] = 306534.06930442,
-				["x"] = 36601.39747612,
-				["name"] = "Unit #092",
+				["unitId"] = 3143,
+				["y"] = 427569.40268305,
+				["x"] = 13808.198394856,
+				["name"] = "CONVOY_light-1-17",
 				["heading"] = 1.8799869866622,
 				["playerCanDrive"] = false,
 			}, -- end of [17]
@@ -16294,31 +16294,380 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "KAMAZ Truck",
-				["unitId"] = 347,
-				["y"] = 306505.49163701,
-				["x"] = 36610.525286638,
-				["name"] = "Unit #093",
+				["unitId"] = 3186,
+				["y"] = 427578.81880602,
+				["x"] = 13833.309137985,
+				["name"] = "CONVOY_light-1-20",
 				["heading"] = 1.8799607746795,
 				["playerCanDrive"] = false,
 			}, -- end of [18]
 			[19] = 
 			{
+				["skill"] = "Excellent",
+				["coldAtStart"] = false,
+				["type"] = "KAMAZ Truck",
+				["unitId"] = 3144,
+				["y"] = 427572.53662872,
+				["x"] = 13816.666716131,
+				["name"] = "CONVOY_light-1-18",
+				["heading"] = 1.8799607746795,
+				["playerCanDrive"] = false,
+			}, -- end of [19]
+			[20] = 
+			{
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "Osa 9A33 ln",
-				["unitId"] = 348,
-				["y"] = 306476.91389706,
-				["x"] = 36619.652870086,
-				["name"] = "Unit #094",
+				["unitId"] = 3145,
+				["y"] = 427575.00377743,
+				["x"] = 13825.201717104,
+				["name"] = "CONVOY_light-1-19",
 				["heading"] = 1.8799518773351,
 				["playerCanDrive"] = false,
-			}, -- end of [19]
+			}, -- end of [20]
 		}, -- end of ["units"]
-		["y"] = 306991.33844617,
-		["x"] = 36455.435715355,
+		["y"] = 427622.79355021,
+		["x"] = 13792.384414609,
 		["name"] = "CONVOY_light-1",
 		["start_time"] = 0,
-	}, -- end of [CONVOY_light-1]
+	}, -- end of ["CONVOY_light-1"]
+	-- ["CONVOY_light-1"] = {
+	-- 	["category"] = Group.Category.GROUND,
+	-- 	["visible"] = false,
+	-- 	["lateActivation"] = true,
+	-- 	["tasks"] = 
+	-- 	{
+	-- 	}, -- end of ["tasks"]
+	-- 	["uncontrollable"] = false,
+	-- 	["task"] = "Ground Nothing",
+	-- 	["taskSelected"] = true,
+	-- 	["route"] = 
+	-- 	{
+	-- 		["spans"] = 
+	-- 		{
+	-- 			[1] = 
+	-- 			{
+	-- 				[1] = 
+	-- 				{
+	-- 					["y"] = 307002.29266054,
+	-- 					["x"] = 36451.947799565,
+	-- 				}, -- end of [1]
+	-- 				[2] = 
+	-- 				{
+	-- 					["y"] = 307002.29266054,
+	-- 					["x"] = 36451.947799565,
+	-- 				}, -- end of [2]
+	-- 			}, -- end of [1]
+	-- 		}, -- end of ["spans"]
+	-- 		["points"] = 
+	-- 		{
+	-- 			[1] = 
+	-- 			{
+	-- 				["alt"] = 5,
+	-- 				["type"] = "Turning Point",
+	-- 				["ETA"] = 0,
+	-- 				["alt_type"] = "BARO",
+	-- 				["formation_template"] = "",
+	-- 				["y"] = 306991.33844617,
+	-- 				["x"] = 36455.435715355,
+	-- 				["name"] = "",
+	-- 				["ETA_locked"] = true,
+	-- 				["speed"] = 5.5555555555556,
+	-- 				["action"] = "On Road",
+	-- 				["task"] = 
+	-- 				{
+	-- 					["id"] = "ComboTask",
+	-- 					["params"] = 
+	-- 					{
+	-- 						["tasks"] = 
+	-- 						{
+	-- 							[1] = 
+	-- 							{
+	-- 								["number"] = 1,
+	-- 								["auto"] = false,
+	-- 								["id"] = "WrappedAction",
+	-- 								["enabled"] = true,
+	-- 								["params"] = 
+	-- 								{
+	-- 									["action"] = 
+	-- 									{
+	-- 										["id"] = "Option",
+	-- 										["params"] = 
+	-- 										{
+	-- 											["value"] = 0,
+	-- 											["name"] = 0,
+	-- 										}, -- end of ["params"]
+	-- 									}, -- end of ["action"]
+	-- 								}, -- end of ["params"]
+	-- 							}, -- end of [1]
+	-- 							[2] = 
+	-- 							{
+	-- 								["number"] = 2,
+	-- 								["auto"] = false,
+	-- 								["id"] = "WrappedAction",
+	-- 								["enabled"] = true,
+	-- 								["params"] = 
+	-- 								{
+	-- 									["action"] = 
+	-- 									{
+	-- 										["id"] = "Option",
+	-- 										["params"] = 
+	-- 										{
+	-- 											["value"] = 0,
+	-- 											["name"] = 9,
+	-- 										}, -- end of ["params"]
+	-- 									}, -- end of ["action"]
+	-- 								}, -- end of ["params"]
+	-- 							}, -- end of [2]
+	-- 						}, -- end of ["tasks"]
+	-- 					}, -- end of ["params"]
+	-- 				}, -- end of ["task"]
+	-- 				["speed_locked"] = true,
+	-- 			}, -- end of [1]
+	-- 		}, -- end of ["points"]
+	-- 		["routeRelativeTOT"] = true,
+	-- 	}, -- end of ["route"]
+	-- 	["groupId"] = 45,
+	-- 	["hidden"] = false,
+	-- 	["units"] = 
+	-- 	{
+	-- 		[1] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Tigr_233036",
+	-- 			["unitId"] = 326,
+	-- 			["y"] = 306991.33844617,
+	-- 			["x"] = 36455.435715355,
+	-- 			["name"] = "Unit #033",
+	-- 			["heading"] = 2.8333339754249,
+	-- 			["playerCanDrive"] = false,
+	-- 			["wagons"] = 
+	-- 			{
+	-- 			}, -- end of ["wagons"]
+	-- 		}, -- end of [1]
+	-- 		[2] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BTR-80",
+	-- 			["unitId"] = 327,
+	-- 			["y"] = 306962.75232017,
+	-- 			["x"] = 36464.537000937,
+	-- 			["name"] = "Unit #034",
+	-- 			["heading"] = 1.8790433242373,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [2]
+	-- 		[3] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BTR-80",
+	-- 			["unitId"] = 328,
+	-- 			["y"] = 306934.16599896,
+	-- 			["x"] = 36473.637673398,
+	-- 			["name"] = "Unit #035",
+	-- 			["heading"] = 1.8790149274913,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [3]
+	-- 		[4] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Ural-375 ZU-23",
+	-- 			["unitId"] = 329,
+	-- 			["y"] = 306905.57963757,
+	-- 			["x"] = 36482.738219676,
+	-- 			["name"] = "Unit #036",
+	-- 			["heading"] = 1.8790045696829,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [4]
+	-- 		[5] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Ural-375 PBU",
+	-- 			["unitId"] = 330,
+	-- 			["y"] = 306876.99344612,
+	-- 			["x"] = 36491.839299659,
+	-- 			["name"] = "Unit #079",
+	-- 			["heading"] = 1.8790140394514,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [5]
+	-- 		[6] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Tigr_233036",
+	-- 			["unitId"] = 331,
+	-- 			["y"] = 306848.40800062,
+	-- 			["x"] = 36500.942721509,
+	-- 			["name"] = "Unit #080",
+	-- 			["heading"] = 1.8790787459442,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [6]
+	-- 		[7] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "KAMAZ Truck",
+	-- 			["unitId"] = 332,
+	-- 			["y"] = 306819.82419292,
+	-- 			["x"] = 36510.051281374,
+	-- 			["name"] = "Unit #081",
+	-- 			["heading"] = 1.8792307204181,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [7]
+	-- 		[8] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Ural-375 ZU-23",
+	-- 			["unitId"] = 333,
+	-- 			["y"] = 306791.24378837,
+	-- 			["x"] = 36519.170500361,
+	-- 			["name"] = "Unit #083",
+	-- 			["heading"] = 1.8795438987433,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [8]
+	-- 		[9] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "KAMAZ Truck",
+	-- 			["unitId"] = 334,
+	-- 			["y"] = 306762.66880464,
+	-- 			["x"] = 36528.306677043,
+	-- 			["name"] = "Unit #084",
+	-- 			["heading"] = 1.8801155465484,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [9]
+	-- 		[10] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "KAMAZ Truck",
+	-- 			["unitId"] = 335,
+	-- 			["y"] = 306734.09679001,
+	-- 			["x"] = 36537.452161264,
+	-- 			["name"] = "Unit #085",
+	-- 			["heading"] = 1.8805447152192,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [10]
+	-- 		[11] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "KAMAZ Truck",
+	-- 			["unitId"] = 336,
+	-- 			["y"] = 306705.52412294,
+	-- 			["x"] = 36546.595611428,
+	-- 			["name"] = "Unit #086",
+	-- 			["heading"] = 1.8805410215421,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [11]
+	-- 		[12] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Ural-375 ZU-23",
+	-- 			["unitId"] = 337,
+	-- 			["y"] = 306676.95006854,
+	-- 			["x"] = 36555.734724067,
+	-- 			["name"] = "Unit #087",
+	-- 			["heading"] = 1.8803837453141,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [12]
+	-- 		[13] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "SKP-11",
+	-- 			["unitId"] = 342,
+	-- 			["y"] = 306648.37513627,
+	-- 			["x"] = 36564.871092641,
+	-- 			["name"] = "Unit #088",
+	-- 			["heading"] = 1.8802767356983,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [13]
+	-- 		[14] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Tigr_233036",
+	-- 			["unitId"] = 343,
+	-- 			["y"] = 306619.79957931,
+	-- 			["x"] = 36574.005507597,
+	-- 			["name"] = "Unit #089",
+	-- 			["heading"] = 1.8802038056136,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [14]
+	-- 		[15] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "ZiL-131 APA-80",
+	-- 			["unitId"] = 344,
+	-- 			["y"] = 306591.22351138,
+	-- 			["x"] = 36583.138324052,
+	-- 			["name"] = "Unit #090",
+	-- 			["heading"] = 1.8801457366544,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [15]
+	-- 		[16] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "ZiL-131 APA-80",
+	-- 			["unitId"] = 345,
+	-- 			["y"] = 306562.64680561,
+	-- 			["x"] = 36592.269144119,
+	-- 			["name"] = "Unit #091",
+	-- 			["heading"] = 1.8800874621262,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [16]
+	-- 		[17] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "KAMAZ Truck",
+	-- 			["unitId"] = 346,
+	-- 			["y"] = 306534.06930442,
+	-- 			["x"] = 36601.39747612,
+	-- 			["name"] = "Unit #092",
+	-- 			["heading"] = 1.8799869866622,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [17]
+	-- 		[18] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "KAMAZ Truck",
+	-- 			["unitId"] = 347,
+	-- 			["y"] = 306505.49163701,
+	-- 			["x"] = 36610.525286638,
+	-- 			["name"] = "Unit #093",
+	-- 			["heading"] = 1.8799607746795,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [18]
+	-- 		[19] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Osa 9A33 ln",
+	-- 			["unitId"] = 348,
+	-- 			["y"] = 306476.91389706,
+	-- 			["x"] = 36619.652870086,
+	-- 			["name"] = "Unit #094",
+	-- 			["heading"] = 1.8799518773351,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [19]
+	-- 	}, -- end of ["units"]
+	-- 	["y"] = 306991.33844617,
+	-- 	["x"] = 36455.435715355,
+	-- 	["name"] = "CONVOY_light-1",
+	-- 	["start_time"] = 0,
+	-- }, -- end of [CONVOY_light-1]
 	["CONVOY_light-2"] = {
 		["category"] = Group.Category.GROUND,
 		["visible"] = false,
@@ -16351,17 +16700,17 @@ SPAWNTEMPLATES.templates = {
 			{
 				[1] = 
 				{
-					["alt"] = 5,
+					["alt"] = 51,
 					["type"] = "Turning Point",
 					["ETA"] = 0,
 					["alt_type"] = "BARO",
 					["formation_template"] = "",
-					["y"] = 306224.7086263,
-					["x"] = 36700.197414657,
+					["y"] = 427651.63035237,
+					["x"] = 13850.757198918,
 					["name"] = "",
 					["ETA_locked"] = true,
 					["speed"] = 5.5555555555556,
-					["action"] = "On Road",
+					["action"] = "Off Road",
 					["task"] = 
 					{
 						["id"] = "ComboTask",
@@ -16415,7 +16764,7 @@ SPAWNTEMPLATES.templates = {
 			}, -- end of ["points"]
 			["routeRelativeTOT"] = true,
 		}, -- end of ["route"]
-		["groupId"] = 71,
+		["groupId"] = 321,
 		["hidden"] = false,
 		["units"] = 
 		{
@@ -16424,11 +16773,11 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "Tigr_233036",
-				["unitId"] = 425,
-				["y"] = 306224.7086263,
-				["x"] = 36700.197414657,
-				["name"] = "Unit #160",
-				["heading"] = 2.0846941664357,
+				["unitId"] = 3088,
+				["y"] = 427651.63035237,
+				["x"] = 13850.757198918,
+				["name"] = "CONVOY_light-2-1",
+				["heading"] = 1.8849555921539,
 				["playerCanDrive"] = false,
 				["wagons"] = 
 				{
@@ -16439,10 +16788,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "BTR-80",
-				["unitId"] = 426,
-				["y"] = 306196.72763336,
-				["x"] = 36709.132878916,
-				["name"] = "Unit #161",
+				["unitId"] = 3089,
+				["y"] = 427653.52285025,
+				["x"] = 13855.921158178,
+				["name"] = "CONVOY_light-2-2",
 				["heading"] = 1.879900916109,
 				["playerCanDrive"] = false,
 			}, -- end of [2]
@@ -16451,10 +16800,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "BTR-80",
-				["unitId"] = 427,
-				["y"] = 306168.14944255,
-				["x"] = 36718.259050849,
-				["name"] = "Unit #162",
+				["unitId"] = 3090,
+				["y"] = 427656.79369732,
+				["x"] = 13862.099424868,
+				["name"] = "CONVOY_light-2-3",
 				["heading"] = 1.8799008592043,
 				["playerCanDrive"] = false,
 			}, -- end of [3]
@@ -16463,10 +16812,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "Ural-375 ZU-23",
-				["unitId"] = 428,
-				["y"] = 306139.57125186,
-				["x"] = 36727.385222765,
-				["name"] = "Unit #163",
+				["unitId"] = 3091,
+				["y"] = 427658.61083458,
+				["x"] = 13868.277691558,
+				["name"] = "CONVOY_light-2-4",
 				["heading"] = 1.879900859882,
 				["playerCanDrive"] = false,
 			}, -- end of [4]
@@ -16475,10 +16824,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "Ural-375 PBU",
-				["unitId"] = 429,
-				["y"] = 306110.99306129,
-				["x"] = 36736.511395035,
-				["name"] = "Unit #164",
+				["unitId"] = 3092,
+				["y"] = 427638.25889725,
+				["x"] = 13855.073160789,
+				["name"] = "CONVOY_light-2-5",
 				["heading"] = 1.8799008723394,
 				["playerCanDrive"] = false,
 			}, -- end of [5]
@@ -16487,10 +16836,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "Tigr_233036",
-				["unitId"] = 430,
-				["y"] = 306082.41487089,
-				["x"] = 36745.637568004,
-				["name"] = "Unit #165",
+				["unitId"] = 3093,
+				["y"] = 427641.07041672,
+				["x"] = 13860.432449647,
+				["name"] = "CONVOY_light-2-6",
 				["heading"] = 1.8799008962587,
 				["playerCanDrive"] = false,
 			}, -- end of [6]
@@ -16499,10 +16848,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "Ural-375",
-				["unitId"] = 431,
-				["y"] = 306053.83668082,
-				["x"] = 36754.76374199,
-				["name"] = "Unit #166",
+				["unitId"] = 3094,
+				["y"] = 427643.32549924,
+				["x"] = 13866.719346379,
+				["name"] = "CONVOY_light-2-7",
 				["heading"] = 1.8799009318986,
 				["playerCanDrive"] = false,
 			}, -- end of [7]
@@ -16511,10 +16860,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "Ural-375",
-				["unitId"] = 432,
-				["y"] = 306025.25849108,
-				["x"] = 36763.889917036,
-				["name"] = "Unit #167",
+				["unitId"] = 3095,
+				["y"] = 427645.71725343,
+				["x"] = 13873.142914779,
+				["name"] = "CONVOY_light-2-8",
 				["heading"] = 1.8799009689035,
 				["playerCanDrive"] = false,
 			}, -- end of [8]
@@ -16523,10 +16872,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "Ural-375",
-				["unitId"] = 433,
-				["y"] = 305996.68030161,
-				["x"] = 36773.016092938,
-				["name"] = "Unit #168",
+				["unitId"] = 3096,
+				["y"] = 427626.92489907,
+				["x"] = 13859.065732967,
+				["name"] = "CONVOY_light-2-9",
 				["heading"] = 1.8799009988225,
 				["playerCanDrive"] = false,
 			}, -- end of [9]
@@ -16535,10 +16884,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "Ural-375",
-				["unitId"] = 434,
-				["y"] = 305968.10211242,
-				["x"] = 36782.14226958,
-				["name"] = "Unit #169",
+				["unitId"] = 3097,
+				["y"] = 427629.24831743,
+				["x"] = 13864.737607192,
+				["name"] = "CONVOY_light-2-10",
 				["heading"] = 1.8799010251592,
 				["playerCanDrive"] = false,
 			}, -- end of [10]
@@ -16547,10 +16896,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "Ural-375",
-				["unitId"] = 435,
-				["y"] = 305939.52392328,
-				["x"] = 36791.268446585,
-				["name"] = "Unit #170",
+				["unitId"] = 3098,
+				["y"] = 427631.77674329,
+				["x"] = 13871.092839757,
+				["name"] = "CONVOY_light-2-11",
 				["heading"] = 1.8799010371935,
 				["playerCanDrive"] = false,
 			}, -- end of [11]
@@ -16559,10 +16908,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "Ural-375 ZU-23",
-				["unitId"] = 436,
-				["y"] = 305910.94573413,
-				["x"] = 36800.39462353,
-				["name"] = "Unit #171",
+				["unitId"] = 3099,
+				["y"] = 427634.51017665,
+				["x"] = 13877.516408157,
+				["name"] = "CONVOY_light-2-12",
 				["heading"] = 1.879901035186,
 				["playerCanDrive"] = false,
 			}, -- end of [12]
@@ -16571,10 +16920,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "ZIL-131 KUNG",
-				["unitId"] = 437,
-				["y"] = 305882.36754484,
-				["x"] = 36809.520800007,
-				["name"] = "Unit #172",
+				["unitId"] = 3100,
+				["y"] = 427616.26450896,
+				["x"] = 13862.482524669,
+				["name"] = "CONVOY_light-2-13",
 				["heading"] = 1.8799010189057,
 				["playerCanDrive"] = false,
 			}, -- end of [13]
@@ -16583,10 +16932,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "Tigr_233036",
-				["unitId"] = 438,
-				["y"] = 305853.78935446,
-				["x"] = 36818.646973079,
-				["name"] = "Unit #173",
+				["unitId"] = 3101,
+				["y"] = 427619.06627815,
+				["x"] = 13868.154398894,
+				["name"] = "CONVOY_light-2-14",
 				["heading"] = 1.8799008997323,
 				["playerCanDrive"] = false,
 			}, -- end of [14]
@@ -16595,10 +16944,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "ZiL-131 APA-80",
-				["unitId"] = 439,
-				["y"] = 305825.2111515,
-				["x"] = 36827.773106733,
-				["name"] = "Unit #174",
+				["unitId"] = 3102,
+				["y"] = 427621.86804735,
+				["x"] = 13874.714638961,
+				["name"] = "CONVOY_light-2-15",
 				["heading"] = 1.879899520508,
 				["playerCanDrive"] = false,
 			}, -- end of [15]
@@ -16607,10 +16956,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "ZiL-131 APA-80",
-				["unitId"] = 440,
-				["y"] = 305796.63290686,
-				["x"] = 36836.89910986,
-				["name"] = "Unit #175",
+				["unitId"] = 3103,
+				["y"] = 427624.87482405,
+				["x"] = 13881.274879029,
+				["name"] = "CONVOY_light-2-16",
 				["heading"] = 1.8798949531691,
 				["playerCanDrive"] = false,
 			}, -- end of [16]
@@ -16619,10 +16968,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "GAZ-66",
-				["unitId"] = 441,
-				["y"] = 305768.05459097,
-				["x"] = 36846.024890129,
-				["name"] = "Unit #176",
+				["unitId"] = 3104,
+				["y"] = 427605.33077551,
+				["x"] = 13866.172659707,
+				["name"] = "CONVOY_light-2-17",
 				["heading"] = 1.8798871541494,
 				["playerCanDrive"] = false,
 			}, -- end of [17]
@@ -16631,31 +16980,380 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "GAZ-66",
-				["unitId"] = 442,
-				["y"] = 305739.47617453,
-				["x"] = 36855.150355254,
-				["name"] = "Unit #177",
+				["unitId"] = 3187,
+				["y"] = 427613.15856542,
+				["x"] = 13884.409797101,
+				["name"] = "CONVOY_light-2-20",
 				["heading"] = 1.8798761276137,
 				["playerCanDrive"] = false,
 			}, -- end of [18]
 			[19] = 
 			{
+				["skill"] = "Excellent",
+				["coldAtStart"] = false,
+				["type"] = "GAZ-66",
+				["unitId"] = 3105,
+				["y"] = 427610.9343139,
+				["x"] = 13877.994758995,
+				["name"] = "CONVOY_light-2-18",
+				["heading"] = 1.8798761276137,
+				["playerCanDrive"] = false,
+			}, -- end of [19]
+			[20] = 
+			{
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "Osa 9A33 ln",
-				["unitId"] = 443,
-				["y"] = 305710.89762808,
-				["x"] = 36864.27541319,
-				["name"] = "Unit #178",
+				["unitId"] = 3106,
+				["y"] = 427608.20088054,
+				["x"] = 13871.9812056,
+				["name"] = "CONVOY_light-2-19",
 				["heading"] = 1.8798618795929,
 				["playerCanDrive"] = false,
-			}, -- end of [19]
+			}, -- end of [20]
 		}, -- end of ["units"]
-		["y"] = 306224.7086263,
-		["x"] = 36700.197414657,
+		["y"] = 427651.63035237,
+		["x"] = 13850.757198918,
 		["name"] = "CONVOY_light-2",
 		["start_time"] = 0,
-	}, -- end of [CONVOY_light-2]
+	}, -- end of ["CONVOY_light-2"]
+	-- ["CONVOY_light-2"] = {
+	-- 	["category"] = Group.Category.GROUND,
+	-- 	["visible"] = false,
+	-- 	["lateActivation"] = true,
+	-- 	["tasks"] = 
+	-- 	{
+	-- 	}, -- end of ["tasks"]
+	-- 	["uncontrollable"] = false,
+	-- 	["task"] = "Ground Nothing",
+	-- 	["taskSelected"] = true,
+	-- 	["route"] = 
+	-- 	{
+	-- 		["spans"] = 
+	-- 		{
+	-- 			[1] = 
+	-- 			{
+	-- 				[1] = 
+	-- 				{
+	-- 					["y"] = 306224.70862636,
+	-- 					["x"] = 36700.197414639,
+	-- 				}, -- end of [1]
+	-- 				[2] = 
+	-- 				{
+	-- 					["y"] = 306224.70862636,
+	-- 					["x"] = 36700.197414639,
+	-- 				}, -- end of [2]
+	-- 			}, -- end of [1]
+	-- 		}, -- end of ["spans"]
+	-- 		["points"] = 
+	-- 		{
+	-- 			[1] = 
+	-- 			{
+	-- 				["alt"] = 5,
+	-- 				["type"] = "Turning Point",
+	-- 				["ETA"] = 0,
+	-- 				["alt_type"] = "BARO",
+	-- 				["formation_template"] = "",
+	-- 				["y"] = 306224.7086263,
+	-- 				["x"] = 36700.197414657,
+	-- 				["name"] = "",
+	-- 				["ETA_locked"] = true,
+	-- 				["speed"] = 5.5555555555556,
+	-- 				["action"] = "On Road",
+	-- 				["task"] = 
+	-- 				{
+	-- 					["id"] = "ComboTask",
+	-- 					["params"] = 
+	-- 					{
+	-- 						["tasks"] = 
+	-- 						{
+	-- 							[1] = 
+	-- 							{
+	-- 								["number"] = 1,
+	-- 								["auto"] = false,
+	-- 								["id"] = "WrappedAction",
+	-- 								["enabled"] = true,
+	-- 								["params"] = 
+	-- 								{
+	-- 									["action"] = 
+	-- 									{
+	-- 										["id"] = "Option",
+	-- 										["params"] = 
+	-- 										{
+	-- 											["value"] = 0,
+	-- 											["name"] = 0,
+	-- 										}, -- end of ["params"]
+	-- 									}, -- end of ["action"]
+	-- 								}, -- end of ["params"]
+	-- 							}, -- end of [1]
+	-- 							[2] = 
+	-- 							{
+	-- 								["number"] = 2,
+	-- 								["auto"] = false,
+	-- 								["id"] = "WrappedAction",
+	-- 								["enabled"] = true,
+	-- 								["params"] = 
+	-- 								{
+	-- 									["action"] = 
+	-- 									{
+	-- 										["id"] = "Option",
+	-- 										["params"] = 
+	-- 										{
+	-- 											["value"] = 0,
+	-- 											["name"] = 9,
+	-- 										}, -- end of ["params"]
+	-- 									}, -- end of ["action"]
+	-- 								}, -- end of ["params"]
+	-- 							}, -- end of [2]
+	-- 						}, -- end of ["tasks"]
+	-- 					}, -- end of ["params"]
+	-- 				}, -- end of ["task"]
+	-- 				["speed_locked"] = true,
+	-- 			}, -- end of [1]
+	-- 		}, -- end of ["points"]
+	-- 		["routeRelativeTOT"] = true,
+	-- 	}, -- end of ["route"]
+	-- 	["groupId"] = 71,
+	-- 	["hidden"] = false,
+	-- 	["units"] = 
+	-- 	{
+	-- 		[1] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Tigr_233036",
+	-- 			["unitId"] = 425,
+	-- 			["y"] = 306224.7086263,
+	-- 			["x"] = 36700.197414657,
+	-- 			["name"] = "Unit #160",
+	-- 			["heading"] = 2.0846941664357,
+	-- 			["playerCanDrive"] = false,
+	-- 			["wagons"] = 
+	-- 			{
+	-- 			}, -- end of ["wagons"]
+	-- 		}, -- end of [1]
+	-- 		[2] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BTR-80",
+	-- 			["unitId"] = 426,
+	-- 			["y"] = 306196.72763336,
+	-- 			["x"] = 36709.132878916,
+	-- 			["name"] = "Unit #161",
+	-- 			["heading"] = 1.879900916109,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [2]
+	-- 		[3] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BTR-80",
+	-- 			["unitId"] = 427,
+	-- 			["y"] = 306168.14944255,
+	-- 			["x"] = 36718.259050849,
+	-- 			["name"] = "Unit #162",
+	-- 			["heading"] = 1.8799008592043,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [3]
+	-- 		[4] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Ural-375 ZU-23",
+	-- 			["unitId"] = 428,
+	-- 			["y"] = 306139.57125186,
+	-- 			["x"] = 36727.385222765,
+	-- 			["name"] = "Unit #163",
+	-- 			["heading"] = 1.879900859882,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [4]
+	-- 		[5] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Ural-375 PBU",
+	-- 			["unitId"] = 429,
+	-- 			["y"] = 306110.99306129,
+	-- 			["x"] = 36736.511395035,
+	-- 			["name"] = "Unit #164",
+	-- 			["heading"] = 1.8799008723394,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [5]
+	-- 		[6] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Tigr_233036",
+	-- 			["unitId"] = 430,
+	-- 			["y"] = 306082.41487089,
+	-- 			["x"] = 36745.637568004,
+	-- 			["name"] = "Unit #165",
+	-- 			["heading"] = 1.8799008962587,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [6]
+	-- 		[7] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Ural-375",
+	-- 			["unitId"] = 431,
+	-- 			["y"] = 306053.83668082,
+	-- 			["x"] = 36754.76374199,
+	-- 			["name"] = "Unit #166",
+	-- 			["heading"] = 1.8799009318986,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [7]
+	-- 		[8] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Ural-375",
+	-- 			["unitId"] = 432,
+	-- 			["y"] = 306025.25849108,
+	-- 			["x"] = 36763.889917036,
+	-- 			["name"] = "Unit #167",
+	-- 			["heading"] = 1.8799009689035,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [8]
+	-- 		[9] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Ural-375",
+	-- 			["unitId"] = 433,
+	-- 			["y"] = 305996.68030161,
+	-- 			["x"] = 36773.016092938,
+	-- 			["name"] = "Unit #168",
+	-- 			["heading"] = 1.8799009988225,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [9]
+	-- 		[10] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Ural-375",
+	-- 			["unitId"] = 434,
+	-- 			["y"] = 305968.10211242,
+	-- 			["x"] = 36782.14226958,
+	-- 			["name"] = "Unit #169",
+	-- 			["heading"] = 1.8799010251592,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [10]
+	-- 		[11] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Ural-375",
+	-- 			["unitId"] = 435,
+	-- 			["y"] = 305939.52392328,
+	-- 			["x"] = 36791.268446585,
+	-- 			["name"] = "Unit #170",
+	-- 			["heading"] = 1.8799010371935,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [11]
+	-- 		[12] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Ural-375 ZU-23",
+	-- 			["unitId"] = 436,
+	-- 			["y"] = 305910.94573413,
+	-- 			["x"] = 36800.39462353,
+	-- 			["name"] = "Unit #171",
+	-- 			["heading"] = 1.879901035186,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [12]
+	-- 		[13] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "ZIL-131 KUNG",
+	-- 			["unitId"] = 437,
+	-- 			["y"] = 305882.36754484,
+	-- 			["x"] = 36809.520800007,
+	-- 			["name"] = "Unit #172",
+	-- 			["heading"] = 1.8799010189057,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [13]
+	-- 		[14] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Tigr_233036",
+	-- 			["unitId"] = 438,
+	-- 			["y"] = 305853.78935446,
+	-- 			["x"] = 36818.646973079,
+	-- 			["name"] = "Unit #173",
+	-- 			["heading"] = 1.8799008997323,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [14]
+	-- 		[15] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "ZiL-131 APA-80",
+	-- 			["unitId"] = 439,
+	-- 			["y"] = 305825.2111515,
+	-- 			["x"] = 36827.773106733,
+	-- 			["name"] = "Unit #174",
+	-- 			["heading"] = 1.879899520508,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [15]
+	-- 		[16] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "ZiL-131 APA-80",
+	-- 			["unitId"] = 440,
+	-- 			["y"] = 305796.63290686,
+	-- 			["x"] = 36836.89910986,
+	-- 			["name"] = "Unit #175",
+	-- 			["heading"] = 1.8798949531691,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [16]
+	-- 		[17] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "GAZ-66",
+	-- 			["unitId"] = 441,
+	-- 			["y"] = 305768.05459097,
+	-- 			["x"] = 36846.024890129,
+	-- 			["name"] = "Unit #176",
+	-- 			["heading"] = 1.8798871541494,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [17]
+	-- 		[18] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "GAZ-66",
+	-- 			["unitId"] = 442,
+	-- 			["y"] = 305739.47617453,
+	-- 			["x"] = 36855.150355254,
+	-- 			["name"] = "Unit #177",
+	-- 			["heading"] = 1.8798761276137,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [18]
+	-- 		[19] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Osa 9A33 ln",
+	-- 			["unitId"] = 443,
+	-- 			["y"] = 305710.89762808,
+	-- 			["x"] = 36864.27541319,
+	-- 			["name"] = "Unit #178",
+	-- 			["heading"] = 1.8798618795929,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [19]
+	-- 	}, -- end of ["units"]
+	-- 	["y"] = 306224.7086263,
+	-- 	["x"] = 36700.197414657,
+	-- 	["name"] = "CONVOY_light-2",
+	-- 	["start_time"] = 0,
+	-- }, -- end of [CONVOY_light-2]
 	["CONVOY_heavy-1"] = {
 		["category"] = Group.Category.GROUND,
 		["visible"] = false,
@@ -16688,17 +17386,17 @@ SPAWNTEMPLATES.templates = {
 			{
 				[1] = 
 				{
-					["alt"] = 20,
+					["alt"] = 52,
 					["type"] = "Turning Point",
 					["ETA"] = 0,
 					["alt_type"] = "BARO",
 					["formation_template"] = "",
-					["y"] = 302474.66874609,
-					["x"] = 37949.084862931,
+					["y"] = 427585.19682356,
+					["x"] = 13671.643558776,
 					["name"] = "",
 					["ETA_locked"] = true,
 					["speed"] = 9.25,
-					["action"] = "On Road",
+					["action"] = "Off Road",
 					["task"] = 
 					{
 						["id"] = "ComboTask",
@@ -16752,7 +17450,7 @@ SPAWNTEMPLATES.templates = {
 			}, -- end of ["points"]
 			["routeRelativeTOT"] = true,
 		}, -- end of ["route"]
-		["groupId"] = 44,
+		["groupId"] = 322,
 		["hidden"] = false,
 		["units"] = 
 		{
@@ -16761,11 +17459,11 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "Tigr_233036",
-				["unitId"] = 306,
-				["y"] = 302474.66874609,
-				["x"] = 37949.084862931,
-				["name"] = "Unit #001",
-				["heading"] = 2.8167434240319,
+				["unitId"] = 3107,
+				["y"] = 427585.19682356,
+				["x"] = 13671.643558776,
+				["name"] = "CONVOY_heavy-1-1",
+				["heading"] = 1.850049007114,
 				["playerCanDrive"] = true,
 			}, -- end of [1]
 			[2] = 
@@ -16773,10 +17471,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "BMP-2",
-				["unitId"] = 307,
-				["y"] = 302446.2306552,
-				["x"] = 37958.638576264,
-				["name"] = "Unit #002",
+				["unitId"] = 3108,
+				["y"] = 427543.20068003,
+				["x"] = 13707.91421832,
+				["name"] = "CONVOY_heavy-1-2",
 				["heading"] = 1.8791409262917,
 				["playerCanDrive"] = true,
 			}, -- end of [2]
@@ -16785,10 +17483,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "BMP-2",
-				["unitId"] = 308,
-				["y"] = 302417.77983982,
-				["x"] = 37968.154265693,
-				["name"] = "Unit #003",
+				["unitId"] = 3109,
+				["y"] = 427587.45327674,
+				["x"] = 13677.959587648,
+				["name"] = "CONVOY_heavy-1-3",
 				["heading"] = 1.8791601648452,
 				["playerCanDrive"] = true,
 			}, -- end of [3]
@@ -16797,10 +17495,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "BMP-2",
-				["unitId"] = 309,
-				["y"] = 302389.32114534,
-				["x"] = 37977.64645492,
-				["name"] = "Unit #004",
+				["unitId"] = 3110,
+				["y"] = 427590.43800042,
+				["x"] = 13685.028670051,
+				["name"] = "CONVOY_heavy-1-4",
 				["heading"] = 1.8792199564999,
 				["playerCanDrive"] = true,
 			}, -- end of [4]
@@ -16809,10 +17507,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Average",
 				["coldAtStart"] = false,
 				["type"] = "BMP-2",
-				["unitId"] = 310,
-				["y"] = 302360.85771163,
-				["x"] = 37987.124459484,
-				["name"] = "Unit #005",
+				["unitId"] = 3111,
+				["y"] = 427593.89399626,
+				["x"] = 13691.312298852,
+				["name"] = "CONVOY_heavy-1-5",
 				["heading"] = 1.8792993044879,
 				["playerCanDrive"] = true,
 			}, -- end of [5]
@@ -16821,10 +17519,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Average",
 				["coldAtStart"] = false,
 				["type"] = "Ural-375 ZU-23",
-				["unitId"] = 311,
-				["y"] = 302332.3918371,
-				["x"] = 37996.595145932,
-				["name"] = "Unit #006",
+				["unitId"] = 3112,
+				["y"] = 427571.27293257,
+				["x"] = 13675.760317568,
+				["name"] = "CONVOY_heavy-1-6",
 				["heading"] = 1.8793461925752,
 				["playerCanDrive"] = true,
 			}, -- end of [6]
@@ -16833,10 +17531,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Average",
 				["coldAtStart"] = false,
 				["type"] = "BMP-2",
-				["unitId"] = 312,
-				["y"] = 302303.92538172,
-				["x"] = 38006.064090677,
-				["name"] = "Unit #007",
+				["unitId"] = 3113,
+				["y"] = 427573.94347482,
+				["x"] = 13681.88685565,
+				["name"] = "CONVOY_heavy-1-7",
 				["heading"] = 1.8793518558872,
 				["playerCanDrive"] = true,
 			}, -- end of [7]
@@ -16845,10 +17543,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Average",
 				["coldAtStart"] = false,
 				["type"] = "BMP-2",
-				["unitId"] = 313,
-				["y"] = 302275.45890848,
-				["x"] = 38015.532981929,
-				["name"] = "Unit #008",
+				["unitId"] = 3114,
+				["y"] = 427576.62903289,
+				["x"] = 13689.139390002,
+				["name"] = "CONVOY_heavy-1-8",
 				["heading"] = 1.8792989748675,
 				["playerCanDrive"] = true,
 			}, -- end of [8]
@@ -16857,10 +17555,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "BMP-2",
-				["unitId"] = 314,
-				["y"] = 302246.99243469,
-				["x"] = 38025.001873676,
-				["name"] = "Unit #009",
+				["unitId"] = 3115,
+				["y"] = 427579.65132233,
+				["x"] = 13695.733476045,
+				["name"] = "CONVOY_heavy-1-9",
 				["heading"] = 1.8791699310651,
 				["playerCanDrive"] = false,
 			}, -- end of [9]
@@ -16869,10 +17567,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Average",
 				["coldAtStart"] = false,
 				["type"] = "BMP-2",
-				["unitId"] = 315,
-				["y"] = 302218.52596171,
-				["x"] = 38034.470765722,
-				["name"] = "Unit #018",
+				["unitId"] = 3116,
+				["y"] = 427558.77004986,
+				["x"] = 13680.347275277,
+				["name"] = "CONVOY_heavy-1-10",
 				["heading"] = 1.8790240909102,
 				["playerCanDrive"] = true,
 			}, -- end of [10]
@@ -16881,10 +17579,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Average",
 				["coldAtStart"] = false,
 				["type"] = "Osa 9A33 ln",
-				["unitId"] = 316,
-				["y"] = 302190.05948895,
-				["x"] = 38043.93965839,
-				["name"] = "Unit #019",
+				["unitId"] = 3117,
+				["y"] = 427561.24283212,
+				["x"] = 13686.39185415,
+				["name"] = "CONVOY_heavy-1-11",
 				["heading"] = 1.878900414256,
 				["playerCanDrive"] = true,
 			}, -- end of [11]
@@ -16893,10 +17591,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Average",
 				["coldAtStart"] = false,
 				["type"] = "BTR_D",
-				["unitId"] = 317,
-				["y"] = 302161.59301643,
-				["x"] = 38053.408551812,
-				["name"] = "Unit #020",
+				["unitId"] = 3118,
+				["y"] = 427564.44829062,
+				["x"] = 13693.16910925,
+				["name"] = "CONVOY_heavy-1-12",
 				["heading"] = 1.8788157653291,
 				["playerCanDrive"] = true,
 			}, -- end of [12]
@@ -16905,10 +17603,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Average",
 				["coldAtStart"] = false,
 				["type"] = "BTR_D",
-				["unitId"] = 318,
-				["y"] = 302133.12654527,
-				["x"] = 38062.877449289,
-				["name"] = "Unit #021",
+				["unitId"] = 3119,
+				["y"] = 427567.28741099,
+				["x"] = 13699.854779822,
+				["name"] = "CONVOY_heavy-1-13",
 				["heading"] = 1.8787606099854,
 				["playerCanDrive"] = true,
 			}, -- end of [13]
@@ -16917,10 +17615,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "BTR_D",
-				["unitId"] = 319,
-				["y"] = 302104.66007372,
-				["x"] = 38072.346345632,
-				["name"] = "Unit #022",
+				["unitId"] = 3120,
+				["y"] = 427546.77247664,
+				["x"] = 13684.926501696,
+				["name"] = "CONVOY_heavy-1-14",
 				["heading"] = 1.8787212155447,
 				["playerCanDrive"] = true,
 			}, -- end of [14]
@@ -16929,10 +17627,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "BTR-80",
-				["unitId"] = 320,
-				["y"] = 302076.19360245,
-				["x"] = 38081.815242795,
-				["name"] = "Unit #023",
+				["unitId"] = 3121,
+				["y"] = 427549.52001249,
+				["x"] = 13690.971080569,
+				["name"] = "CONVOY_heavy-1-15",
 				["heading"] = 1.878691365128,
 				["playerCanDrive"] = true,
 			}, -- end of [15]
@@ -16941,10 +17639,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "Ural-375 ZU-23",
-				["unitId"] = 321,
-				["y"] = 302047.72713132,
-				["x"] = 38091.284140392,
-				["name"] = "Unit #024",
+				["unitId"] = 3122,
+				["y"] = 427552.26754834,
+				["x"] = 13697.381997556,
+				["name"] = "CONVOY_heavy-1-16",
 				["heading"] = 1.8786679717346,
 				["playerCanDrive"] = true,
 			}, -- end of [16]
@@ -16953,10 +17651,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "BTR-80",
-				["unitId"] = 322,
-				["y"] = 302019.26066022,
-				["x"] = 38100.753038035,
-				["name"] = "Unit #025",
+				["unitId"] = 3123,
+				["y"] = 427555.28983778,
+				["x"] = 13703.792914542,
+				["name"] = "CONVOY_heavy-1-17",
 				["heading"] = 1.8786490585146,
 				["playerCanDrive"] = true,
 			}, -- end of [17]
@@ -16965,10 +17663,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "Ural-375",
-				["unitId"] = 323,
-				["y"] = 301990.794189,
-				["x"] = 38110.22193534,
-				["name"] = "Unit #026",
+				["unitId"] = 3124,
+				["y"] = 427534.13381172,
+				["x"] = 13689.139390002,
+				["name"] = "CONVOY_heavy-1-18",
 				["heading"] = 1.8786338426242,
 				["playerCanDrive"] = false,
 			}, -- end of [18]
@@ -16977,10 +17675,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "Ural-375",
-				["unitId"] = 324,
-				["y"] = 301962.32771754,
-				["x"] = 38119.69083192,
-				["name"] = "Unit #027",
+				["unitId"] = 3125,
+				["y"] = 427537.15610116,
+				["x"] = 13695.550306988,
+				["name"] = "CONVOY_heavy-1-19",
 				["heading"] = 1.8786213481253,
 				["playerCanDrive"] = false,
 			}, -- end of [19]
@@ -16989,19 +17687,365 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "Osa 9A33 ln",
-				["unitId"] = 325,
-				["y"] = 301933.86124555,
-				["x"] = 38129.159726928,
-				["name"] = "Unit #028",
+				["unitId"] = 3126,
+				["y"] = 427540.45314418,
+				["x"] = 13701.503301333,
+				["name"] = "CONVOY_heavy-1-20",
 				["heading"] = 1.878611069685,
 				["playerCanDrive"] = true,
 			}, -- end of [20]
 		}, -- end of ["units"]
-		["y"] = 302474.66874609,
-		["x"] = 37949.084862931,
+		["y"] = 427585.19682356,
+		["x"] = 13671.643558776,
 		["name"] = "CONVOY_heavy-1",
 		["start_time"] = 0,
-	}, -- end of [CONVOY_heavy-1]
+	}, -- end of ["CONVOY_heavy-1"]
+	-- ["CONVOY_heavy-1"] = {
+	-- 	["category"] = Group.Category.GROUND,
+	-- 	["visible"] = false,
+	-- 	["lateActivation"] = true,
+	-- 	["tasks"] = 
+	-- 	{
+	-- 	}, -- end of ["tasks"]
+	-- 	["uncontrollable"] = false,
+	-- 	["task"] = "Ground Nothing",
+	-- 	["taskSelected"] = true,
+	-- 	["route"] = 
+	-- 	{
+	-- 		["spans"] = 
+	-- 		{
+	-- 			[1] = 
+	-- 			{
+	-- 				[1] = 
+	-- 				{
+	-- 					["y"] = 305424.62758347,
+	-- 					["x"] = 36955.598089493,
+	-- 				}, -- end of [1]
+	-- 				[2] = 
+	-- 				{
+	-- 					["y"] = 305424.62758347,
+	-- 					["x"] = 36955.598089493,
+	-- 				}, -- end of [2]
+	-- 			}, -- end of [1]
+	-- 		}, -- end of ["spans"]
+	-- 		["points"] = 
+	-- 		{
+	-- 			[1] = 
+	-- 			{
+	-- 				["alt"] = 20,
+	-- 				["type"] = "Turning Point",
+	-- 				["ETA"] = 0,
+	-- 				["alt_type"] = "BARO",
+	-- 				["formation_template"] = "",
+	-- 				["y"] = 302474.66874609,
+	-- 				["x"] = 37949.084862931,
+	-- 				["name"] = "",
+	-- 				["ETA_locked"] = true,
+	-- 				["speed"] = 9.25,
+	-- 				["action"] = "On Road",
+	-- 				["task"] = 
+	-- 				{
+	-- 					["id"] = "ComboTask",
+	-- 					["params"] = 
+	-- 					{
+	-- 						["tasks"] = 
+	-- 						{
+	-- 							[1] = 
+	-- 							{
+	-- 								["number"] = 1,
+	-- 								["auto"] = false,
+	-- 								["id"] = "WrappedAction",
+	-- 								["enabled"] = true,
+	-- 								["params"] = 
+	-- 								{
+	-- 									["action"] = 
+	-- 									{
+	-- 										["id"] = "Option",
+	-- 										["params"] = 
+	-- 										{
+	-- 											["value"] = 0,
+	-- 											["name"] = 0,
+	-- 										}, -- end of ["params"]
+	-- 									}, -- end of ["action"]
+	-- 								}, -- end of ["params"]
+	-- 							}, -- end of [1]
+	-- 							[2] = 
+	-- 							{
+	-- 								["number"] = 2,
+	-- 								["auto"] = false,
+	-- 								["id"] = "WrappedAction",
+	-- 								["enabled"] = true,
+	-- 								["params"] = 
+	-- 								{
+	-- 									["action"] = 
+	-- 									{
+	-- 										["id"] = "Option",
+	-- 										["params"] = 
+	-- 										{
+	-- 											["value"] = 0,
+	-- 											["name"] = 9,
+	-- 										}, -- end of ["params"]
+	-- 									}, -- end of ["action"]
+	-- 								}, -- end of ["params"]
+	-- 							}, -- end of [2]
+	-- 						}, -- end of ["tasks"]
+	-- 					}, -- end of ["params"]
+	-- 				}, -- end of ["task"]
+	-- 				["speed_locked"] = true,
+	-- 			}, -- end of [1]
+	-- 		}, -- end of ["points"]
+	-- 		["routeRelativeTOT"] = true,
+	-- 	}, -- end of ["route"]
+	-- 	["groupId"] = 44,
+	-- 	["hidden"] = false,
+	-- 	["units"] = 
+	-- 	{
+	-- 		[1] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Tigr_233036",
+	-- 			["unitId"] = 306,
+	-- 			["y"] = 302474.66874609,
+	-- 			["x"] = 37949.084862931,
+	-- 			["name"] = "Unit #001",
+	-- 			["heading"] = 2.8167434240319,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [1]
+	-- 		[2] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BMP-2",
+	-- 			["unitId"] = 307,
+	-- 			["y"] = 302446.2306552,
+	-- 			["x"] = 37958.638576264,
+	-- 			["name"] = "Unit #002",
+	-- 			["heading"] = 1.8791409262917,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [2]
+	-- 		[3] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BMP-2",
+	-- 			["unitId"] = 308,
+	-- 			["y"] = 302417.77983982,
+	-- 			["x"] = 37968.154265693,
+	-- 			["name"] = "Unit #003",
+	-- 			["heading"] = 1.8791601648452,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [3]
+	-- 		[4] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BMP-2",
+	-- 			["unitId"] = 309,
+	-- 			["y"] = 302389.32114534,
+	-- 			["x"] = 37977.64645492,
+	-- 			["name"] = "Unit #004",
+	-- 			["heading"] = 1.8792199564999,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [4]
+	-- 		[5] = 
+	-- 		{
+	-- 			["skill"] = "Average",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BMP-2",
+	-- 			["unitId"] = 310,
+	-- 			["y"] = 302360.85771163,
+	-- 			["x"] = 37987.124459484,
+	-- 			["name"] = "Unit #005",
+	-- 			["heading"] = 1.8792993044879,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [5]
+	-- 		[6] = 
+	-- 		{
+	-- 			["skill"] = "Average",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Ural-375 ZU-23",
+	-- 			["unitId"] = 311,
+	-- 			["y"] = 302332.3918371,
+	-- 			["x"] = 37996.595145932,
+	-- 			["name"] = "Unit #006",
+	-- 			["heading"] = 1.8793461925752,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [6]
+	-- 		[7] = 
+	-- 		{
+	-- 			["skill"] = "Average",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BMP-2",
+	-- 			["unitId"] = 312,
+	-- 			["y"] = 302303.92538172,
+	-- 			["x"] = 38006.064090677,
+	-- 			["name"] = "Unit #007",
+	-- 			["heading"] = 1.8793518558872,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [7]
+	-- 		[8] = 
+	-- 		{
+	-- 			["skill"] = "Average",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BMP-2",
+	-- 			["unitId"] = 313,
+	-- 			["y"] = 302275.45890848,
+	-- 			["x"] = 38015.532981929,
+	-- 			["name"] = "Unit #008",
+	-- 			["heading"] = 1.8792989748675,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [8]
+	-- 		[9] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BMP-2",
+	-- 			["unitId"] = 314,
+	-- 			["y"] = 302246.99243469,
+	-- 			["x"] = 38025.001873676,
+	-- 			["name"] = "Unit #009",
+	-- 			["heading"] = 1.8791699310651,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [9]
+	-- 		[10] = 
+	-- 		{
+	-- 			["skill"] = "Average",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BMP-2",
+	-- 			["unitId"] = 315,
+	-- 			["y"] = 302218.52596171,
+	-- 			["x"] = 38034.470765722,
+	-- 			["name"] = "Unit #018",
+	-- 			["heading"] = 1.8790240909102,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [10]
+	-- 		[11] = 
+	-- 		{
+	-- 			["skill"] = "Average",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Osa 9A33 ln",
+	-- 			["unitId"] = 316,
+	-- 			["y"] = 302190.05948895,
+	-- 			["x"] = 38043.93965839,
+	-- 			["name"] = "Unit #019",
+	-- 			["heading"] = 1.878900414256,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [11]
+	-- 		[12] = 
+	-- 		{
+	-- 			["skill"] = "Average",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BTR_D",
+	-- 			["unitId"] = 317,
+	-- 			["y"] = 302161.59301643,
+	-- 			["x"] = 38053.408551812,
+	-- 			["name"] = "Unit #020",
+	-- 			["heading"] = 1.8788157653291,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [12]
+	-- 		[13] = 
+	-- 		{
+	-- 			["skill"] = "Average",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BTR_D",
+	-- 			["unitId"] = 318,
+	-- 			["y"] = 302133.12654527,
+	-- 			["x"] = 38062.877449289,
+	-- 			["name"] = "Unit #021",
+	-- 			["heading"] = 1.8787606099854,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [13]
+	-- 		[14] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BTR_D",
+	-- 			["unitId"] = 319,
+	-- 			["y"] = 302104.66007372,
+	-- 			["x"] = 38072.346345632,
+	-- 			["name"] = "Unit #022",
+	-- 			["heading"] = 1.8787212155447,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [14]
+	-- 		[15] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BTR-80",
+	-- 			["unitId"] = 320,
+	-- 			["y"] = 302076.19360245,
+	-- 			["x"] = 38081.815242795,
+	-- 			["name"] = "Unit #023",
+	-- 			["heading"] = 1.878691365128,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [15]
+	-- 		[16] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Ural-375 ZU-23",
+	-- 			["unitId"] = 321,
+	-- 			["y"] = 302047.72713132,
+	-- 			["x"] = 38091.284140392,
+	-- 			["name"] = "Unit #024",
+	-- 			["heading"] = 1.8786679717346,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [16]
+	-- 		[17] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BTR-80",
+	-- 			["unitId"] = 322,
+	-- 			["y"] = 302019.26066022,
+	-- 			["x"] = 38100.753038035,
+	-- 			["name"] = "Unit #025",
+	-- 			["heading"] = 1.8786490585146,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [17]
+	-- 		[18] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Ural-375",
+	-- 			["unitId"] = 323,
+	-- 			["y"] = 301990.794189,
+	-- 			["x"] = 38110.22193534,
+	-- 			["name"] = "Unit #026",
+	-- 			["heading"] = 1.8786338426242,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [18]
+	-- 		[19] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Ural-375",
+	-- 			["unitId"] = 324,
+	-- 			["y"] = 301962.32771754,
+	-- 			["x"] = 38119.69083192,
+	-- 			["name"] = "Unit #027",
+	-- 			["heading"] = 1.8786213481253,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [19]
+	-- 		[20] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Osa 9A33 ln",
+	-- 			["unitId"] = 325,
+	-- 			["y"] = 301933.86124555,
+	-- 			["x"] = 38129.159726928,
+	-- 			["name"] = "Unit #028",
+	-- 			["heading"] = 1.878611069685,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [20]
+	-- 	}, -- end of ["units"]
+	-- 	["y"] = 302474.66874609,
+	-- 	["x"] = 37949.084862931,
+	-- 	["name"] = "CONVOY_heavy-1",
+	-- 	["start_time"] = 0,
+	-- }, -- end of [CONVOY_heavy-1]
 	["CONVOY_heavy-2"] = {
 		["category"] = Group.Category.GROUND,
 		["visible"] = false,
@@ -17034,17 +18078,17 @@ SPAWNTEMPLATES.templates = {
 			{
 				[1] = 
 				{
-					["alt"] = 22,
+					["alt"] = 52,
 					["type"] = "Turning Point",
 					["ETA"] = 0,
 					["alt_type"] = "BARO",
 					["formation_template"] = "",
-					["y"] = 301676.00477616,
-					["x"] = 38214.931330529,
+					["y"] = 427552.42580137,
+					["x"] = 13613.164301968,
 					["name"] = "",
 					["ETA_locked"] = true,
 					["speed"] = 9.25,
-					["action"] = "On Road",
+					["action"] = "Custom",
 					["task"] = 
 					{
 						["id"] = "ComboTask",
@@ -17098,7 +18142,7 @@ SPAWNTEMPLATES.templates = {
 			}, -- end of ["points"]
 			["routeRelativeTOT"] = true,
 		}, -- end of ["route"]
-		["groupId"] = 70,
+		["groupId"] = 324,
 		["hidden"] = false,
 		["units"] = 
 		{
@@ -17107,11 +18151,11 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "ZSU-23-4 Shilka",
-				["unitId"] = 405,
-				["y"] = 301676.00477616,
-				["x"] = 38214.931330529,
-				["name"] = "Unit #140",
-				["heading"] = 2.8116029773454,
+				["unitId"] = 3146,
+				["y"] = 427552.42580137,
+				["x"] = 13613.164301968,
+				["name"] = "CONVOY_heavy-2-1",
+				["heading"] = 1.9024088846738,
 				["playerCanDrive"] = true,
 			}, -- end of [1]
 			[2] = 
@@ -17119,10 +18163,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "T-72B",
-				["unitId"] = 406,
-				["y"] = 301647.53942293,
-				["x"] = 38224.39985035,
-				["name"] = "Unit #141",
+				["unitId"] = 3147,
+				["y"] = 427555.12715032,
+				["x"] = 13619.130326314,
+				["name"] = "CONVOY_heavy-2-2",
 				["heading"] = 1.8782668196037,
 				["playerCanDrive"] = true,
 			}, -- end of [2]
@@ -17131,10 +18175,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "T-72B",
-				["unitId"] = 407,
-				["y"] = 301619.07294999,
-				["x"] = 38233.868742469,
-				["name"] = "Unit #142",
+				["unitId"] = 3148,
+				["y"] = 427557.3968117,
+				["x"] = 13624.96659842,
+				["name"] = "CONVOY_heavy-2-3",
 				["heading"] = 1.8784381995326,
 				["playerCanDrive"] = true,
 			}, -- end of [3]
@@ -17143,10 +18187,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "Ural-375 ZU-23",
-				["unitId"] = 408,
-				["y"] = 301590.60647629,
-				["x"] = 38243.337631008,
-				["name"] = "Unit #143",
+				["unitId"] = 3149,
+				["y"] = 427559.01799839,
+				["x"] = 13630.802870525,
+				["name"] = "CONVOY_heavy-2-4",
 				["heading"] = 1.8785398765432,
 				["playerCanDrive"] = true,
 			}, -- end of [4]
@@ -17155,10 +18199,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Average",
 				["coldAtStart"] = false,
 				["type"] = "T-72B",
-				["unitId"] = 409,
-				["y"] = 301562.13998517,
-				["x"] = 38252.806469144,
-				["name"] = "Unit #144",
+				["unitId"] = 3150,
+				["y"] = 427541.75236008,
+				["x"] = 13616.69854627,
+				["name"] = "CONVOY_heavy-2-5",
 				["heading"] = 1.8783470362892,
 				["playerCanDrive"] = true,
 			}, -- end of [5]
@@ -17167,10 +18211,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Average",
 				["coldAtStart"] = false,
 				["type"] = "T-72B",
-				["unitId"] = 410,
-				["y"] = 301533.67338246,
-				["x"] = 38262.27497114,
-				["name"] = "Unit #145",
+				["unitId"] = 3151,
+				["y"] = 427543.53566545,
+				["x"] = 13622.77799638,
+				["name"] = "CONVOY_heavy-2-6",
 				["heading"] = 1.877645336169,
 				["playerCanDrive"] = true,
 			}, -- end of [6]
@@ -17179,10 +18223,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Average",
 				["coldAtStart"] = false,
 				["type"] = "T-72B",
-				["unitId"] = 411,
-				["y"] = 301505.20653901,
-				["x"] = 38271.74274927,
-				["name"] = "Unit #146",
+				["unitId"] = 3152,
+				["y"] = 427546.53486084,
+				["x"] = 13628.371090481,
+				["name"] = "CONVOY_heavy-2-7",
 				["heading"] = 1.877473355351,
 				["playerCanDrive"] = true,
 			}, -- end of [7]
@@ -17191,10 +18235,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Average",
 				["coldAtStart"] = false,
 				["type"] = "T-72B",
-				["unitId"] = 412,
-				["y"] = 301476.73925518,
-				["x"] = 38281.209202938,
-				["name"] = "Unit #147",
+				["unitId"] = 3153,
+				["y"] = 427548.23710687,
+				["x"] = 13633.964184582,
+				["name"] = "CONVOY_heavy-2-8",
 				["heading"] = 1.8773984159304,
 				["playerCanDrive"] = true,
 			}, -- end of [8]
@@ -17203,10 +18247,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "Osa 9A33 ln",
-				["unitId"] = 413,
-				["y"] = 301448.27113757,
-				["x"] = 38290.673148291,
-				["name"] = "Unit #148",
+				["unitId"] = 3154,
+				["y"] = 427530.16087521,
+				["x"] = 13620.265157001,
+				["name"] = "CONVOY_heavy-2-9",
 				["heading"] = 1.8773291465698,
 				["playerCanDrive"] = false,
 			}, -- end of [9]
@@ -17215,10 +18259,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Average",
 				["coldAtStart"] = false,
 				["type"] = "T-72B",
-				["unitId"] = 414,
-				["y"] = 301419.80110324,
-				["x"] = 38300.131321826,
-				["name"] = "Unit #149",
+				["unitId"] = 3155,
+				["y"] = 427532.10629924,
+				["x"] = 13626.425666446,
+				["name"] = "CONVOY_heavy-2-10",
 				["heading"] = 1.8772303862861,
 				["playerCanDrive"] = true,
 			}, -- end of [10]
@@ -17227,10 +18271,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Average",
 				["coldAtStart"] = false,
 				["type"] = "T-72B",
-				["unitId"] = 415,
-				["y"] = 301391.32811351,
-				["x"] = 38309.580594062,
-				["name"] = "Unit #150",
+				["unitId"] = 3156,
+				["y"] = 427534.94337596,
+				["x"] = 13632.261938552,
+				["name"] = "CONVOY_heavy-2-11",
 				["heading"] = 1.8769893046105,
 				["playerCanDrive"] = true,
 			}, -- end of [11]
@@ -17239,10 +18283,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Average",
 				["coldAtStart"] = false,
 				["type"] = "T-72B",
-				["unitId"] = 416,
-				["y"] = 301362.85730293,
-				["x"] = 38319.036426189,
-				["name"] = "Unit #151",
+				["unitId"] = 3157,
+				["y"] = 427537.05091866,
+				["x"] = 13638.665626001,
+				["name"] = "CONVOY_heavy-2-12",
 				["heading"] = 1.8757472778833,
 				["playerCanDrive"] = true,
 			}, -- end of [12]
@@ -17251,10 +18295,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Average",
 				["coldAtStart"] = false,
 				["type"] = "T-72B",
-				["unitId"] = 417,
-				["y"] = 301334.39176906,
-				["x"] = 38328.508118369,
-				["name"] = "Unit #152",
+				["unitId"] = 3158,
+				["y"] = 427518.974687,
+				["x"] = 13624.074945737,
+				["name"] = "CONVOY_heavy-2-13",
 				["heading"] = 1.8730157673716,
 				["playerCanDrive"] = true,
 			}, -- end of [13]
@@ -17263,10 +18307,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "Ural-375 ZU-23",
-				["unitId"] = 418,
-				["y"] = 301305.92821931,
-				["x"] = 38337.98579116,
-				["name"] = "Unit #153",
+				["unitId"] = 3159,
+				["y"] = 427520.8390517,
+				["x"] = 13629.749099173,
+				["name"] = "CONVOY_heavy-2-14",
 				["heading"] = 1.8708689503781,
 				["playerCanDrive"] = true,
 			}, -- end of [14]
@@ -17275,10 +18319,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "BTR-80",
-				["unitId"] = 419,
-				["y"] = 301277.46511035,
-				["x"] = 38347.464790578,
-				["name"] = "Unit #154",
+				["unitId"] = 3160,
+				["y"] = 427523.51400975,
+				["x"] = 13635.747489948,
+				["name"] = "CONVOY_heavy-2-15",
 				["heading"] = 1.8679285264736,
 				["playerCanDrive"] = true,
 			}, -- end of [15]
@@ -17287,10 +18331,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "BTR-80",
-				["unitId"] = 420,
-				["y"] = 301249.00182235,
-				["x"] = 38356.943252237,
-				["name"] = "Unit #155",
+				["unitId"] = 3161,
+				["y"] = 427526.59426448,
+				["x"] = 13642.394355401,
+				["name"] = "CONVOY_heavy-2-16",
 				["heading"] = 1.8637875013618,
 				["playerCanDrive"] = true,
 			}, -- end of [16]
@@ -17299,10 +18343,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "BTR-80",
-				["unitId"] = 421,
-				["y"] = 301220.53792841,
-				["x"] = 38366.419893654,
-				["name"] = "Unit #156",
+				["unitId"] = 3162,
+				["y"] = 427507.27020542,
+				["x"] = 13627.798973696,
+				["name"] = "CONVOY_heavy-2-17",
 				["heading"] = 1.8575911919256,
 				["playerCanDrive"] = true,
 			}, -- end of [17]
@@ -17311,10 +18355,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "BTR-80",
-				["unitId"] = 422,
-				["y"] = 301192.07330281,
-				["x"] = 38375.894337225,
-				["name"] = "Unit #157",
+				["unitId"] = 3163,
+				["y"] = 427510.7226846,
+				["x"] = 13633.948702249,
+				["name"] = "CONVOY_heavy-2-18",
 				["heading"] = 1.8495312285784,
 				["playerCanDrive"] = true,
 			}, -- end of [18]
@@ -17323,10 +18367,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "T-72B",
-				["unitId"] = 423,
-				["y"] = 301163.60811559,
-				["x"] = 38385.367093434,
-				["name"] = "Unit #158",
+				["unitId"] = 3164,
+				["y"] = 427513.41993397,
+				["x"] = 13640.314210752,
+				["name"] = "CONVOY_heavy-2-19",
 				["heading"] = 1.846427458863,
 				["playerCanDrive"] = true,
 			}, -- end of [19]
@@ -17335,19 +18379,365 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "Osa 9A33 ln",
-				["unitId"] = 424,
-				["y"] = 301135.14239031,
-				["x"] = 38394.838232731,
-				["name"] = "Unit #159",
+				["unitId"] = 3165,
+				["y"] = 427516.54874323,
+				["x"] = 13646.248159355,
+				["name"] = "CONVOY_heavy-2-20",
 				["heading"] = 1.8562698946798,
 				["playerCanDrive"] = true,
 			}, -- end of [20]
 		}, -- end of ["units"]
-		["y"] = 301676.00477616,
-		["x"] = 38214.931330529,
+		["y"] = 427552.42580137,
+		["x"] = 13613.164301968,
 		["name"] = "CONVOY_heavy-2",
 		["start_time"] = 0,
-	}, -- end of [CONVOY_heavy-2]
+	}, -- end of ["CONVOY_heavy-2"]
+	-- ["CONVOY_heavy-2"] = {
+	-- 	["category"] = Group.Category.GROUND,
+	-- 	["visible"] = false,
+	-- 	["lateActivation"] = true,
+	-- 	["tasks"] = 
+	-- 	{
+	-- 	}, -- end of ["tasks"]
+	-- 	["uncontrollable"] = false,
+	-- 	["task"] = "Ground Nothing",
+	-- 	["taskSelected"] = true,
+	-- 	["route"] = 
+	-- 	{
+	-- 		["spans"] = 
+	-- 		{
+	-- 			[1] = 
+	-- 			{
+	-- 				[1] = 
+	-- 				{
+	-- 					["y"] = 304414.77669086,
+	-- 					["x"] = 37276.865434798,
+	-- 				}, -- end of [1]
+	-- 				[2] = 
+	-- 				{
+	-- 					["y"] = 304414.77669086,
+	-- 					["x"] = 37276.865434798,
+	-- 				}, -- end of [2]
+	-- 			}, -- end of [1]
+	-- 		}, -- end of ["spans"]
+	-- 		["points"] = 
+	-- 		{
+	-- 			[1] = 
+	-- 			{
+	-- 				["alt"] = 22,
+	-- 				["type"] = "Turning Point",
+	-- 				["ETA"] = 0,
+	-- 				["alt_type"] = "BARO",
+	-- 				["formation_template"] = "",
+	-- 				["y"] = 301676.00477616,
+	-- 				["x"] = 38214.931330529,
+	-- 				["name"] = "",
+	-- 				["ETA_locked"] = true,
+	-- 				["speed"] = 9.25,
+	-- 				["action"] = "On Road",
+	-- 				["task"] = 
+	-- 				{
+	-- 					["id"] = "ComboTask",
+	-- 					["params"] = 
+	-- 					{
+	-- 						["tasks"] = 
+	-- 						{
+	-- 							[1] = 
+	-- 							{
+	-- 								["number"] = 1,
+	-- 								["auto"] = false,
+	-- 								["id"] = "WrappedAction",
+	-- 								["enabled"] = true,
+	-- 								["params"] = 
+	-- 								{
+	-- 									["action"] = 
+	-- 									{
+	-- 										["id"] = "Option",
+	-- 										["params"] = 
+	-- 										{
+	-- 											["value"] = 0,
+	-- 											["name"] = 0,
+	-- 										}, -- end of ["params"]
+	-- 									}, -- end of ["action"]
+	-- 								}, -- end of ["params"]
+	-- 							}, -- end of [1]
+	-- 							[2] = 
+	-- 							{
+	-- 								["number"] = 2,
+	-- 								["auto"] = false,
+	-- 								["id"] = "WrappedAction",
+	-- 								["enabled"] = true,
+	-- 								["params"] = 
+	-- 								{
+	-- 									["action"] = 
+	-- 									{
+	-- 										["id"] = "Option",
+	-- 										["params"] = 
+	-- 										{
+	-- 											["value"] = 0,
+	-- 											["name"] = 9,
+	-- 										}, -- end of ["params"]
+	-- 									}, -- end of ["action"]
+	-- 								}, -- end of ["params"]
+	-- 							}, -- end of [2]
+	-- 						}, -- end of ["tasks"]
+	-- 					}, -- end of ["params"]
+	-- 				}, -- end of ["task"]
+	-- 				["speed_locked"] = true,
+	-- 			}, -- end of [1]
+	-- 		}, -- end of ["points"]
+	-- 		["routeRelativeTOT"] = true,
+	-- 	}, -- end of ["route"]
+	-- 	["groupId"] = 70,
+	-- 	["hidden"] = false,
+	-- 	["units"] = 
+	-- 	{
+	-- 		[1] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "ZSU-23-4 Shilka",
+	-- 			["unitId"] = 405,
+	-- 			["y"] = 301676.00477616,
+	-- 			["x"] = 38214.931330529,
+	-- 			["name"] = "Unit #140",
+	-- 			["heading"] = 2.8116029773454,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [1]
+	-- 		[2] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-72B",
+	-- 			["unitId"] = 406,
+	-- 			["y"] = 301647.53942293,
+	-- 			["x"] = 38224.39985035,
+	-- 			["name"] = "Unit #141",
+	-- 			["heading"] = 1.8782668196037,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [2]
+	-- 		[3] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-72B",
+	-- 			["unitId"] = 407,
+	-- 			["y"] = 301619.07294999,
+	-- 			["x"] = 38233.868742469,
+	-- 			["name"] = "Unit #142",
+	-- 			["heading"] = 1.8784381995326,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [3]
+	-- 		[4] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Ural-375 ZU-23",
+	-- 			["unitId"] = 408,
+	-- 			["y"] = 301590.60647629,
+	-- 			["x"] = 38243.337631008,
+	-- 			["name"] = "Unit #143",
+	-- 			["heading"] = 1.8785398765432,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [4]
+	-- 		[5] = 
+	-- 		{
+	-- 			["skill"] = "Average",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-72B",
+	-- 			["unitId"] = 409,
+	-- 			["y"] = 301562.13998517,
+	-- 			["x"] = 38252.806469144,
+	-- 			["name"] = "Unit #144",
+	-- 			["heading"] = 1.8783470362892,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [5]
+	-- 		[6] = 
+	-- 		{
+	-- 			["skill"] = "Average",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-72B",
+	-- 			["unitId"] = 410,
+	-- 			["y"] = 301533.67338246,
+	-- 			["x"] = 38262.27497114,
+	-- 			["name"] = "Unit #145",
+	-- 			["heading"] = 1.877645336169,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [6]
+	-- 		[7] = 
+	-- 		{
+	-- 			["skill"] = "Average",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-72B",
+	-- 			["unitId"] = 411,
+	-- 			["y"] = 301505.20653901,
+	-- 			["x"] = 38271.74274927,
+	-- 			["name"] = "Unit #146",
+	-- 			["heading"] = 1.877473355351,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [7]
+	-- 		[8] = 
+	-- 		{
+	-- 			["skill"] = "Average",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-72B",
+	-- 			["unitId"] = 412,
+	-- 			["y"] = 301476.73925518,
+	-- 			["x"] = 38281.209202938,
+	-- 			["name"] = "Unit #147",
+	-- 			["heading"] = 1.8773984159304,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [8]
+	-- 		[9] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Osa 9A33 ln",
+	-- 			["unitId"] = 413,
+	-- 			["y"] = 301448.27113757,
+	-- 			["x"] = 38290.673148291,
+	-- 			["name"] = "Unit #148",
+	-- 			["heading"] = 1.8773291465698,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [9]
+	-- 		[10] = 
+	-- 		{
+	-- 			["skill"] = "Average",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-72B",
+	-- 			["unitId"] = 414,
+	-- 			["y"] = 301419.80110324,
+	-- 			["x"] = 38300.131321826,
+	-- 			["name"] = "Unit #149",
+	-- 			["heading"] = 1.8772303862861,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [10]
+	-- 		[11] = 
+	-- 		{
+	-- 			["skill"] = "Average",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-72B",
+	-- 			["unitId"] = 415,
+	-- 			["y"] = 301391.32811351,
+	-- 			["x"] = 38309.580594062,
+	-- 			["name"] = "Unit #150",
+	-- 			["heading"] = 1.8769893046105,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [11]
+	-- 		[12] = 
+	-- 		{
+	-- 			["skill"] = "Average",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-72B",
+	-- 			["unitId"] = 416,
+	-- 			["y"] = 301362.85730293,
+	-- 			["x"] = 38319.036426189,
+	-- 			["name"] = "Unit #151",
+	-- 			["heading"] = 1.8757472778833,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [12]
+	-- 		[13] = 
+	-- 		{
+	-- 			["skill"] = "Average",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-72B",
+	-- 			["unitId"] = 417,
+	-- 			["y"] = 301334.39176906,
+	-- 			["x"] = 38328.508118369,
+	-- 			["name"] = "Unit #152",
+	-- 			["heading"] = 1.8730157673716,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [13]
+	-- 		[14] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Ural-375 ZU-23",
+	-- 			["unitId"] = 418,
+	-- 			["y"] = 301305.92821931,
+	-- 			["x"] = 38337.98579116,
+	-- 			["name"] = "Unit #153",
+	-- 			["heading"] = 1.8708689503781,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [14]
+	-- 		[15] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BTR-80",
+	-- 			["unitId"] = 419,
+	-- 			["y"] = 301277.46511035,
+	-- 			["x"] = 38347.464790578,
+	-- 			["name"] = "Unit #154",
+	-- 			["heading"] = 1.8679285264736,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [15]
+	-- 		[16] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BTR-80",
+	-- 			["unitId"] = 420,
+	-- 			["y"] = 301249.00182235,
+	-- 			["x"] = 38356.943252237,
+	-- 			["name"] = "Unit #155",
+	-- 			["heading"] = 1.8637875013618,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [16]
+	-- 		[17] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BTR-80",
+	-- 			["unitId"] = 421,
+	-- 			["y"] = 301220.53792841,
+	-- 			["x"] = 38366.419893654,
+	-- 			["name"] = "Unit #156",
+	-- 			["heading"] = 1.8575911919256,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [17]
+	-- 		[18] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BTR-80",
+	-- 			["unitId"] = 422,
+	-- 			["y"] = 301192.07330281,
+	-- 			["x"] = 38375.894337225,
+	-- 			["name"] = "Unit #157",
+	-- 			["heading"] = 1.8495312285784,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [18]
+	-- 		[19] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-72B",
+	-- 			["unitId"] = 423,
+	-- 			["y"] = 301163.60811559,
+	-- 			["x"] = 38385.367093434,
+	-- 			["name"] = "Unit #158",
+	-- 			["heading"] = 1.846427458863,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [19]
+	-- 		[20] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Osa 9A33 ln",
+	-- 			["unitId"] = 424,
+	-- 			["y"] = 301135.14239031,
+	-- 			["x"] = 38394.838232731,
+	-- 			["name"] = "Unit #159",
+	-- 			["heading"] = 1.8562698946798,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [20]
+	-- 	}, -- end of ["units"]
+	-- 	["y"] = 301676.00477616,
+	-- 	["x"] = 38214.931330529,
+	-- 	["name"] = "CONVOY_heavy-2",
+	-- 	["start_time"] = 0,
+	-- }, -- end of [CONVOY_heavy-2]
 	["CONVOY_heavy-3"] = {
 		["category"] = Group.Category.GROUND,
 		["visible"] = false,
@@ -17380,17 +18770,17 @@ SPAWNTEMPLATES.templates = {
 			{
 				[1] = 
 				{
-					["alt"] = 22,
+					["alt"] = 51,
 					["type"] = "Turning Point",
 					["ETA"] = 0,
 					["alt_type"] = "BARO",
 					["formation_template"] = "",
-					["y"] = 300752.32117481,
-					["x"] = 38522.131438127,
+					["y"] = 427529.34149148,
+					["x"] = 13561.906228033,
 					["name"] = "",
 					["ETA_locked"] = true,
 					["speed"] = 9.25,
-					["action"] = "On Road",
+					["action"] = "Custom",
 					["task"] = 
 					{
 						["id"] = "ComboTask",
@@ -17444,7 +18834,7 @@ SPAWNTEMPLATES.templates = {
 			}, -- end of ["points"]
 			["routeRelativeTOT"] = true,
 		}, -- end of ["route"]
-		["groupId"] = 661,
+		["groupId"] = 325,
 		["hidden"] = false,
 		["units"] = 
 		{
@@ -17453,11 +18843,11 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "Tigr_233036",
-				["unitId"] = 1729,
-				["y"] = 300752.32117481,
-				["x"] = 38522.131438127,
+				["unitId"] = 3166,
+				["y"] = 427529.34149148,
+				["x"] = 13561.906228033,
 				["name"] = "CONVOY_heavy-3-1",
-				["heading"] = 2.8138465283448,
+				["heading"] = 1.8675022996339,
 				["playerCanDrive"] = false,
 			}, -- end of [1]
 			[2] = 
@@ -17465,9 +18855,9 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "UAZ-469",
-				["unitId"] = 1730,
-				["y"] = 300723.83993312,
-				["x"] = 38531.552138367,
+				["unitId"] = 3167,
+				["y"] = 427534.06119693,
+				["x"] = 13566.728535773,
 				["name"] = "CONVOY_heavy-3-2",
 				["heading"] = 1.8782668196037,
 				["playerCanDrive"] = false,
@@ -17477,9 +18867,9 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "ATZ-5",
-				["unitId"] = 1731,
-				["y"] = 300695.34725822,
-				["x"] = 38540.941758892,
+				["unitId"] = 3168,
+				["y"] = 427539.39651613,
+				["x"] = 13579.348617732,
 				["name"] = "CONVOY_heavy-3-3",
 				["heading"] = 1.8784381995326,
 				["playerCanDrive"] = false,
@@ -17489,9 +18879,9 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "Ural-375 ZU-23",
-				["unitId"] = 1732,
-				["y"] = 300666.83995151,
-				["x"] = 38550.286755566,
+				["unitId"] = 3169,
+				["y"] = 427536.11324277,
+				["x"] = 13573.397684776,
 				["name"] = "CONVOY_heavy-3-4",
 				["heading"] = 1.8785398765432,
 				["playerCanDrive"] = true,
@@ -17501,9 +18891,9 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Average",
 				["coldAtStart"] = false,
 				["type"] = "ATZ-5",
-				["unitId"] = 1733,
-				["y"] = 300638.31942473,
-				["x"] = 38559.591410069,
+				["unitId"] = 3170,
+				["y"] = 427520.31248975,
+				["x"] = 13565.292103681,
 				["name"] = "CONVOY_heavy-3-5",
 				["heading"] = 1.8783470362892,
 				["playerCanDrive"] = false,
@@ -17513,9 +18903,9 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Average",
 				["coldAtStart"] = false,
 				["type"] = "T-90",
-				["unitId"] = 1734,
-				["y"] = 300609.79426423,
-				["x"] = 38568.882008205,
+				["unitId"] = 3171,
+				["y"] = 427522.67234248,
+				["x"] = 13570.832627467,
 				["name"] = "CONVOY_heavy-3-6",
 				["heading"] = 1.877645336169,
 				["playerCanDrive"] = true,
@@ -17525,9 +18915,9 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Average",
 				["coldAtStart"] = false,
 				["type"] = "T-90",
-				["unitId"] = 1735,
-				["y"] = 300581.28128861,
-				["x"] = 38578.209647558,
+				["unitId"] = 3172,
+				["y"] = 427525.54520666,
+				["x"] = 13577.296571885,
 				["name"] = "CONVOY_heavy-3-7",
 				["heading"] = 1.877473355351,
 				["playerCanDrive"] = true,
@@ -17537,9 +18927,9 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Average",
 				["coldAtStart"] = false,
 				["type"] = "T-90",
-				["unitId"] = 1736,
-				["y"] = 300552.81543767,
-				["x"] = 38587.677441908,
+				["unitId"] = 3173,
+				["y"] = 427528.31546855,
+				["x"] = 13583.760516302,
 				["name"] = "CONVOY_heavy-3-8",
 				["heading"] = 1.8773984159304,
 				["playerCanDrive"] = true,
@@ -17549,9 +18939,9 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "Osa 9A33 ln",
-				["unitId"] = 1737,
-				["y"] = 300524.41541783,
-				["x"] = 38597.340409349,
+				["unitId"] = 3174,
+				["y"] = 427508.9236353,
+				["x"] = 13568.985786205,
 				["name"] = "CONVOY_heavy-3-9",
 				["heading"] = 1.8773291465698,
 				["playerCanDrive"] = false,
@@ -17561,9 +18951,9 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Average",
 				["coldAtStart"] = false,
 				["type"] = "T-90",
-				["unitId"] = 1738,
-				["y"] = 300496.03015748,
-				["x"] = 38607.050069872,
+				["unitId"] = 3175,
+				["y"] = 427511.18088573,
+				["x"] = 13574.731514576,
 				["name"] = "CONVOY_heavy-3-10",
 				["heading"] = 1.8772303862861,
 				["playerCanDrive"] = true,
@@ -17573,9 +18963,9 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Average",
 				["coldAtStart"] = false,
 				["type"] = "T-90",
-				["unitId"] = 1739,
-				["y"] = 300467.61997942,
-				["x"] = 38616.685845949,
+				["unitId"] = 3176,
+				["y"] = 427514.05374992,
+				["x"] = 13581.605868163,
 				["name"] = "CONVOY_heavy-3-11",
 				["heading"] = 1.8769893046105,
 				["playerCanDrive"] = true,
@@ -17585,9 +18975,9 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Average",
 				["coldAtStart"] = false,
 				["type"] = "T-90",
-				["unitId"] = 1740,
-				["y"] = 300439.18369934,
-				["x"] = 38626.244456237,
+				["unitId"] = 3177,
+				["y"] = 427517.13181869,
+				["x"] = 13587.967210288,
 				["name"] = "CONVOY_heavy-3-12",
 				["heading"] = 1.8757472778833,
 				["playerCanDrive"] = true,
@@ -17597,9 +18987,9 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Average",
 				["coldAtStart"] = false,
 				["type"] = "T-90",
-				["unitId"] = 1741,
-				["y"] = 300410.73327937,
-				["x"] = 38635.761302478,
+				["unitId"] = 3178,
+				["y"] = 427496.30355334,
+				["x"] = 13573.60288936,
 				["name"] = "CONVOY_heavy-3-13",
 				["heading"] = 1.8730157673716,
 				["playerCanDrive"] = true,
@@ -17609,9 +18999,9 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "Ural-375 ZU-23",
-				["unitId"] = 1742,
-				["y"] = 300382.2748848,
-				["x"] = 38645.254390186,
+				["unitId"] = 3179,
+				["y"] = 427498.35559919,
+				["x"] = 13579.348617732,
 				["name"] = "CONVOY_heavy-3-14",
 				["heading"] = 1.8708689503781,
 				["playerCanDrive"] = true,
@@ -17621,9 +19011,9 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "BTR-80",
-				["unitId"] = 1743,
-				["y"] = 300353.81181696,
-				["x"] = 38654.733493855,
+				["unitId"] = 3180,
+				["y"] = 427501.43366796,
+				["x"] = 13585.299550688,
 				["name"] = "CONVOY_heavy-3-15",
 				["heading"] = 1.8679285264736,
 				["playerCanDrive"] = true,
@@ -17633,9 +19023,9 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "BTR-80",
-				["unitId"] = 1744,
-				["y"] = 300325.34623247,
-				["x"] = 38664.205051307,
+				["unitId"] = 3181,
+				["y"] = 427505.02474819,
+				["x"] = 13592.276506567,
 				["name"] = "CONVOY_heavy-3-16",
 				["heading"] = 1.8637875013618,
 				["playerCanDrive"] = true,
@@ -17645,9 +19035,9 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Excellent",
 				["coldAtStart"] = false,
 				["type"] = "BTR-80",
-				["unitId"] = 1745,
-				["y"] = 300296.87980238,
-				["x"] = 38673.674073212,
+				["unitId"] = 3182,
+				["y"] = 427485.63291494,
+				["x"] = 13577.0913673,
 				["name"] = "CONVOY_heavy-3-17",
 				["heading"] = 1.8575911919256,
 				["playerCanDrive"] = true,
@@ -17657,9 +19047,9 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "BTR-80",
-				["unitId"] = 1746,
-				["y"] = 300268.41332819,
-				["x"] = 38683.142961584,
+				["unitId"] = 3183,
+				["y"] = 427488.813586,
+				["x"] = 13582.939697964,
 				["name"] = "CONVOY_heavy-3-18",
 				["heading"] = 1.8495312285784,
 				["playerCanDrive"] = true,
@@ -17669,9 +19059,9 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "T-90",
-				["unitId"] = 1747,
-				["y"] = 300239.94685341,
-				["x"] = 38692.611848221,
+				["unitId"] = 3184,
+				["y"] = 427491.07083643,
+				["x"] = 13589.608846966,
 				["name"] = "CONVOY_heavy-3-19",
 				["heading"] = 1.846427458863,
 				["playerCanDrive"] = true,
@@ -17681,24 +19071,369 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "Osa 9A33 ln",
-				["unitId"] = 1748,
-				["y"] = 300211.48037893,
-				["x"] = 38702.080735718,
+				["unitId"] = 3185,
+				["y"] = 427494.66191667,
+				["x"] = 13596.483200553,
 				["name"] = "CONVOY_heavy-3-20",
 				["heading"] = 1.8562698946798,
 				["playerCanDrive"] = true,
 			}, -- end of [20]
 		}, -- end of ["units"]
-		["y"] = 300752.32117481,
-		["x"] = 38522.131438127,
+		["y"] = 427529.34149148,
+		["x"] = 13561.906228033,
 		["name"] = "CONVOY_heavy-3",
 		["start_time"] = 0,
-	}, -- end of [CONVOY_heavy-3]
+	}, -- end of ["CONVOY_heavy-3"]
+	-- ["CONVOY_heavy-3"] = {
+	-- 	["category"] = Group.Category.GROUND,
+	-- 	["visible"] = false,
+	-- 	["lateActivation"] = true,
+	-- 	["tasks"] = 
+	-- 	{
+	-- 	}, -- end of ["tasks"]
+	-- 	["uncontrollable"] = false,
+	-- 	["task"] = "Ground Nothing",
+	-- 	["taskSelected"] = true,
+	-- 	["route"] = 
+	-- 	{
+	-- 		["spans"] = 
+	-- 		{
+	-- 			[1] = 
+	-- 			{
+	-- 				[1] = 
+	-- 				{
+	-- 					["y"] = 304414.77669086,
+	-- 					["x"] = 37276.865434798,
+	-- 				}, -- end of [1]
+	-- 				[2] = 
+	-- 				{
+	-- 					["y"] = 304414.77669086,
+	-- 					["x"] = 37276.865434798,
+	-- 				}, -- end of [2]
+	-- 			}, -- end of [1]
+	-- 		}, -- end of ["spans"]
+	-- 		["points"] = 
+	-- 		{
+	-- 			[1] = 
+	-- 			{
+	-- 				["alt"] = 22,
+	-- 				["type"] = "Turning Point",
+	-- 				["ETA"] = 0,
+	-- 				["alt_type"] = "BARO",
+	-- 				["formation_template"] = "",
+	-- 				["y"] = 300752.32117481,
+	-- 				["x"] = 38522.131438127,
+	-- 				["name"] = "",
+	-- 				["ETA_locked"] = true,
+	-- 				["speed"] = 9.25,
+	-- 				["action"] = "On Road",
+	-- 				["task"] = 
+	-- 				{
+	-- 					["id"] = "ComboTask",
+	-- 					["params"] = 
+	-- 					{
+	-- 						["tasks"] = 
+	-- 						{
+	-- 							[1] = 
+	-- 							{
+	-- 								["number"] = 1,
+	-- 								["auto"] = false,
+	-- 								["id"] = "WrappedAction",
+	-- 								["enabled"] = true,
+	-- 								["params"] = 
+	-- 								{
+	-- 									["action"] = 
+	-- 									{
+	-- 										["id"] = "Option",
+	-- 										["params"] = 
+	-- 										{
+	-- 											["value"] = 0,
+	-- 											["name"] = 0,
+	-- 										}, -- end of ["params"]
+	-- 									}, -- end of ["action"]
+	-- 								}, -- end of ["params"]
+	-- 							}, -- end of [1]
+	-- 							[2] = 
+	-- 							{
+	-- 								["number"] = 2,
+	-- 								["auto"] = false,
+	-- 								["id"] = "WrappedAction",
+	-- 								["enabled"] = true,
+	-- 								["params"] = 
+	-- 								{
+	-- 									["action"] = 
+	-- 									{
+	-- 										["id"] = "Option",
+	-- 										["params"] = 
+	-- 										{
+	-- 											["value"] = 0,
+	-- 											["name"] = 9,
+	-- 										}, -- end of ["params"]
+	-- 									}, -- end of ["action"]
+	-- 								}, -- end of ["params"]
+	-- 							}, -- end of [2]
+	-- 						}, -- end of ["tasks"]
+	-- 					}, -- end of ["params"]
+	-- 				}, -- end of ["task"]
+	-- 				["speed_locked"] = true,
+	-- 			}, -- end of [1]
+	-- 		}, -- end of ["points"]
+	-- 		["routeRelativeTOT"] = true,
+	-- 	}, -- end of ["route"]
+	-- 	["groupId"] = 661,
+	-- 	["hidden"] = false,
+	-- 	["units"] = 
+	-- 	{
+	-- 		[1] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Tigr_233036",
+	-- 			["unitId"] = 1729,
+	-- 			["y"] = 300752.32117481,
+	-- 			["x"] = 38522.131438127,
+	-- 			["name"] = "CONVOY_heavy-3-1",
+	-- 			["heading"] = 2.8138465283448,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [1]
+	-- 		[2] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "UAZ-469",
+	-- 			["unitId"] = 1730,
+	-- 			["y"] = 300723.83993312,
+	-- 			["x"] = 38531.552138367,
+	-- 			["name"] = "CONVOY_heavy-3-2",
+	-- 			["heading"] = 1.8782668196037,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [2]
+	-- 		[3] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "ATZ-5",
+	-- 			["unitId"] = 1731,
+	-- 			["y"] = 300695.34725822,
+	-- 			["x"] = 38540.941758892,
+	-- 			["name"] = "CONVOY_heavy-3-3",
+	-- 			["heading"] = 1.8784381995326,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [3]
+	-- 		[4] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Ural-375 ZU-23",
+	-- 			["unitId"] = 1732,
+	-- 			["y"] = 300666.83995151,
+	-- 			["x"] = 38550.286755566,
+	-- 			["name"] = "CONVOY_heavy-3-4",
+	-- 			["heading"] = 1.8785398765432,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [4]
+	-- 		[5] = 
+	-- 		{
+	-- 			["skill"] = "Average",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "ATZ-5",
+	-- 			["unitId"] = 1733,
+	-- 			["y"] = 300638.31942473,
+	-- 			["x"] = 38559.591410069,
+	-- 			["name"] = "CONVOY_heavy-3-5",
+	-- 			["heading"] = 1.8783470362892,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [5]
+	-- 		[6] = 
+	-- 		{
+	-- 			["skill"] = "Average",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-90",
+	-- 			["unitId"] = 1734,
+	-- 			["y"] = 300609.79426423,
+	-- 			["x"] = 38568.882008205,
+	-- 			["name"] = "CONVOY_heavy-3-6",
+	-- 			["heading"] = 1.877645336169,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [6]
+	-- 		[7] = 
+	-- 		{
+	-- 			["skill"] = "Average",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-90",
+	-- 			["unitId"] = 1735,
+	-- 			["y"] = 300581.28128861,
+	-- 			["x"] = 38578.209647558,
+	-- 			["name"] = "CONVOY_heavy-3-7",
+	-- 			["heading"] = 1.877473355351,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [7]
+	-- 		[8] = 
+	-- 		{
+	-- 			["skill"] = "Average",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-90",
+	-- 			["unitId"] = 1736,
+	-- 			["y"] = 300552.81543767,
+	-- 			["x"] = 38587.677441908,
+	-- 			["name"] = "CONVOY_heavy-3-8",
+	-- 			["heading"] = 1.8773984159304,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [8]
+	-- 		[9] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Osa 9A33 ln",
+	-- 			["unitId"] = 1737,
+	-- 			["y"] = 300524.41541783,
+	-- 			["x"] = 38597.340409349,
+	-- 			["name"] = "CONVOY_heavy-3-9",
+	-- 			["heading"] = 1.8773291465698,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [9]
+	-- 		[10] = 
+	-- 		{
+	-- 			["skill"] = "Average",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-90",
+	-- 			["unitId"] = 1738,
+	-- 			["y"] = 300496.03015748,
+	-- 			["x"] = 38607.050069872,
+	-- 			["name"] = "CONVOY_heavy-3-10",
+	-- 			["heading"] = 1.8772303862861,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [10]
+	-- 		[11] = 
+	-- 		{
+	-- 			["skill"] = "Average",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-90",
+	-- 			["unitId"] = 1739,
+	-- 			["y"] = 300467.61997942,
+	-- 			["x"] = 38616.685845949,
+	-- 			["name"] = "CONVOY_heavy-3-11",
+	-- 			["heading"] = 1.8769893046105,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [11]
+	-- 		[12] = 
+	-- 		{
+	-- 			["skill"] = "Average",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-90",
+	-- 			["unitId"] = 1740,
+	-- 			["y"] = 300439.18369934,
+	-- 			["x"] = 38626.244456237,
+	-- 			["name"] = "CONVOY_heavy-3-12",
+	-- 			["heading"] = 1.8757472778833,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [12]
+	-- 		[13] = 
+	-- 		{
+	-- 			["skill"] = "Average",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-90",
+	-- 			["unitId"] = 1741,
+	-- 			["y"] = 300410.73327937,
+	-- 			["x"] = 38635.761302478,
+	-- 			["name"] = "CONVOY_heavy-3-13",
+	-- 			["heading"] = 1.8730157673716,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [13]
+	-- 		[14] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Ural-375 ZU-23",
+	-- 			["unitId"] = 1742,
+	-- 			["y"] = 300382.2748848,
+	-- 			["x"] = 38645.254390186,
+	-- 			["name"] = "CONVOY_heavy-3-14",
+	-- 			["heading"] = 1.8708689503781,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [14]
+	-- 		[15] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BTR-80",
+	-- 			["unitId"] = 1743,
+	-- 			["y"] = 300353.81181696,
+	-- 			["x"] = 38654.733493855,
+	-- 			["name"] = "CONVOY_heavy-3-15",
+	-- 			["heading"] = 1.8679285264736,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [15]
+	-- 		[16] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BTR-80",
+	-- 			["unitId"] = 1744,
+	-- 			["y"] = 300325.34623247,
+	-- 			["x"] = 38664.205051307,
+	-- 			["name"] = "CONVOY_heavy-3-16",
+	-- 			["heading"] = 1.8637875013618,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [16]
+	-- 		[17] = 
+	-- 		{
+	-- 			["skill"] = "Excellent",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BTR-80",
+	-- 			["unitId"] = 1745,
+	-- 			["y"] = 300296.87980238,
+	-- 			["x"] = 38673.674073212,
+	-- 			["name"] = "CONVOY_heavy-3-17",
+	-- 			["heading"] = 1.8575911919256,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [17]
+	-- 		[18] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BTR-80",
+	-- 			["unitId"] = 1746,
+	-- 			["y"] = 300268.41332819,
+	-- 			["x"] = 38683.142961584,
+	-- 			["name"] = "CONVOY_heavy-3-18",
+	-- 			["heading"] = 1.8495312285784,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [18]
+	-- 		[19] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-90",
+	-- 			["unitId"] = 1747,
+	-- 			["y"] = 300239.94685341,
+	-- 			["x"] = 38692.611848221,
+	-- 			["name"] = "CONVOY_heavy-3-19",
+	-- 			["heading"] = 1.846427458863,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [19]
+	-- 		[20] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Osa 9A33 ln",
+	-- 			["unitId"] = 1748,
+	-- 			["y"] = 300211.48037893,
+	-- 			["x"] = 38702.080735718,
+	-- 			["name"] = "CONVOY_heavy-3-20",
+	-- 			["heading"] = 1.8562698946798,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [20]
+	-- 	}, -- end of ["units"]
+	-- 	["y"] = 300752.32117481,
+	-- 	["x"] = 38522.131438127,
+	-- 	["name"] = "CONVOY_heavy-3",
+	-- 	["start_time"] = 0,
+	-- }, -- end of [CONVOY_heavy-3]
 	------------------------ ARMOUR ------------------------
 	["ARMOUR_Heavy_01"] = {
 		["category"] = Group.Category.GROUND,
 		["visible"] = false,
-		["lateActivation"] = true,
 		["tasks"] = 
 		{
 		}, -- end of ["tasks"]
@@ -17712,13 +19447,13 @@ SPAWNTEMPLATES.templates = {
 			{
 				[1] = 
 				{
-					["alt"] = 5,
+					["alt"] = 51,
 					["type"] = "Turning Point",
 					["ETA"] = 0,
 					["alt_type"] = "BARO",
 					["formation_template"] = "",
-					["y"] = -855879.72750057,
-					["x"] = 529013.61212327,
+					["y"] = 427361.00279172,
+					["x"] = 13655.375481588,
 					["ETA_locked"] = true,
 					["speed"] = 5.5555555555556,
 					["action"] = "Off Road",
@@ -17735,9 +19470,8 @@ SPAWNTEMPLATES.templates = {
 					["speed_locked"] = true,
 				}, -- end of [1]
 			}, -- end of ["points"]
-			["routeRelativeTOT"] = true,
 		}, -- end of ["route"]
-		["groupId"] = 17479,
+		["groupId"] = 328,
 		["hidden"] = false,
 		["units"] = 
 		{
@@ -17746,10 +19480,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "BTR-80",
-				["unitId"] = 20624,
-				["y"] = -855879.72750057,
-				["x"] = 529013.61212327,
-				["name"] = "Ground-1-1",
+				["unitId"] = 3204,
+				["y"] = 427361.00279172,
+				["x"] = 13655.375481588,
+				["name"] = "ARMOUR_Heavy_01-1",
 				["heading"] = 0,
 				["playerCanDrive"] = true,
 			}, -- end of [1]
@@ -17758,10 +19492,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "Ural-375 ZU-23",
-				["unitId"] = 20625,
-				["y"] = -855866.62702883,
-				["x"] = 529030.53356593,
-				["name"] = "Ground-1-2",
+				["unitId"] = 3205,
+				["y"] = 427374.10326346,
+				["x"] = 13672.296924251,
+				["name"] = "ARMOUR_Heavy_01-2",
 				["heading"] = 0.97738438111682,
 				["playerCanDrive"] = true,
 			}, -- end of [2]
@@ -17770,10 +19504,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "T-55",
-				["unitId"] = 20626,
-				["y"] = -855890.28065836,
-				["x"] = 528999.41994555,
-				["name"] = "Ground-1-3",
+				["unitId"] = 3206,
+				["y"] = 427350.44963393,
+				["x"] = 13641.183303871,
+				["name"] = "ARMOUR_Heavy_01-3",
 				["heading"] = 5.6723200689816,
 				["playerCanDrive"] = true,
 			}, -- end of [3]
@@ -17782,10 +19516,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "T-72B",
-				["unitId"] = 20627,
-				["y"] = -855865.56171714,
-				["x"] = 529001.79287326,
-				["name"] = "Ground-1-4",
+				["unitId"] = 3207,
+				["y"] = 427375.16857515,
+				["x"] = 13643.556231586,
+				["name"] = "ARMOUR_Heavy_01-4",
 				["heading"] = 3.3161255787892,
 				["playerCanDrive"] = true,
 			}, -- end of [4]
@@ -17794,10 +19528,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "tt_KORD",
-				["unitId"] = 20628,
-				["y"] = -855874.59389209,
-				["x"] = 528993.91250137,
-				["name"] = "Ground-1-5",
+				["unitId"] = 3208,
+				["y"] = 427366.1364002,
+				["x"] = 13635.675859695,
+				["name"] = "ARMOUR_Heavy_01-5",
 				["heading"] = 2.3038346126325,
 				["playerCanDrive"] = true,
 			}, -- end of [5]
@@ -17806,10 +19540,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "Ural-375 ZU-23",
-				["unitId"] = 20629,
-				["y"] = -855885.85814016,
-				["x"] = 529034.78150396,
-				["name"] = "Ground-1-6",
+				["unitId"] = 3209,
+				["y"] = 427354.87215213,
+				["x"] = 13676.544862285,
+				["name"] = "ARMOUR_Heavy_01-6",
 				["heading"] = 2.8448866807508,
 				["playerCanDrive"] = true,
 			}, -- end of [6]
@@ -17818,10 +19552,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "GAZ-66",
-				["unitId"] = 20630,
-				["y"] = -855965.20391893,
-				["x"] = 529067.16680314,
-				["name"] = "Ground-1-7",
+				["unitId"] = 3210,
+				["y"] = 427340.72621724,
+				["x"] = 13668.783119687,
+				["name"] = "ARMOUR_Heavy_01-7",
 				["heading"] = 1.5707963267949,
 				["playerCanDrive"] = false,
 			}, -- end of [7]
@@ -17830,22 +19564,170 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "HL_DSHK",
-				["unitId"] = 20631,
-				["y"] = -855902.76563999,
-				["x"] = 529013.87617546,
-				["name"] = "Ground-1-8",
+				["unitId"] = 3211,
+				["y"] = 427343.00011621,
+				["x"] = 13655.730186682,
+				["name"] = "ARMOUR_Heavy_01-8",
 				["heading"] = 1.7627825445143,
 				["playerCanDrive"] = true,
 			}, -- end of [8]
 		}, -- end of ["units"]
-		["y"] = -855879.72750057,
-		["x"] = 529013.61212327,
+		["y"] = 427361.00279172,
+		["x"] = 13655.375481588,
 		["name"] = "ARMOUR_Heavy_01",
 		["start_time"] = 0,
 	}, -- end of ["ARMOUR_Heavy_01"]
+	-- ["ARMOUR_Heavy_01"] = {
+	-- 	["category"] = Group.Category.GROUND,
+	-- 	["visible"] = false,
+	-- 	["lateActivation"] = true,
+	-- 	["tasks"] = 
+	-- 	{
+	-- 	}, -- end of ["tasks"]
+	-- 	["uncontrollable"] = false,
+	-- 	["route"] = 
+	-- 	{
+	-- 		["spans"] = 
+	-- 		{
+	-- 		}, -- end of ["spans"]
+	-- 		["points"] = 
+	-- 		{
+	-- 			[1] = 
+	-- 			{
+	-- 				["alt"] = 5,
+	-- 				["type"] = "Turning Point",
+	-- 				["ETA"] = 0,
+	-- 				["alt_type"] = "BARO",
+	-- 				["formation_template"] = "",
+	-- 				["y"] = -855879.72750057,
+	-- 				["x"] = 529013.61212327,
+	-- 				["ETA_locked"] = true,
+	-- 				["speed"] = 5.5555555555556,
+	-- 				["action"] = "Off Road",
+	-- 				["task"] = 
+	-- 				{
+	-- 					["id"] = "ComboTask",
+	-- 					["params"] = 
+	-- 					{
+	-- 						["tasks"] = 
+	-- 						{
+	-- 						}, -- end of ["tasks"]
+	-- 					}, -- end of ["params"]
+	-- 				}, -- end of ["task"]
+	-- 				["speed_locked"] = true,
+	-- 			}, -- end of [1]
+	-- 		}, -- end of ["points"]
+	-- 		["routeRelativeTOT"] = true,
+	-- 	}, -- end of ["route"]
+	-- 	["groupId"] = 17479,
+	-- 	["hidden"] = false,
+	-- 	["units"] = 
+	-- 	{
+	-- 		[1] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BTR-80",
+	-- 			["unitId"] = 20624,
+	-- 			["y"] = -855879.72750057,
+	-- 			["x"] = 529013.61212327,
+	-- 			["name"] = "Ground-1-1",
+	-- 			["heading"] = 0,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [1]
+	-- 		[2] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Ural-375 ZU-23",
+	-- 			["unitId"] = 20625,
+	-- 			["y"] = -855866.62702883,
+	-- 			["x"] = 529030.53356593,
+	-- 			["name"] = "Ground-1-2",
+	-- 			["heading"] = 0.97738438111682,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [2]
+	-- 		[3] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-55",
+	-- 			["unitId"] = 20626,
+	-- 			["y"] = -855890.28065836,
+	-- 			["x"] = 528999.41994555,
+	-- 			["name"] = "Ground-1-3",
+	-- 			["heading"] = 5.6723200689816,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [3]
+	-- 		[4] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-72B",
+	-- 			["unitId"] = 20627,
+	-- 			["y"] = -855865.56171714,
+	-- 			["x"] = 529001.79287326,
+	-- 			["name"] = "Ground-1-4",
+	-- 			["heading"] = 3.3161255787892,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [4]
+	-- 		[5] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "tt_KORD",
+	-- 			["unitId"] = 20628,
+	-- 			["y"] = -855874.59389209,
+	-- 			["x"] = 528993.91250137,
+	-- 			["name"] = "Ground-1-5",
+	-- 			["heading"] = 2.3038346126325,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [5]
+	-- 		[6] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Ural-375 ZU-23",
+	-- 			["unitId"] = 20629,
+	-- 			["y"] = -855885.85814016,
+	-- 			["x"] = 529034.78150396,
+	-- 			["name"] = "Ground-1-6",
+	-- 			["heading"] = 2.8448866807508,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [6]
+	-- 		[7] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "GAZ-66",
+	-- 			["unitId"] = 20630,
+	-- 			["y"] = -855965.20391893,
+	-- 			["x"] = 529067.16680314,
+	-- 			["name"] = "Ground-1-7",
+	-- 			["heading"] = 1.5707963267949,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [7]
+	-- 		[8] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "HL_DSHK",
+	-- 			["unitId"] = 20631,
+	-- 			["y"] = -855902.76563999,
+	-- 			["x"] = 529013.87617546,
+	-- 			["name"] = "Ground-1-8",
+	-- 			["heading"] = 1.7627825445143,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [8]
+	-- 	}, -- end of ["units"]
+	-- 	["y"] = -855879.72750057,
+	-- 	["x"] = 529013.61212327,
+	-- 	["name"] = "ARMOUR_Heavy_01",
+	-- 	["start_time"] = 0,
+	-- }, -- end of ["ARMOUR_Heavy_01"]
 	["ARMOUR_Heavy_02"] = {
+		["category"] = Group.Category.GROUND,
 		["visible"] = false,
-		["lateActivation"] = true,
 		["tasks"] = 
 		{
 		}, -- end of ["tasks"]
@@ -17859,13 +19741,13 @@ SPAWNTEMPLATES.templates = {
 			{
 				[1] = 
 				{
-					["alt"] = 17,
+					["alt"] = 51,
 					["type"] = "Turning Point",
 					["ETA"] = 0,
 					["alt_type"] = "BARO",
 					["formation_template"] = "",
-					["y"] = -856971.79320205,
-					["x"] = 519137.53969249,
+					["y"] = 427408.8264185,
+					["x"] = 13776.126967418,
 					["ETA_locked"] = true,
 					["speed"] = 5.5555555555556,
 					["action"] = "Off Road",
@@ -17882,9 +19764,8 @@ SPAWNTEMPLATES.templates = {
 					["speed_locked"] = true,
 				}, -- end of [1]
 			}, -- end of ["points"]
-			["routeRelativeTOT"] = true,
 		}, -- end of ["route"]
-		["groupId"] = 17480,
+		["groupId"] = 329,
 		["hidden"] = false,
 		["units"] = 
 		{
@@ -17893,10 +19774,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "BRDM-2",
-				["unitId"] = 20632,
-				["y"] = -856971.79320205,
-				["x"] = 519137.53969249,
-				["name"] = "Ground-2-1",
+				["unitId"] = 3212,
+				["y"] = 427408.8264185,
+				["x"] = 13776.126967418,
+				["name"] = "ARMOUR_Heavy_02-1",
 				["heading"] = 0,
 				["playerCanDrive"] = true,
 			}, -- end of [1]
@@ -17905,10 +19786,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "BRDM-2",
-				["unitId"] = 20633,
-				["y"] = -856957.0245358,
-				["x"] = 519120.92494297,
-				["name"] = "Ground-2-2",
+				["unitId"] = 3213,
+				["y"] = 427423.59508475,
+				["x"] = 13759.512217893,
+				["name"] = "ARMOUR_Heavy_02-2",
 				["heading"] = 2.460914245312,
 				["playerCanDrive"] = true,
 			}, -- end of [2]
@@ -17917,10 +19798,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "Ural-375 ZU-23",
-				["unitId"] = 20634,
-				["y"] = -856986.61144471,
-				["x"] = 519118.0589405,
-				["name"] = "Ground-2-3",
+				["unitId"] = 3214,
+				["y"] = 427394.00817584,
+				["x"] = 13756.64621542,
+				["name"] = "ARMOUR_Heavy_02-3",
 				["heading"] = 3.5604716740684,
 				["playerCanDrive"] = true,
 			}, -- end of [3]
@@ -17929,10 +19810,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "HL_KORD",
-				["unitId"] = 20635,
-				["y"] = -856975.48536861,
-				["x"] = 519158.76965022,
-				["name"] = "Ground-2-4",
+				["unitId"] = 3215,
+				["y"] = 427405.13425194,
+				["x"] = 13797.356925145,
+				["name"] = "ARMOUR_Heavy_02-4",
 				["heading"] = 6.2308254296198,
 				["playerCanDrive"] = true,
 			}, -- end of [4]
@@ -17941,10 +19822,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "HL_DSHK",
-				["unitId"] = 20636,
-				["y"] = -856971.61125105,
-				["x"] = 519123.71141677,
-				["name"] = "Ground-2-5",
+				["unitId"] = 3216,
+				["y"] = 427409.0083695,
+				["x"] = 13762.298691693,
+				["name"] = "ARMOUR_Heavy_02-5",
 				["heading"] = 0.78539816339745,
 				["playerCanDrive"] = true,
 			}, -- end of [5]
@@ -17953,10 +19834,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "SAU Gvozdika",
-				["unitId"] = 20637,
-				["y"] = -856993.2581859,
-				["x"] = 519139.66614032,
-				["name"] = "Ground-2-6",
+				["unitId"] = 3217,
+				["y"] = 427387.36143465,
+				["x"] = 13778.253415243,
+				["name"] = "ARMOUR_Heavy_02-6",
 				["heading"] = 4.2411500823462,
 				["playerCanDrive"] = true,
 			}, -- end of [6]
@@ -17965,10 +19846,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "ATMZ-5",
-				["unitId"] = 20638,
-				["y"] = -856942.59713264,
-				["x"] = 519136.08987622,
-				["name"] = "Ground-2-7",
+				["unitId"] = 3218,
+				["y"] = 427438.02248791,
+				["x"] = 13774.677151143,
+				["name"] = "ARMOUR_Heavy_02-7",
 				["heading"] = 3.1415926535898,
 				["playerCanDrive"] = false,
 			}, -- end of [7]
@@ -17977,22 +19858,170 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "ATMZ-5",
-				["unitId"] = 20639,
-				["y"] = -856951.90204602,
-				["x"] = 519136.63722407,
-				["name"] = "Ground-2-8",
+				["unitId"] = 3219,
+				["y"] = 427428.71757453,
+				["x"] = 13775.224498989,
+				["name"] = "ARMOUR_Heavy_02-8",
 				["heading"] = 3.0194196059502,
 				["playerCanDrive"] = false,
 			}, -- end of [8]
 		}, -- end of ["units"]
-		["y"] = -856971.79320205,
-		["x"] = 519137.53969249,
+		["y"] = 427408.8264185,
+		["x"] = 13776.126967418,
 		["name"] = "ARMOUR_Heavy_02",
 		["start_time"] = 0,
 	}, -- end of ["ARMOUR_Heavy_02"]
+	-- ["ARMOUR_Heavy_02"] = {
+	--  ["category"] = Group.Category.GROUND,
+	-- 	["visible"] = false,
+	-- 	["lateActivation"] = true,
+	-- 	["tasks"] = 
+	-- 	{
+	-- 	}, -- end of ["tasks"]
+	-- 	["uncontrollable"] = false,
+	-- 	["route"] = 
+	-- 	{
+	-- 		["spans"] = 
+	-- 		{
+	-- 		}, -- end of ["spans"]
+	-- 		["points"] = 
+	-- 		{
+	-- 			[1] = 
+	-- 			{
+	-- 				["alt"] = 17,
+	-- 				["type"] = "Turning Point",
+	-- 				["ETA"] = 0,
+	-- 				["alt_type"] = "BARO",
+	-- 				["formation_template"] = "",
+	-- 				["y"] = -856971.79320205,
+	-- 				["x"] = 519137.53969249,
+	-- 				["ETA_locked"] = true,
+	-- 				["speed"] = 5.5555555555556,
+	-- 				["action"] = "Off Road",
+	-- 				["task"] = 
+	-- 				{
+	-- 					["id"] = "ComboTask",
+	-- 					["params"] = 
+	-- 					{
+	-- 						["tasks"] = 
+	-- 						{
+	-- 						}, -- end of ["tasks"]
+	-- 					}, -- end of ["params"]
+	-- 				}, -- end of ["task"]
+	-- 				["speed_locked"] = true,
+	-- 			}, -- end of [1]
+	-- 		}, -- end of ["points"]
+	-- 		["routeRelativeTOT"] = true,
+	-- 	}, -- end of ["route"]
+	-- 	["groupId"] = 17480,
+	-- 	["hidden"] = false,
+	-- 	["units"] = 
+	-- 	{
+	-- 		[1] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BRDM-2",
+	-- 			["unitId"] = 20632,
+	-- 			["y"] = -856971.79320205,
+	-- 			["x"] = 519137.53969249,
+	-- 			["name"] = "Ground-2-1",
+	-- 			["heading"] = 0,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [1]
+	-- 		[2] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BRDM-2",
+	-- 			["unitId"] = 20633,
+	-- 			["y"] = -856957.0245358,
+	-- 			["x"] = 519120.92494297,
+	-- 			["name"] = "Ground-2-2",
+	-- 			["heading"] = 2.460914245312,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [2]
+	-- 		[3] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Ural-375 ZU-23",
+	-- 			["unitId"] = 20634,
+	-- 			["y"] = -856986.61144471,
+	-- 			["x"] = 519118.0589405,
+	-- 			["name"] = "Ground-2-3",
+	-- 			["heading"] = 3.5604716740684,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [3]
+	-- 		[4] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "HL_KORD",
+	-- 			["unitId"] = 20635,
+	-- 			["y"] = -856975.48536861,
+	-- 			["x"] = 519158.76965022,
+	-- 			["name"] = "Ground-2-4",
+	-- 			["heading"] = 6.2308254296198,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [4]
+	-- 		[5] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "HL_DSHK",
+	-- 			["unitId"] = 20636,
+	-- 			["y"] = -856971.61125105,
+	-- 			["x"] = 519123.71141677,
+	-- 			["name"] = "Ground-2-5",
+	-- 			["heading"] = 0.78539816339745,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [5]
+	-- 		[6] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "SAU Gvozdika",
+	-- 			["unitId"] = 20637,
+	-- 			["y"] = -856993.2581859,
+	-- 			["x"] = 519139.66614032,
+	-- 			["name"] = "Ground-2-6",
+	-- 			["heading"] = 4.2411500823462,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [6]
+	-- 		[7] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "ATMZ-5",
+	-- 			["unitId"] = 20638,
+	-- 			["y"] = -856942.59713264,
+	-- 			["x"] = 519136.08987622,
+	-- 			["name"] = "Ground-2-7",
+	-- 			["heading"] = 3.1415926535898,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [7]
+	-- 		[8] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "ATMZ-5",
+	-- 			["unitId"] = 20639,
+	-- 			["y"] = -856951.90204602,
+	-- 			["x"] = 519136.63722407,
+	-- 			["name"] = "Ground-2-8",
+	-- 			["heading"] = 3.0194196059502,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [8]
+	-- 	}, -- end of ["units"]
+	-- 	["y"] = -856971.79320205,
+	-- 	["x"] = 519137.53969249,
+	-- 	["name"] = "ARMOUR_Heavy_02",
+	-- 	["start_time"] = 0,
+	-- }, -- end of ["ARMOUR_Heavy_02"]
 	["ARMOUR_Heavy_03"] = {
+		["category"] = Group.Category.GROUND,
 		["visible"] = false,
-		["lateActivation"] = true,
 		["tasks"] = 
 		{
 		}, -- end of ["tasks"]
@@ -18006,13 +20035,13 @@ SPAWNTEMPLATES.templates = {
 			{
 				[1] = 
 				{
-					["alt"] = 2,
+					["alt"] = 51,
 					["type"] = "Turning Point",
 					["ETA"] = 0,
 					["alt_type"] = "BARO",
 					["formation_template"] = "",
-					["y"] = -837931.86510234,
-					["x"] = 530010.71558983,
+					["y"] = 427443.12239686,
+					["x"] = 13868.726108977,
 					["ETA_locked"] = true,
 					["speed"] = 5.5555555555556,
 					["action"] = "Off Road",
@@ -18029,9 +20058,8 @@ SPAWNTEMPLATES.templates = {
 					["speed_locked"] = true,
 				}, -- end of [1]
 			}, -- end of ["points"]
-			["routeRelativeTOT"] = true,
 		}, -- end of ["route"]
-		["groupId"] = 17481,
+		["groupId"] = 330,
 		["hidden"] = false,
 		["units"] = 
 		{
@@ -18040,10 +20068,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "BTR-80",
-				["unitId"] = 20640,
-				["y"] = -837931.86510234,
-				["x"] = 530010.71558983,
-				["name"] = "Ground-3-1",
+				["unitId"] = 3220,
+				["y"] = 427443.12239686,
+				["x"] = 13868.726108977,
+				["name"] = "ARMOUR_Heavy_03-1",
 				["heading"] = 0,
 				["playerCanDrive"] = true,
 			}, -- end of [1]
@@ -18052,10 +20080,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "BMP-3",
-				["unitId"] = 20641,
-				["y"] = -837694.45951506,
-				["x"] = 529963.23447238,
-				["name"] = "Ground-3-2",
+				["unitId"] = 3221,
+				["y"] = 427426.48202961,
+				["x"] = 13874.447449118,
+				["name"] = "ARMOUR_Heavy_03-2",
 				["heading"] = 5.1836278784232,
 				["playerCanDrive"] = true,
 			}, -- end of [2]
@@ -18064,10 +20092,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "tt_DSHK",
-				["unitId"] = 20642,
-				["y"] = -837940.282535,
-				["x"] = 530001.49525613,
-				["name"] = "Ground-3-3",
+				["unitId"] = 3222,
+				["y"] = 427434.7049642,
+				["x"] = 13859.505775276,
+				["name"] = "ARMOUR_Heavy_03-3",
 				["heading"] = 5.6723200689816,
 				["playerCanDrive"] = true,
 			}, -- end of [3]
@@ -18076,10 +20104,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "T-72B",
-				["unitId"] = 20643,
-				["y"] = -837913.88137077,
-				["x"] = 529992.00732741,
-				["name"] = "Ground-3-4",
+				["unitId"] = 3223,
+				["y"] = 427461.10612843,
+				["x"] = 13850.017846548,
+				["name"] = "ARMOUR_Heavy_03-4",
 				["heading"] = 2.4434609527921,
 				["playerCanDrive"] = true,
 			}, -- end of [4]
@@ -18088,10 +20116,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "T-55",
-				["unitId"] = 20644,
-				["y"] = -837932.05402184,
-				["x"] = 529990.0113746,
-				["name"] = "Ground-3-5",
+				["unitId"] = 3224,
+				["y"] = 427442.93347736,
+				["x"] = 13848.021893743,
+				["name"] = "ARMOUR_Heavy_03-5",
 				["heading"] = 3.1415926535898,
 				["playerCanDrive"] = true,
 			}, -- end of [5]
@@ -18100,10 +20128,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "BTR-80",
-				["unitId"] = 20645,
-				["y"] = -837945.19623982,
-				["x"] = 530025.86322085,
-				["name"] = "Ground-3-6",
+				["unitId"] = 3225,
+				["y"] = 427429.79125938,
+				["x"] = 13883.873739997,
+				["name"] = "ARMOUR_Heavy_03-6",
 				["heading"] = 4.9741883681838,
 				["playerCanDrive"] = true,
 			}, -- end of [6]
@@ -18112,10 +20140,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "Ural-4320T",
-				["unitId"] = 20646,
-				["y"] = -837955.59158367,
-				["x"] = 529996.47266608,
-				["name"] = "Ground-3-7",
+				["unitId"] = 3226,
+				["y"] = 427419.39591553,
+				["x"] = 13854.483185225,
+				["name"] = "ARMOUR_Heavy_03-7",
 				["heading"] = 3.1415926535898,
 				["playerCanDrive"] = false,
 			}, -- end of [7]
@@ -18124,22 +20152,170 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "Ural-4320T",
-				["unitId"] = 20647,
-				["y"] = -837915.47240191,
-				["x"] = 530011.51736719,
-				["name"] = "Ground-3-8",
+				["unitId"] = 3227,
+				["y"] = 427459.51509729,
+				["x"] = 13869.527886334,
+				["name"] = "ARMOUR_Heavy_03-8",
 				["heading"] = 2.3561944901923,
 				["playerCanDrive"] = false,
 			}, -- end of [8]
 		}, -- end of ["units"]
-		["y"] = -837931.86510234,
-		["x"] = 530010.71558983,
+		["y"] = 427443.12239686,
+		["x"] = 13868.726108977,
 		["name"] = "ARMOUR_Heavy_03",
 		["start_time"] = 0,
 	}, -- end of ["ARMOUR_Heavy_03"]
+	-- ["ARMOUR_Heavy_03"] = {
+	--  ["category"] = Group.Category.GROUND,
+	-- 	["visible"] = false,
+	-- 	["lateActivation"] = true,
+	-- 	["tasks"] = 
+	-- 	{
+	-- 	}, -- end of ["tasks"]
+	-- 	["uncontrollable"] = false,
+	-- 	["route"] = 
+	-- 	{
+	-- 		["spans"] = 
+	-- 		{
+	-- 		}, -- end of ["spans"]
+	-- 		["points"] = 
+	-- 		{
+	-- 			[1] = 
+	-- 			{
+	-- 				["alt"] = 2,
+	-- 				["type"] = "Turning Point",
+	-- 				["ETA"] = 0,
+	-- 				["alt_type"] = "BARO",
+	-- 				["formation_template"] = "",
+	-- 				["y"] = -837931.86510234,
+	-- 				["x"] = 530010.71558983,
+	-- 				["ETA_locked"] = true,
+	-- 				["speed"] = 5.5555555555556,
+	-- 				["action"] = "Off Road",
+	-- 				["task"] = 
+	-- 				{
+	-- 					["id"] = "ComboTask",
+	-- 					["params"] = 
+	-- 					{
+	-- 						["tasks"] = 
+	-- 						{
+	-- 						}, -- end of ["tasks"]
+	-- 					}, -- end of ["params"]
+	-- 				}, -- end of ["task"]
+	-- 				["speed_locked"] = true,
+	-- 			}, -- end of [1]
+	-- 		}, -- end of ["points"]
+	-- 		["routeRelativeTOT"] = true,
+	-- 	}, -- end of ["route"]
+	-- 	["groupId"] = 17481,
+	-- 	["hidden"] = false,
+	-- 	["units"] = 
+	-- 	{
+	-- 		[1] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BTR-80",
+	-- 			["unitId"] = 20640,
+	-- 			["y"] = -837931.86510234,
+	-- 			["x"] = 530010.71558983,
+	-- 			["name"] = "Ground-3-1",
+	-- 			["heading"] = 0,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [1]
+	-- 		[2] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BMP-3",
+	-- 			["unitId"] = 20641,
+	-- 			["y"] = -837694.45951506,
+	-- 			["x"] = 529963.23447238,
+	-- 			["name"] = "Ground-3-2",
+	-- 			["heading"] = 5.1836278784232,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [2]
+	-- 		[3] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "tt_DSHK",
+	-- 			["unitId"] = 20642,
+	-- 			["y"] = -837940.282535,
+	-- 			["x"] = 530001.49525613,
+	-- 			["name"] = "Ground-3-3",
+	-- 			["heading"] = 5.6723200689816,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [3]
+	-- 		[4] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-72B",
+	-- 			["unitId"] = 20643,
+	-- 			["y"] = -837913.88137077,
+	-- 			["x"] = 529992.00732741,
+	-- 			["name"] = "Ground-3-4",
+	-- 			["heading"] = 2.4434609527921,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [4]
+	-- 		[5] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-55",
+	-- 			["unitId"] = 20644,
+	-- 			["y"] = -837932.05402184,
+	-- 			["x"] = 529990.0113746,
+	-- 			["name"] = "Ground-3-5",
+	-- 			["heading"] = 3.1415926535898,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [5]
+	-- 		[6] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BTR-80",
+	-- 			["unitId"] = 20645,
+	-- 			["y"] = -837945.19623982,
+	-- 			["x"] = 530025.86322085,
+	-- 			["name"] = "Ground-3-6",
+	-- 			["heading"] = 4.9741883681838,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [6]
+	-- 		[7] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Ural-4320T",
+	-- 			["unitId"] = 20646,
+	-- 			["y"] = -837955.59158367,
+	-- 			["x"] = 529996.47266608,
+	-- 			["name"] = "Ground-3-7",
+	-- 			["heading"] = 3.1415926535898,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [7]
+	-- 		[8] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Ural-4320T",
+	-- 			["unitId"] = 20647,
+	-- 			["y"] = -837915.47240191,
+	-- 			["x"] = 530011.51736719,
+	-- 			["name"] = "Ground-3-8",
+	-- 			["heading"] = 2.3561944901923,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [8]
+	-- 	}, -- end of ["units"]
+	-- 	["y"] = -837931.86510234,
+	-- 	["x"] = 530010.71558983,
+	-- 	["name"] = "ARMOUR_Heavy_03",
+	-- 	["start_time"] = 0,
+	-- }, -- end of ["ARMOUR_Heavy_03"]
 	["ARMOUR_Heavy_04"] = {
+		["category"] = Group.Category.GROUND,
 		["visible"] = false,
-		["lateActivation"] = true,
 		["tasks"] = 
 		{
 		}, -- end of ["tasks"]
@@ -18153,13 +20329,13 @@ SPAWNTEMPLATES.templates = {
 			{
 				[1] = 
 				{
-					["alt"] = 6,
+					["alt"] = 51,
 					["type"] = "Turning Point",
 					["ETA"] = 0,
 					["alt_type"] = "BARO",
 					["formation_template"] = "",
-					["y"] = -839546.22309583,
-					["x"] = 518615.24740048,
+					["y"] = 427472.82671015,
+					["x"] = 13929.914313022,
 					["ETA_locked"] = true,
 					["speed"] = 4,
 					["action"] = "Off Road",
@@ -18176,9 +20352,8 @@ SPAWNTEMPLATES.templates = {
 					["speed_locked"] = true,
 				}, -- end of [1]
 			}, -- end of ["points"]
-			["routeRelativeTOT"] = true,
 		}, -- end of ["route"]
-		["groupId"] = 17482,
+		["groupId"] = 331,
 		["hidden"] = false,
 		["units"] = 
 		{
@@ -18187,10 +20362,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "BTR-80",
-				["unitId"] = 20648,
-				["y"] = -839546.22309583,
-				["x"] = 518615.24740048,
-				["name"] = "Ground-4-1",
+				["unitId"] = 3228,
+				["y"] = 427472.82671015,
+				["x"] = 13929.914313022,
+				["name"] = "ARMOUR_Heavy_04-1",
 				["heading"] = 0.66322511575785,
 				["playerCanDrive"] = true,
 			}, -- end of [1]
@@ -18199,10 +20374,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "BTR-80",
-				["unitId"] = 20649,
-				["y"] = -839533.12262409,
-				["x"] = 518632.16884315,
-				["name"] = "Ground-4-2",
+				["unitId"] = 3229,
+				["y"] = 427485.92718189,
+				["x"] = 13946.835755685,
+				["name"] = "ARMOUR_Heavy_04-2",
 				["heading"] = 0.97738438111682,
 				["playerCanDrive"] = true,
 			}, -- end of [2]
@@ -18211,10 +20386,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "T-55",
-				["unitId"] = 20650,
-				["y"] = -839532.81335054,
-				["x"] = 518594.95087163,
-				["name"] = "Ground-4-3",
+				["unitId"] = 3230,
+				["y"] = 427486.23645544,
+				["x"] = 13909.617784168,
+				["name"] = "ARMOUR_Heavy_04-3",
 				["heading"] = 2.3212879051525,
 				["playerCanDrive"] = true,
 			}, -- end of [3]
@@ -18223,10 +20398,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "T-72B",
-				["unitId"] = 20651,
-				["y"] = -839526.86652147,
-				["x"] = 518602.65482388,
-				["name"] = "Ground-4-4",
+				["unitId"] = 3231,
+				["y"] = 427492.18328451,
+				["x"] = 13917.321736417,
+				["name"] = "ARMOUR_Heavy_04-4",
 				["heading"] = 1.6231562043547,
 				["playerCanDrive"] = true,
 			}, -- end of [4]
@@ -18235,10 +20410,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "Paratrooper RPG-16",
-				["unitId"] = 20652,
-				["y"] = -839529.09756046,
-				["x"] = 518616.115634,
-				["name"] = "Ground-4-5",
+				["unitId"] = 3232,
+				["y"] = 427489.95224552,
+				["x"] = 13930.782546537,
+				["name"] = "ARMOUR_Heavy_04-5",
 				["heading"] = 0,
 				["playerCanDrive"] = false,
 			}, -- end of [5]
@@ -18247,10 +20422,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "T-72B",
-				["unitId"] = 20653,
-				["y"] = -839548.78876042,
-				["x"] = 518627.57694817,
-				["name"] = "Ground-4-6",
+				["unitId"] = 3233,
+				["y"] = 427470.26104556,
+				["x"] = 13942.243860705,
+				["name"] = "ARMOUR_Heavy_04-6",
 				["heading"] = 4.9043751981041,
 				["playerCanDrive"] = true,
 			}, -- end of [6]
@@ -18259,10 +20434,10 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "HL_DSHK",
-				["unitId"] = 20654,
-				["y"] = -839559.37643921,
-				["x"] = 518602.55557793,
-				["name"] = "Ground-4-7",
+				["unitId"] = 3234,
+				["y"] = 427459.67336677,
+				["x"] = 13917.222490468,
+				["name"] = "ARMOUR_Heavy_04-7",
 				["heading"] = 4.1189770347066,
 				["playerCanDrive"] = true,
 			}, -- end of [7]
@@ -18271,19 +20446,166 @@ SPAWNTEMPLATES.templates = {
 				["skill"] = "Random",
 				["coldAtStart"] = false,
 				["type"] = "GAZ-66",
-				["unitId"] = 20655,
-				["y"] = -839538.27733095,
-				["x"] = 518610.96669662,
-				["name"] = "Ground-4-8",
+				["unitId"] = 3235,
+				["y"] = 427480.77247503,
+				["x"] = 13925.633609156,
+				["name"] = "ARMOUR_Heavy_04-8",
 				["heading"] = 0.62831853071796,
 				["playerCanDrive"] = false,
 			}, -- end of [8]
 		}, -- end of ["units"]
-		["y"] = -839546.22309583,
-		["x"] = 518615.24740048,
+		["y"] = 427472.82671015,
+		["x"] = 13929.914313022,
 		["name"] = "ARMOUR_Heavy_04",
 		["start_time"] = 0,
-	}, -- end of ["ARMOUR_Heavy_04"]	
+	}, -- end of ["ARMOUR_Heavy_04"]
+	-- ["ARMOUR_Heavy_04"] = {
+	-- 	["visible"] = false,
+	-- 	["lateActivation"] = true,
+	-- 	["tasks"] = 
+	-- 	{
+	-- 	}, -- end of ["tasks"]
+	-- 	["uncontrollable"] = false,
+	-- 	["route"] = 
+	-- 	{
+	-- 		["spans"] = 
+	-- 		{
+	-- 		}, -- end of ["spans"]
+	-- 		["points"] = 
+	-- 		{
+	-- 			[1] = 
+	-- 			{
+	-- 				["alt"] = 6,
+	-- 				["type"] = "Turning Point",
+	-- 				["ETA"] = 0,
+	-- 				["alt_type"] = "BARO",
+	-- 				["formation_template"] = "",
+	-- 				["y"] = -839546.22309583,
+	-- 				["x"] = 518615.24740048,
+	-- 				["ETA_locked"] = true,
+	-- 				["speed"] = 4,
+	-- 				["action"] = "Off Road",
+	-- 				["task"] = 
+	-- 				{
+	-- 					["id"] = "ComboTask",
+	-- 					["params"] = 
+	-- 					{
+	-- 						["tasks"] = 
+	-- 						{
+	-- 						}, -- end of ["tasks"]
+	-- 					}, -- end of ["params"]
+	-- 				}, -- end of ["task"]
+	-- 				["speed_locked"] = true,
+	-- 			}, -- end of [1]
+	-- 		}, -- end of ["points"]
+	-- 		["routeRelativeTOT"] = true,
+	-- 	}, -- end of ["route"]
+	-- 	["groupId"] = 17482,
+	-- 	["hidden"] = false,
+	-- 	["units"] = 
+	-- 	{
+	-- 		[1] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BTR-80",
+	-- 			["unitId"] = 20648,
+	-- 			["y"] = -839546.22309583,
+	-- 			["x"] = 518615.24740048,
+	-- 			["name"] = "Ground-4-1",
+	-- 			["heading"] = 0.66322511575785,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [1]
+	-- 		[2] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "BTR-80",
+	-- 			["unitId"] = 20649,
+	-- 			["y"] = -839533.12262409,
+	-- 			["x"] = 518632.16884315,
+	-- 			["name"] = "Ground-4-2",
+	-- 			["heading"] = 0.97738438111682,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [2]
+	-- 		[3] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-55",
+	-- 			["unitId"] = 20650,
+	-- 			["y"] = -839532.81335054,
+	-- 			["x"] = 518594.95087163,
+	-- 			["name"] = "Ground-4-3",
+	-- 			["heading"] = 2.3212879051525,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [3]
+	-- 		[4] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-72B",
+	-- 			["unitId"] = 20651,
+	-- 			["y"] = -839526.86652147,
+	-- 			["x"] = 518602.65482388,
+	-- 			["name"] = "Ground-4-4",
+	-- 			["heading"] = 1.6231562043547,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [4]
+	-- 		[5] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "Paratrooper RPG-16",
+	-- 			["unitId"] = 20652,
+	-- 			["y"] = -839529.09756046,
+	-- 			["x"] = 518616.115634,
+	-- 			["name"] = "Ground-4-5",
+	-- 			["heading"] = 0,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [5]
+	-- 		[6] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "T-72B",
+	-- 			["unitId"] = 20653,
+	-- 			["y"] = -839548.78876042,
+	-- 			["x"] = 518627.57694817,
+	-- 			["name"] = "Ground-4-6",
+	-- 			["heading"] = 4.9043751981041,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [6]
+	-- 		[7] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "HL_DSHK",
+	-- 			["unitId"] = 20654,
+	-- 			["y"] = -839559.37643921,
+	-- 			["x"] = 518602.55557793,
+	-- 			["name"] = "Ground-4-7",
+	-- 			["heading"] = 4.1189770347066,
+	-- 			["playerCanDrive"] = true,
+	-- 		}, -- end of [7]
+	-- 		[8] = 
+	-- 		{
+	-- 			["skill"] = "Random",
+	-- 			["coldAtStart"] = false,
+	-- 			["type"] = "GAZ-66",
+	-- 			["unitId"] = 20655,
+	-- 			["y"] = -839538.27733095,
+	-- 			["x"] = 518610.96669662,
+	-- 			["name"] = "Ground-4-8",
+	-- 			["heading"] = 0.62831853071796,
+	-- 			["playerCanDrive"] = false,
+	-- 		}, -- end of [8]
+	-- 	}, -- end of ["units"]
+	-- 	["y"] = -839546.22309583,
+	-- 	["x"] = 518615.24740048,
+	-- 	["name"] = "ARMOUR_Heavy_04",
+	-- 	["start_time"] = 0,
+	-- }, -- end of ["ARMOUR_Heavy_04"]	
     ------------------------ ARTILLERY ------------------------
 	------------------------ INFANTRY ------------------------
 	------------------------ SHIP ------------------------
@@ -34749,19 +37071,19 @@ MISSIONSTRIKE.missions = { -- TableStrikeAttack
 		is_open = true,
 	},-- End BR61
 
-	------------ PORT ------------
---[[ 	{ -- DK05 Port-North
+	------------ PORT EAST ------------
+	{ -- Bandar-e-Jask Port-East
 		striketype = MISSIONSTRIKE.enums.striketype.port,
-        strikeregion = MISSIONSTRIKE.enums.region.north,                            
-		strikename = "DK05",
-		strikeivo = "Novorossiysk",
+        strikeregion = MISSIONSTRIKE.enums.region.east,
+		strikename = "EP7366",
+		strikeivo = "Bandar-e-Jask",
 		strikemission = MISSIONSTRIKE.enums.strikemission.port.docks, -- text mission description
 		--strikethreats = "RADAR SAM, I/R SAM, AAA, LIGHT ARMOUR",
-		strikezone = "ZONE_DK05Strike",
-		striketargetprefix = "TARGET_DK05",
+		strikezone = "ZONE_BandareJaskPortStrike",
+		striketargetprefix = "TARGET_BandareJaskPortStrike",
 		zoneprefix = {
-			{class = "small", prefix = "ZONE_DK05Small"},
-			{class = "medium", prefix = "ZONE_DK05Med"},
+			{class = "small", prefix = "ZONE_BandareJaskPortSmall"},
+			{class = "medium", prefix = "ZONE_BandareJaskPortMed"},
 		},
 		defassets = { 
 			sam = 2, 
@@ -34771,7 +37093,53 @@ MISSIONSTRIKE.missions = { -- TableStrikeAttack
 		},
 		spawnobjects = {},
 		is_open = true,
-	},-- End DK05 ]]
+	},-- Bandar-e-Jask Port
+
+	------------ PORT CENTRAL ------------
+	{ -- Qeshm Port-Central
+		striketype = MISSIONSTRIKE.enums.striketype.port,
+        strikeregion = MISSIONSTRIKE.enums.region.central,
+		strikename = "DQ2880",
+		strikeivo = "Qeshm",
+		strikemission = MISSIONSTRIKE.enums.strikemission.port.docks, -- text mission description
+		--strikethreats = "RADAR SAM, I/R SAM, AAA, LIGHT ARMOUR",
+		strikezone = "ZONE_QeshmPortStrike",
+		striketargetprefix = "TARGET_QeshmPort",
+		zoneprefix = {
+			{class = "small", prefix = "ZONE_QeshmPortSmall"},
+			{class = "medium", prefix = "ZONE_QeshmPortMed"},
+		},
+		defassets = { 
+			sam = 2, 
+			aaa = 4, 
+			manpad = 2, 
+			armour = 2, 
+		},
+		spawnobjects = {},
+		is_open = true,
+	},-- Qeshm Port
+	{ -- Havadarya Port-Central
+		striketype = MISSIONSTRIKE.enums.striketype.port,
+        strikeregion = MISSIONSTRIKE.enums.region.central,
+		strikename = "DR2012",
+		strikeivo = "Havadarya",
+		strikemission = MISSIONSTRIKE.enums.strikemission.port.docks, -- text mission description
+		--strikethreats = "RADAR SAM, I/R SAM, AAA, LIGHT ARMOUR",
+		strikezone = "ZONE_HavadaryaPortStrike",
+		striketargetprefix = "TARGET_HavadaryaPort",
+		zoneprefix = {
+			{class = "small", prefix = "ZONE_HavadaryaPortSmall"},
+			{class = "medium", prefix = "ZONE_HavadaryaPortMed"},
+		},
+		defassets = { 
+			sam = 2, 
+			aaa = 4, 
+			manpad = 2, 
+			armour = 2, 
+		},
+		spawnobjects = {},
+		is_open = true,
+	},-- Bandar-e-Jask Port
 
 	------------ BRIDGE ------------
 --[[ 	{ -- EJ19 Bridge-North
@@ -35127,6 +37495,12 @@ MISSIONSTRIKE.missions = { -- TableStrikeAttack
 				is_open = true
 			},
 			{ 
+				strikezone = "ZONE_Convoy_Start_e-1",
+				endzone = "ZONE_Convoy_End_e-3",
+				destname = "EQ5467 Dar Pahn",
+				is_open = true
+			},
+			{ 
 				strikezone = "ZONE_Convoy_Start_e-2",
 				endzone = "ZONE_Convoy_End_e-2",
 				destname = "DQ8979 Teyab",
@@ -35136,6 +37510,12 @@ MISSIONSTRIKE.missions = { -- TableStrikeAttack
 				strikezone = "ZONE_Convoy_Start_e-2",
 				endzone = "ZONE_Convoy_End_e-1",
 				destname = "EP3614 Miski",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_e-2",
+				endzone = "ZONE_Convoy_End_e-4",
+				destname = "ER1396 Dehbarez",
 				is_open = true
 			},
 			{ 
@@ -35174,6 +37554,79 @@ MISSIONSTRIKE.missions = { -- TableStrikeAttack
 			MISSIONSTRIKE.enums.convoy.armoured,
 		},
 	},-- End Convoy-EAST
+	{ -- Convoy-CENTRAL
+		striketype = MISSIONSTRIKE.enums.striketype.convoy,
+        strikeregion = MISSIONSTRIKE.enums.region.central,
+		strikename = "Add",
+		strikeivo = "Convoy Mission",
+		strikemission = MISSIONSTRIKE.enums.strikemission.convoy, -- text mission description
+		striketargets = {
+			{ 
+				strikezone = "ZONE_Convoy_Start_c-1",
+				endzone = "ZONE_Convoy_End_c-1",
+				destname = "DR 25 24",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_c-1",
+				endzone = "ZONE_Convoy_End_c-2",
+				destname = "CQ 78 54",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_c-2",
+				endzone = "ZONE_Convoy_End_c-2",
+				destname = "CQ 78 54",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_c-2",
+				endzone = "ZONE_Convoy_End_c-1",
+				destname = "DR 25 24",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_c-2",
+				endzone = "ZONE_Convoy_End_c-3",
+				destname = "CR 44 21",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_c-3",
+				endzone = "ZONE_Convoy_End_c-3",
+				destname = "CR 44 21",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_c-3",
+				endzone = "ZONE_Convoy_End_c-2",
+				destname = "CQ 78 54",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_c-3",
+				endzone = "ZONE_Convoy_End_c-4",
+				destname = "BQ 25 98",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_c-5",
+				endzone = "ZONE_Convoy_End_c-5",
+				destname = "BQ 83 36",
+				is_open = true
+			},
+			{ 
+				strikezone = "ZONE_Convoy_Start_c-5",
+				endzone = "ZONE_Convoy_End_c-6",
+				destname = "BR 61 43",
+				is_open = true
+			},
+		},
+		options = {
+			MISSIONSTRIKE.enums.convoy.supply,
+			MISSIONSTRIKE.enums.convoy.armoured,
+		},
+	},-- End Convoy-CENTRAL
 }
 
 -- Start Strike Attack Module
