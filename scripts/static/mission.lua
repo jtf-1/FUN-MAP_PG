@@ -1,4 +1,4 @@
- env.info("[JTF-1] MISSION BUILD 2024-02-12T22:24:04.11")  
+ env.info("[JTF-1] MISSION BUILD 2024-02-14T17:15:31.05")  
   
 --------------------------------[core\mission_init.lua]-------------------------------- 
  
@@ -36527,6 +36527,7 @@ SUPPORTAC.mission = {
       speed = 315,
       heading = 94,
       leg = 40,
+      unlimitedFuel = true,
     },
     {
       name = "ARWK", -- TANKER
@@ -36542,6 +36543,7 @@ SUPPORTAC.mission = {
       speed = 315,
       heading = 94,
       leg = 40,
+      unlimitedFuel = true,
     },
     {
       name = "ARXJYJ", -- TANKER
@@ -36557,6 +36559,7 @@ SUPPORTAC.mission = {
       speed = 315,
       heading = 94,
       leg = 40,
+      unlimitedFuel = true,
     },
     {
       name = "ARXJYJ", -- TANKER
@@ -36572,6 +36575,7 @@ SUPPORTAC.mission = {
       speed = 315,
       heading = 94,
       leg = 40,
+      unlimitedFuel = true,
     },
     {
       name = "ARYHBN", -- TANKER
@@ -36587,6 +36591,7 @@ SUPPORTAC.mission = {
       speed = 315,
       heading = 94 ,
       leg = 40,
+      unlimitedFuel = true,
     },
     {
       name = "ARYHBN", -- TANKER
@@ -36602,6 +36607,7 @@ SUPPORTAC.mission = {
       speed = 315,
       heading = 94,
       leg = 40,
+      unlimitedFuel = true,
     },
     {
       name = "ARDP", -- TANKER
@@ -36617,6 +36623,7 @@ SUPPORTAC.mission = {
       speed = 315,
       heading = 324,
       leg = 40,
+      unlimitedFuel = true,
     },
     {
       name = "ARDP", -- TANKER
@@ -36632,6 +36639,7 @@ SUPPORTAC.mission = {
       speed = 315,
       heading = 324,
       leg = 40,
+      unlimitedFuel = true,
     },
     {
       name = "AWACSWKYJ", -- AWACS
@@ -36645,11 +36653,33 @@ SUPPORTAC.mission = {
       radio = 282.025,
       flightLevel = 300,
       speed = 400,
-      heading = 123,
+      heading = 90,
       leg = 70,
       activateDelay = 5,
       despawnDelay = 10,
       fuelLowThreshold = 15,
+      unlimitedFuel = true,
+    },
+    {
+      name = "AWACSRED",
+      category = SUPPORTAC.category.awacs,
+      type = SUPPORTAC.type.awacsA50,
+      zone = "AWACSRED",
+      callsign = "666",
+      callsignNumber = 1,
+      tacan = nil,
+      tacanid = nil,
+      radio = 266,
+      flightLevel = 360,
+      speed = 400,
+      heading = 90,
+      leg = 70,
+      activateDelay = 5,
+      despawnDelay = 10,
+      fuelLowThreshold = 15,
+      coalition = coalition.side.RED,
+      countryid = country.id.RUSSIA,
+      unlimitedFuel = true,
     },
 }
 
@@ -37070,6 +37100,30 @@ MISSIONSTRIKE.missions = { -- TableStrikeAttack
 		spawnobjects = {},
 		is_open = true,
 	},-- End BR61
+
+	------------ PORT ALPHA ------------
+	{ -- An Naqdah Port-Alpha
+		striketype = MISSIONSTRIKE.enums.striketype.port,
+        strikeregion = MISSIONSTRIKE.enums.region.alpha,
+		strikename = "DN6100",
+		strikeivo = "An Naqdah",
+		strikemission = MISSIONSTRIKE.enums.strikemission.port.docks, -- text mission description
+		--strikethreats = "RADAR SAM, I/R SAM, AAA, LIGHT ARMOUR",
+		strikezone = "ZONE_AnNaqdahPort",
+		striketargetprefix = "TARGET_AnNaqdahPort",
+		zoneprefix = {
+			{class = "small", prefix = "ZONE_AnNaqdahPortSmall"},
+			{class = "medium", prefix = "ZONE_AnNaqdahPortMed"},
+		},
+		defassets = { 
+			sam = 2, 
+			aaa = 4, 
+			manpad = 2, 
+			armour = 2, 
+		},
+		spawnobjects = {},
+		is_open = true,
+	},-- Qeshm Port
 
 	------------ PORT EAST ------------
 	{ -- Bandar-e-Jask Port-East
