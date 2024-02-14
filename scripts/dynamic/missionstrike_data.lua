@@ -259,6 +259,30 @@ MISSIONSTRIKE.missions = { -- TableStrikeAttack
 		is_open = true,
 	},-- End BR61
 
+	------------ PORT ALPHA ------------
+	{ -- An Naqdah Port-Alpha
+		striketype = MISSIONSTRIKE.enums.striketype.port,
+        strikeregion = MISSIONSTRIKE.enums.region.alpha,
+		strikename = "DN6100",
+		strikeivo = "An Naqdah",
+		strikemission = MISSIONSTRIKE.enums.strikemission.port.docks, -- text mission description
+		--strikethreats = "RADAR SAM, I/R SAM, AAA, LIGHT ARMOUR",
+		strikezone = "ZONE_AnNaqdahPort",
+		striketargetprefix = "TARGET_AnNaqdahPort",
+		zoneprefix = {
+			{class = "small", prefix = "ZONE_AnNaqdahPortSmall"},
+			{class = "medium", prefix = "ZONE_AnNaqdahPortMed"},
+		},
+		defassets = { 
+			sam = 2, 
+			aaa = 4, 
+			manpad = 2, 
+			armour = 2, 
+		},
+		spawnobjects = {},
+		is_open = true,
+	},-- Qeshm Port
+
 	------------ PORT EAST ------------
 	{ -- Bandar-e-Jask Port-East
 		striketype = MISSIONSTRIKE.enums.striketype.port,
