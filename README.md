@@ -4,11 +4,10 @@ Please make yourself aware of the following information:
 ATIS
 ====
 
-- Al Dhafra 119.6
+- Al Dhafra 258.2
 - Al Minhad 121.925
+- Dubai Int 131.7
 - Khasab 125.0
-- Dubai Intl. 131.7
-- Abu Dhabi Intl. 125.1 
 
 AWACS
 =====
