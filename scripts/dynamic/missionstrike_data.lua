@@ -29,7 +29,7 @@ MISSIONSTRIKE.enums.region.qeshm = "Qeshm Island"
 --- MISSIONSTRIKE.mission table 
 -- @type MISSIONSTRIKE.mission
 -- @field #string striketype type of strike; Airfield, Factory, Bridge, Communications, C2
--- @field #string strikeregion Region in which mission is located (East, Central, West)
+-- @field #string strikeregion Region in which mission is located 
 -- @field #string strikename Friendly name for the location used in briefings, menus etc. Currently the same as the key, but will probably change
 -- @field #string strikeivo "in the vacinity of" ("AFB" if airfield, "[TOWN/CITY]" other targets)
 -- @field #string strikecoords LatLong
@@ -102,10 +102,10 @@ MISSIONSTRIKE.missions = { -- TableStrikeAttack
 		is_open = true,
 	},-- End Qeshm
 
-	------------ AIRFIELD EAST ------------
+	------------ AIRFIELD CHARLIE ------------
 	{ -- Bandar-e-Jask Airfield-East
 		striketype = MISSIONSTRIKE.enums.striketype.airfield,
-        strikeregion = MISSIONSTRIKE.enums.region.east,
+        strikeregion = MISSIONSTRIKE.enums.region.charlie,
 		strikename = "Bandar-e-Jask",
 		strikeivo = "AFB",
 		strikemission = MISSIONSTRIKE.enums.strikemission.airfield, -- text mission description
@@ -125,10 +125,10 @@ MISSIONSTRIKE.missions = { -- TableStrikeAttack
 		is_open = true,
 	},-- End Bandar-e-Jask Airfield-East
 
-	------------ AIRFIELD CENTRAL ------------
+	------------ AIRFIELD DELTA ------------
 	{ -- Bandar Abbas Intl Airfield
 		striketype = MISSIONSTRIKE.enums.striketype.airfield,
-        strikeregion = MISSIONSTRIKE.enums.region.central,
+        strikeregion = MISSIONSTRIKE.enums.region.delta,
 		strikename = "Bandar Abbas Intl",
 		strikeivo = "AFB",
 		strikemission = MISSIONSTRIKE.enums.strikemission.airfield, -- text mission description
@@ -149,7 +149,7 @@ MISSIONSTRIKE.missions = { -- TableStrikeAttack
 	},-- End Bandar Abbas
 	{ -- Havadarya Airfield
 		striketype = MISSIONSTRIKE.enums.striketype.airfield,
-        strikeregion = MISSIONSTRIKE.enums.region.central,
+        strikeregion = MISSIONSTRIKE.enums.region.delta,
 		strikename = "Havadarya",
 		strikeivo = "AFB",
 		strikemission = MISSIONSTRIKE.enums.strikemission.airfield, -- text mission description
@@ -170,7 +170,7 @@ MISSIONSTRIKE.missions = { -- TableStrikeAttack
 	},-- End Havadarya
 	{ -- Lar Airfield
 		striketype = MISSIONSTRIKE.enums.striketype.airfield,
-        strikeregion = MISSIONSTRIKE.enums.region.central,
+        strikeregion = MISSIONSTRIKE.enums.region.delta,
 		strikename = "Lar",
 		strikeivo = "AFB",
 		strikemission = MISSIONSTRIKE.enums.strikemission.airfield, -- text mission description
@@ -190,10 +190,10 @@ MISSIONSTRIKE.missions = { -- TableStrikeAttack
 		is_open = true,
 	},-- End Lar
 
-	------------ AIRFIELD NORTH WEST ------------
+	------------ AIRFIELD FOXTROT ------------
 	{ -- Shiraz Intl Airfield
 		striketype = MISSIONSTRIKE.enums.striketype.airfield,
-        strikeregion = MISSIONSTRIKE.enums.region.northwest,
+        strikeregion = MISSIONSTRIKE.enums.region.foxtrot,
 		strikename = "Shiraz Intl",
 		strikeivo = "AFB",
 		strikemission = MISSIONSTRIKE.enums.strikemission.airfield, -- text mission description
@@ -213,10 +213,10 @@ MISSIONSTRIKE.missions = { -- TableStrikeAttack
 		is_open = true,
 	},-- End Shiraz
 
-	------------ FACTORY CENTRAL ------------
+	------------ FACTORY DELTA ------------
 	{ -- DR30 Factory
 		striketype = MISSIONSTRIKE.enums.striketype.factory,
-        strikeregion = MISSIONSTRIKE.enums.region.central,                            
+        strikeregion = MISSIONSTRIKE.enums.region.delta,                            
 		strikename = "DR30",
 		strikeivo = "Bandar Abbas",
 		strikemission = MISSIONSTRIKE.enums.strikemission.factory.chemical, -- text mission description
@@ -238,7 +238,7 @@ MISSIONSTRIKE.missions = { -- TableStrikeAttack
 	},-- End DR30
 	{ -- BR61 Factory
 		striketype = MISSIONSTRIKE.enums.striketype.factory,
-        strikeregion = MISSIONSTRIKE.enums.region.central,                            
+        strikeregion = MISSIONSTRIKE.enums.region.delta,                            
 		strikename = "BR61",
 		strikeivo = "Chah Banard",
 		strikemission = MISSIONSTRIKE.enums.strikemission.factory.chemical, -- text mission description
@@ -286,7 +286,7 @@ MISSIONSTRIKE.missions = { -- TableStrikeAttack
 	------------ PORT EAST ------------
 	{ -- Bandar-e-Jask Port-East
 		striketype = MISSIONSTRIKE.enums.striketype.port,
-        strikeregion = MISSIONSTRIKE.enums.region.east,
+        strikeregion = MISSIONSTRIKE.enums.region.charlie,
 		strikename = "EP7366",
 		strikeivo = "Bandar-e-Jask",
 		strikemission = MISSIONSTRIKE.enums.strikemission.port.docks, -- text mission description
@@ -307,10 +307,10 @@ MISSIONSTRIKE.missions = { -- TableStrikeAttack
 		is_open = true,
 	},-- Bandar-e-Jask Port
 
-	------------ PORT CENTRAL ------------
-	{ -- Qeshm Port-Central
+	------------ PORT DELTA ------------
+	{ -- Qeshm Port-DELTA
 		striketype = MISSIONSTRIKE.enums.striketype.port,
-        strikeregion = MISSIONSTRIKE.enums.region.central,
+        strikeregion = MISSIONSTRIKE.enums.region.delta,
 		strikename = "DQ2880",
 		strikeivo = "Qeshm",
 		strikemission = MISSIONSTRIKE.enums.strikemission.port.docks, -- text mission description
@@ -330,9 +330,9 @@ MISSIONSTRIKE.missions = { -- TableStrikeAttack
 		spawnobjects = {},
 		is_open = true,
 	},-- Qeshm Port
-	{ -- Havadarya Port-Central
+	{ -- Havadarya Port-DELTA
 		striketype = MISSIONSTRIKE.enums.striketype.port,
-        strikeregion = MISSIONSTRIKE.enums.region.central,
+        strikeregion = MISSIONSTRIKE.enums.region.delta,
 		strikename = "DR2012",
 		strikeivo = "Havadarya",
 		strikemission = MISSIONSTRIKE.enums.strikemission.port.docks, -- text mission description
@@ -695,7 +695,7 @@ MISSIONSTRIKE.missions = { -- TableStrikeAttack
 	},-- End Convoy-EAST
 	{ -- Convoy-EAST
 		striketype = MISSIONSTRIKE.enums.striketype.convoy,
-        strikeregion = MISSIONSTRIKE.enums.region.east,                            
+        strikeregion = MISSIONSTRIKE.enums.region.charlie,                            
 		strikename = "Add",
 		strikeivo = "Convoy Mission",
 		strikemission = MISSIONSTRIKE.enums.strikemission.convoy, -- text mission description
@@ -766,9 +766,9 @@ MISSIONSTRIKE.missions = { -- TableStrikeAttack
 			MISSIONSTRIKE.enums.convoy.armoured,
 		},
 	},-- End Convoy-EAST
-	{ -- Convoy-CENTRAL
+	{ -- Convoy-DELTA
 		striketype = MISSIONSTRIKE.enums.striketype.convoy,
-        strikeregion = MISSIONSTRIKE.enums.region.central,
+        strikeregion = MISSIONSTRIKE.enums.region.delta,
 		strikename = "Add",
 		strikeivo = "Convoy Mission",
 		strikemission = MISSIONSTRIKE.enums.strikemission.convoy, -- text mission description
@@ -838,7 +838,7 @@ MISSIONSTRIKE.missions = { -- TableStrikeAttack
 			MISSIONSTRIKE.enums.convoy.supply,
 			MISSIONSTRIKE.enums.convoy.armoured,
 		},
-	},-- End Convoy-CENTRAL
+	},-- End Convoy-DELTA
 }
 
 -- Start Strike Attack Module
