@@ -65,15 +65,6 @@ function destroyAntiShipStrike (AntiShipStrike_1)
     end
 end -- function
 
--- XXX Spawn CAP aircraft
-
-function SpawnCAP( _args )
-
-    _args[2]:InitRandomizeTemplate(_args[3])
-    _args[2]:InitRandomizeZones(_args[1])
-    _args[2]:InitRandomizeRoute(1,4,10000)
-    _args[2]:Spawn()
-end --function
 
 -- XXX PERPETUAL TARGETS ON THE NORTHEASTERN HALF OF QESHM ISLAND
 function QeshmIslandHot()
@@ -765,14 +756,6 @@ end --function
 
 -- END FUNCTIONS SECTION
 
--- XXX BEGIN ON DEMAND CAP SECTION
-
-IranCAPAircraft = {"Iran_Mig31","Iran_Mig29","Iran_Mig21","Iran_Mig21","Iran_Mig29"}
--- IranCAPAircraft = {"Iran_F14","Iran_Mig29","Iran_Mig21","Iran_Mig21","Iran_Mig29"}
-
-
-
--- END ON DEMAND CAP SECTION
 -- XXX BEGIN ANTI-SHIP STRIKE SECTION
 
 
@@ -824,77 +807,99 @@ LIVESEAD = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"BANDAR LENGEH SEAD",
 --EWR Sites 
 EWRIran = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"ACTIVATE IRAN EWR SITES",MenuGroundAttack,IranEWR, "")
 
+
+-- Legacy CAP
+
+-- XXX Spawn CAP aircraft
+function SpawnCAP( _args )
+  _args[2]:InitRandomizeTemplate(_args[3])
+  _args[2]:InitRandomizeZones(_args[1])
+  _args[2]:InitRandomizeRoute(1,4,10000)
+  _args[2]:Spawn()
+end --function
+
 --CAP menu items
---Shiraz
-ShirazZones = {
-  ZONE:New("ShirazCAPZone"),
-  }
+function LegacyCap()
 
-ShirazCAP1 = SPAWN:New("ShirazCAP1")
+  IranCAPAircraft = {"Iran_Mig31","Iran_Mig29","Iran_Mig21","Iran_Mig21","Iran_Mig29"}
 
-ShirazCAPAircraft = {
-  "Iran_Mig31",
-  "Iran_Mig31",
-  "Iran_Mig29",
-  "Iran_Mig21",
-  "Iran_Mig31",
-  }
-
-_Shiraz_args = {
-  ShirazZones,
-  ShirazCAP1,
-  ShirazCAPAircraft,
-  }
-
-ShirazCAPs = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"Spawn Shiraz CAP",CAP_Shiraz,SpawnCAP, _Shiraz_args)
-shirazattack1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"AIRFIELD ATTACK SHIRAZ",MenuShiraz,airfieldattackshiraz, "mission")
-
---Lar
-m1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"AIRFIELD ATTACK LAR",MenuBandarL,airfieldattacklar, "mission")
-
---Lar AB
-LarCAPZones = {
-  ZONE:New("LarCAPZone"),
-  }
+  --Shiraz
+  ShirazZones = {
+    ZONE:New("ShirazCAPZone"),
+    }
   
-LARCAP1 = SPAWN:New("LarCAP1")
-
-LarCAPAircraft = {
-  "Iran_Mig29", 
-  "Iran_Mig21",
-  "Iran_Mig21",
-  "Iran_Mig29",
-  }
-
-_Lar_args = {
-  LarCAPZones,
-  LARCAP1,
-  LarCAPAircraft,
-  }
-
-LARCAPs = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"Spawn LAR CAP",CAP_Lar,SpawnCAP, _Lar_args)
-
---Bandar Abbas
-BandarZones = {
-  ZONE:New("BandarCAPZone"),
-  }
-
-BandarACAP1 = SPAWN:New("BandarAbbasCAP1")
-
-BACAPAircraft = {
-  "Iran_Mig29",
-  "Iran_Mig21",
-  "Iran_Mig21",
-  "Iran_Mig29",
-  }
+  ShirazCAP1 = SPAWN:New("ShirazCAP1")
   
-_BandarA_args = {
-  BandarZones,
-  BandarACAP1,
-  BACAPAircraft,
-  }
+  ShirazCAPAircraft = {
+    "Iran_Mig31",
+    "Iran_Mig31",
+    "Iran_Mig29",
+    "Iran_Mig21",
+    "Iran_Mig31",
+    }
+  
+  _Shiraz_args = {
+    ShirazZones,
+    ShirazCAP1,
+    ShirazCAPAircraft,
+    }
+  
+  ShirazCAPs = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"Spawn Shiraz CAP",CAP_Shiraz,SpawnCAP, _Shiraz_args)
+  shirazattack1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"AIRFIELD ATTACK SHIRAZ",MenuShiraz,airfieldattackshiraz, "mission")
+  
+  --Lar
+  m1 = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"AIRFIELD ATTACK LAR",MenuBandarL,airfieldattacklar, "mission")
+  
+  --Lar AB
+  LarCAPZones = {
+    ZONE:New("LarCAPZone"),
+    }
+    
+  LARCAP1 = SPAWN:New("LarCAP1")
+  
+  LarCAPAircraft = {
+    "Iran_Mig29", 
+    "Iran_Mig21",
+    "Iran_Mig21",
+    "Iran_Mig29",
+    }
+  
+  _Lar_args = {
+    LarCAPZones,
+    LARCAP1,
+    LarCAPAircraft,
+    }
+  
+  LARCAPs = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"Spawn LAR CAP",CAP_Lar,SpawnCAP, _Lar_args)
+  
+  --Bandar Abbas
+  BandarZones = {
+    ZONE:New("BandarCAPZone"),
+    }
+  
+  BandarACAP1 = SPAWN:New("BandarAbbasCAP1")
+  
+  BACAPAircraft = {
+    "Iran_Mig29",
+    "Iran_Mig21",
+    "Iran_Mig21",
+    "Iran_Mig29",
+    }
+    
+  _BandarA_args = {
+    BandarZones,
+    BandarACAP1,
+    BACAPAircraft,
+    }
+  
+  BandarACAPs = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"Spawn Bandar Abbas CAP",CAP_BandarA,SpawnCAP, _BandarA_args)
+  
+end
 
-BandarACAPs = MENU_COALITION_COMMAND:New( coalition.side.BLUE,"Spawn Bandar Abbas CAP",CAP_BandarA,SpawnCAP, _BandarA_args)
+-- LegacyCap()
+
+-- end legacy cap
+
 
 --kerman
 
