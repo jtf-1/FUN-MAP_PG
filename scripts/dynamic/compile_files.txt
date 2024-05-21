@@ -12,6 +12,7 @@ core\dynamic_deck.lua
 core\markspawn.lua
 core\Hercules_Cargo.lua
 core\spawntemplates.lua
+core\supportaircraft_templates.lua
 core\dynamic_deck_templates.lua
 missionsrs_data.lua
 adminmenu_data.lua
