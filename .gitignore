@@ -236,3 +236,4 @@ Moose Development/Moose/.vscode/launch.json
 .gitignore
 .gitignore
 /.gitignore
+/scripts/static
