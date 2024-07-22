@@ -5,6 +5,8 @@
 core/
 #static/
 lib/
+test/
+dynspawn/
 
 #################
 ## Eclipse
