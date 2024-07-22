@@ -49,6 +49,7 @@ SUPPORTAC.mission = {
       speed = 315,
       heading = 94,
       leg = 40,
+      unlimitedFuel = true,
     },
     {
       name = "ARWK", -- TANKER
@@ -64,6 +65,7 @@ SUPPORTAC.mission = {
       speed = 315,
       heading = 94,
       leg = 40,
+      unlimitedFuel = true,
     },
     {
       name = "ARXJYJ", -- TANKER
@@ -79,6 +81,7 @@ SUPPORTAC.mission = {
       speed = 315,
       heading = 94,
       leg = 40,
+      unlimitedFuel = true,
     },
     {
       name = "ARXJYJ", -- TANKER
@@ -94,6 +97,7 @@ SUPPORTAC.mission = {
       speed = 315,
       heading = 94,
       leg = 40,
+      unlimitedFuel = true,
     },
     {
       name = "ARYHBN", -- TANKER
@@ -107,8 +111,9 @@ SUPPORTAC.mission = {
       radio = 317.6,
       flightLevel = 215,
       speed = 315,
-      heading = 270 ,
+      heading = 94 ,
       leg = 40,
+      unlimitedFuel = true,
     },
     {
       name = "ARYHBN", -- TANKER
@@ -122,8 +127,9 @@ SUPPORTAC.mission = {
       radio = 317.65,
       flightLevel = 240,
       speed = 315,
-      heading = 270,
+      heading = 94,
       leg = 40,
+      unlimitedFuel = true,
     },
     {
       name = "ARDP", -- TANKER
@@ -139,6 +145,7 @@ SUPPORTAC.mission = {
       speed = 315,
       heading = 324,
       leg = 40,
+      unlimitedFuel = true,
     },
     {
       name = "ARDP", -- TANKER
@@ -154,6 +161,7 @@ SUPPORTAC.mission = {
       speed = 315,
       heading = 324,
       leg = 40,
+      unlimitedFuel = true,
     },
     {
       name = "AWACSWKYJ", -- AWACS
@@ -167,11 +175,33 @@ SUPPORTAC.mission = {
       radio = 282.025,
       flightLevel = 300,
       speed = 400,
-      heading = 123,
+      heading = 90,
       leg = 70,
       activateDelay = 5,
       despawnDelay = 10,
       fuelLowThreshold = 15,
+      unlimitedFuel = true,
+    },
+    {
+      name = "AWACSRED",
+      category = SUPPORTAC.category.awacs,
+      type = SUPPORTAC.type.awacsA50,
+      zone = "AWACSRED",
+      callsign = "666",
+      callsignNumber = 1,
+      tacan = nil,
+      tacanid = nil,
+      radio = 266,
+      flightLevel = 360,
+      speed = 400,
+      heading = 90,
+      leg = 70,
+      activateDelay = 5,
+      despawnDelay = 10,
+      fuelLowThreshold = 15,
+      coalition = coalition.side.RED,
+      countryid = country.id.RUSSIA,
+      unlimitedFuel = true,
     },
 }
 

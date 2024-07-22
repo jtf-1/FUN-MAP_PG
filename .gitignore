@@ -5,6 +5,8 @@
 core/
 #static/
 lib/
+test/
+dynspawn/
 
 #################
 ## Eclipse
@@ -236,3 +238,4 @@ Moose Development/Moose/.vscode/launch.json
 .gitignore
 .gitignore
 /.gitignore
+/scripts/static

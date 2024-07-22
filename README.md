@@ -4,11 +4,10 @@ Please make yourself aware of the following information:
 ATIS
 ====
 
-- Al Dhafra 119.6
+- Al Dhafra 258.2
 - Al Minhad 121.925
+- Dubai Int 131.7
 - Khasab 125.0
-- Dubai Intl. 131.7
-- Abu Dhabi Intl. 125.1 
 
 AWACS
 =====
@@ -37,8 +36,8 @@ Track DP;
 Lincoln Hawk;
 - Texaco 6-1 [S-3B] 38Y, 317.775, FL060
 
-Forrestal Hawk;
-- Texaco 6-2 [S-3B] 15Y, 278.325, FL060
+Tarawa Hawk;
+- Arco 2-1 [S-3B] 39Y, 278.325, FL060
 
 NAVAL OPERATIONS
 ================
@@ -55,15 +54,6 @@ Lincoln CVN-72 (SC)
 
 (Use CV Deck freq 274.075 to call AI APPR/TWR/PAD)
 
-
-Forrestal CVN-59:
-- BRC 315'TRUE
-- TACAN 59X 
-- ILCS: Channel 3
-- Towers/Paddles: 308.475 AM
- 
-(Use CV Deck freq 274.175 to call AI Tower to reqest landing. This also activates lights at night)
-
 Tarawa LHA-1:
 - BRC 280'
 - TACAN 1X
@@ -77,34 +67,29 @@ AWACS RED
 
 - 305.325AM
 
-MISSILE TRAINER
-===============
+ON DEMAND GROUND ATTACK MISSIONS
+================================
 
-A missile trainer is available to assist training in A/S and A/A missile evasion without being destroyed. By default, the missile trainer is disabled, but may be enabled for your aircraft via the F10 menu
+Insurgent Camp Attack:  
+----------------------
 
-While enabled, the missile trainer will;
+Strike missions are available, on-demand, via the F-10 menu. Camps can be spawned at a series of random locations, South of the Russian border, within the Eastern, Central and Western portions of the map (8x potential locations in each). A mission brief will be displayed with the location of the camp (nearest town and coordinates). A mark, with a label listing the strike name and its coordinates, will be placed on the F10 map at the strike location. A menu option is also available to remove the oldest spawned insurgent camp.
 
-- Alert on missile launch
-- Provide evasion advice
-- Destroy incoming missiles prior to impact
+Convoy Attack: 
+--------------
 
-NOTE: At very high closure rates it may not be possible to destroy the incoming missile without causing (potentially catastrophic) damage to your aircraft. The missile trainer will not protect against cannon rounds or other balistic weapons.
+Strike missions against enemy convoys are available, on-demand, via the F-10 menu. Options are available to spawn both armoured and soft convoys, at a series of random locations within the Central and Western portions of the map. A mission brief will be displayed indicating the last known location of the convoy, its anticipated destination and the threats within it. A mark, with a label listing the strike name and its coordinates, will be placed on the F10 map at the strike location.
 
-AIRSTRIKE ON FLEET (LEGACY)
-===========================
+Strategic Strike Attacks: 
+-------------------------
 
-The F10 Menu "Ship Strike" provides for a player callable anti-ship strike on both the Tarawa and the Forrestal. The exact target and departure location are randomly selected. A message informing the player on the aircraft type, departure location, and target will transmit.
+Strike missions are available, on demand, via the F10 menu. Air defences can be spawned at a series of target locations North of the Russian border. A mission brief will be displayed confirming the name of the chosen location, the coordinates of the main target center, and the anticipated threats. A mark, with a label listing the strike name and its coordinates, will be placed on the F10 map at the strike location. A menu option is also available to remove the mission after it has been spawned. The following target categories are selectable;
 
-The three strike packages are as follows:
-
-1. SU24s loaded with ASMs from Bandar Abbas Intl will target the Tarawa.
-2. SU24s loaded with ASMs from Shiraz International Airport will target the Tarawa.
-3. SU24s loaded with ASMs from Shiraz International Airport will target the Forrestal.
-
-*BE AWARE OF INDIRECT ROUTING*
-*RECOMMEND TUNING 282.025 FOR BLUE AWACS SUPPORT*
-*DESTRUCTION COMMAND AVAILABLE IN F10 "Ship Strike" MENU*
-
+- Airfield
+- Factory
+- Bridge
+- Port
+- Naval (WiP)
 
 RANGE COMPLEXES
 ===============
@@ -139,86 +124,13 @@ Deck lighting can be controlled via the Change Lights submenu. By default, the c
 DYNAMIC DECK TEMPLATES
 ======================
 
-Application and removal of Dynamic Deck Templates is available in the F10|Other|JTF-1 menu under "Dynamic Deck". Complete and partial templates can be applied to supported ships. 
+Application and removal of Dynamic Deck Templates is available in the F10|Other|JTF-1 menu under "Dynamic Deck" for carriers that support them. Complete and partial templates can be applied to supported ships. 
 
 Complete templates contain a full set of static objects for Launch or Recovery. If a Complete template is applied all existing statics will be cleared from the deck first.
 
 Partial templates can be added to or subtracted from a clear deck or a deck containing other partial templates. Partial templates cannot be added to, or removed from, a Complete template that has already been applied.
 
 The "Clear Deck" command will remove all statics from the deck.
-
-AIRBOSS
-=======
-
-Scripted recovery of aircraft on CVN-74 John C Forrestal is available via the F10 menu.
-Use the Marshal and Paddles frequencies as shown above to contact the relevant agencies when using the menu or when told to do so by Marshal. 
-
-Main Features;
---------------
-
-- CASE I, II and III recoveries.
-- Automatic LSO grading including (optional) live grading while in the groove.
-- Different skill levels, from on-the-fly tips for flight students to ziplip for pros, can be set for each player individually.
-- Separate radio channels for LSO and Marshal transmissions.
-- Voice over support for LSO and Marshal radio transmissions.
-- Advanced F10 radio menu including carrier info, weather, radio frequencies, TACAN/ICLS channels, player LSO grades, marking of zones etc.
-- Persistence of player results. LSO grading data is saved.
-
-AIRBOSS Menu Structure;
------------------------
-
-- F1 Help... (Help submenu. Set skill level, check status etc.)
-- F2 Kneeboard... (Kneeboard submenu. Carrier information, weather report, player status.)
-- F3 Request Marshal
-- F4 Request Commence
-- F5 Request Refueling
-- F6 Spinning
-- F7 Emergency Landing
-- F8 [Reset My Status]
-
-F3 Request Marshal
-------------------
-
-This radio command can be used to request a stack in the holding pattern from Marshal. Necessary conditions are that the flight is inside the Carrier Controlled Area (CCA, 50nm).
-
-Marshal will assign an individual stack for each player group depending on the current or next open recovery case window. If multiple players have registered as a section, the section lead will be assigned a stack and is responsible for guiding his section to the assigned holding position.
-
-F4 Request Commence
--------------------
-
-This command can be used to request commencing from the marshal stack to the landing pattern. Necessary condition is that the player is in the lowest marshal stack and that the number of aircraft in the landing pattern is smaller than four.
-
-A player can also request commencing if he is not registered in a marshal stack yet. If the pattern is free, Marshal will allow him to directly enter the landing pattern.
-
-F5 Request Refueling
---------------------
-
-The player can request refueling at the Hawk tanker. The player will be informed if the tanker is currently busy or going RTB to refuel itself at its home base. Once the re-fueling is complete, the player has to re-register to the marshal stack.
-
-F6 Spinning
------------
-
-If the pattern is full, players can go into the spin pattern. This step is only allowed, if the player is in the pattern and his next step is initial, break entry or early/late break. At this point, the player should climb to 1200 ft and follow the spin pattern on the port side of the boat and return to the initial.
-
-If a player is in the spin pattern, flights in the Marshal queue should hold their altitude and are not allowed into the pattern until the spinning aircraft proceeds.
-
-Once the player is aft of the abeam point and at least 1 NM to port, his step is set to "Initial" and he can resume the normal pattern approach.
-
-If necessary, the player can call "Spinning" again when in the above mentioned steps.
-
-F7 Emergency Landing
---------------------
-
-Request an emergency landing, i.e. bypass all pattern steps and go directly to the final approach.
-
-All section members are supposed to follow. Player (or section lead) is removed from all other queues and automatically added to the landing pattern queue.
-
-If this command is called while the player is currently on the carrier, he will be put in the bolter pattern so that the next expected step after take off will be the abeam position. This allows for quick landing training exercises without having to go through the whole pattern.
-
-F8 [Reset My Status]
---------------------
-
-This will reset the current player status. If player is currently in a marshal stack, he will be removed from the marshal queue and the stack above will collapse. The player needs to re-register later if desired. If player is currently in the landing pattern, he will be removed from the pattern queue.
 
 MAP MARK SPAWNING
 =================
@@ -274,6 +186,7 @@ Groundspawn Types
 -----------------
 
 - SA2
+- SA3
 - SA6
 - SA10
 - SA11
