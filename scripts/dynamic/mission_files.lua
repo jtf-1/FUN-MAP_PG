@@ -14,7 +14,7 @@ __JTFLoader.Include( 'core/missionstrike.lua' )             -- core file
 __JTFLoader.Include( 'core/cvncontrol.lua' )                -- core file
 __JTFLoader.Include( 'core/dynamic_deck.lua' )              -- core file
 __JTFLoader.Include( 'core/markspawn.lua' )                 -- core file
-__JTFLoader.Include( 'core/missionegcicap.lua' )            -- core file
+__JTFLoader.Include( 'core/missiongcicap.lua' )            -- core file
 __JTFLoader.Include( 'core/Hercules_cargo.lua' )            -- core file
 -- TEMPLATES
 env.info("[JTF-1] Load Templates")
@@ -33,7 +33,7 @@ __JTFLoader.Include( 'missionstrike_data.lua' )
 __JTFLoader.Include( 'cvncontrol_data.lua' )
 __JTFLoader.Include( 'dynamic_deck_data.lua' )
 __JTFLoader.Include( 'markspawn_data.lua' )
-__JTFLoader.Include( 'missionegcicap_data.lua' )
+__JTFLoader.Include( 'missiongcicap_data.lua' )
 -- JTF END
 env.info("Load Main End")
 __JTFLoader.Include( 'core/mission_end.lua' )               -- core file
