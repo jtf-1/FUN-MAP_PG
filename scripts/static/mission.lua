@@ -35914,7 +35914,7 @@ MISSIONSTRIKE.missions = { -- TableStrikeAttack
 		strikeivo = "An Naqdah",
 		strikemission = MISSIONSTRIKE.enums.strikemission.port.docks, -- text mission description
 		--strikethreats = "RADAR SAM, I/R SAM, AAA, LIGHT ARMOUR",
-		strikezone = "ZONE_AnNaqdahPort",
+		strikezone = "ZONE_AnNaqdahPortStrike",
 		striketargetprefix = "TARGET_AnNaqdahPort",
 		zoneprefix = {
 			{class = "small", prefix = "ZONE_AnNaqdahPortSmall"},
